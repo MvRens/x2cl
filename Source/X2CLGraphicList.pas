@@ -32,13 +32,17 @@ type
   }
   TX2GraphicCollectionItem  = class(TCollectionItem, IChangeNotifier)
   private
+    FName:              String;
     FPicture:           TPicture;
 
     procedure SetPicture(const Value: TPicture);
+    procedure SetName(const Value: String);
   protected
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
     function _AddRef(): Integer; stdcall;
     function _Release(): Integer; stdcall;
+
+    function GetDisplayName(): String; override;
 
     procedure NotifierChanged();
     procedure IChangeNotifier.Changed = NotifierChanged;
@@ -48,6 +52,7 @@ type
 
     procedure AssignTo(Dest: TPersistent); override;
   published
+    property Name:          String    read FName    write SetName;
     property Picture:       TPicture  read FPicture write SetPicture;
   end;
 
@@ -217,8 +222,23 @@ begin
 end;
 
 
+function TX2GraphicCollectionItem.GetDisplayName;
+begin
+  if Length(FName) > 0 then
+    Result  := FName
+  else
+    Result  := inherited GetDisplayName();
+end;
+
+
 procedure TX2GraphicCollectionItem.NotifierChanged;
 begin
+  Changed(False);
+end;
+
+procedure TX2GraphicCollectionItem.SetName;
+begin
+  FName := Value;
   Changed(False);
 end;
 
@@ -427,7 +447,8 @@ end;
   Graphics
 ========================================}
 function TX2GraphicList.DrawGraphic;
-  procedure InternalDrawGraphic(const ADest: TCanvas);
+  procedure InternalDrawGraphic(const ADest: TCanvas;
+                                const ADestX, ADestY: Integer);
   var
     bmpTemp:      TBitmap;
     iHeight:      Integer;
@@ -438,7 +459,7 @@ function TX2GraphicList.DrawGraphic;
   begin
     with FContainer.Graphics[AIndex].Picture do
       if (Width <= Self.Width) and (Height <= Self.Height) then
-        ADest.Draw(AX, AY, Graphic)
+        ADest.Draw(ADestX, ADestY, Graphic)
       else
       begin
         iWidth  := Width;
@@ -450,7 +471,8 @@ function TX2GraphicList.DrawGraphic;
         if iHeight > Self.Height then
           iHeight := Self.Height;
 
-        rDest   := Rect(AX, AY, AX + iWidth, AY + iHeight);
+        rDest               := Rect(ADestX, ADestY,
+                                    ADestX + iWidth, ADestY + iHeight);
         rSource := Rect(0, 0, iWidth, iHeight);
 
         case FStretchMode of
@@ -502,7 +524,7 @@ begin
 
   if AEnabled then
     // Enabled, simply draw the graphic
-    InternalDrawGraphic(ACanvas)
+    InternalDrawGraphic(ACanvas, AX, AY)
   else
   begin
     // Disabled, need to draw the image using 50% transparency. There's only
@@ -524,14 +546,14 @@ begin
       end;
 
       bmpBlend.Assign(bmpBackground);
-      InternalDrawGraphic(bmpBlend.Canvas);
+      InternalDrawGraphic(bmpBlend.Canvas, 0, 0);
 
       // Blend graphic with background at 50%
       for iY  := 0 to bmpBackground.Height - 1 do
       begin
         pBackground := bmpBackground.ScanLine[iY];
         pBlend      := bmpBlend.ScanLine[iY];
-        
+
         for iX  := 0 to bmpBackground.Width - 1 do
           with pBlend^[iX] do
           begin

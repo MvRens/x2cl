@@ -166,3 +166,27 @@ c:\delphi6\Projects\Bpl\PsychoTidyD6.bpl=PsychoTidy IDE Expert
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+[Included Packages]
+C:\Program Files\Borland\Delphi6\Bin\dclstd60.bpl=Borland Standard Components
+F:\Delphi\Components\madCollection\madBasic\Delphi 6\madBasic_.bpl=madBasic 1.1f  ·  www.madshi.net
+F:\Delphi\Components\madCollection\madDisAsm\Delphi 6\madDisAsm_.bpl=madDisAsm 2.0a  ·  www.madshi.net
+F:\Delphi\Components\madCollection\madExcept\Delphi 6\madExcept_.bpl=madExcept 2.6a  ·  www.madshi.net
+F:\Delphi\Components\madCollection\madExcept\Delphi 6\madExceptWizard_.bpl=madExceptWizard 2.6  ·  www.madshi.net
+c:\program files\borland\delphi6\Bin\dclsmpedit60.bpl=Borland Editor Script Enhancements
+C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\ThemeManager6.bpl=Windows XP Theme Manager
+c:\program files\borland\delphi6\Projects\Bpl\X2CLGLD.bpl=X²CL GraphicList (Designtime)
+C:\Program Files\Borland\Delphi6\Bin\dcldb60.bpl=Borland Database Components
+c:\program files\borland\delphi6\Projects\Bpl\VirtualTreesD6D.bpl=Virtual Treeview
+C:\Program Files\Borland\Delphi6\Bin\dclact60.bpl=Borland ActionBar Components
+c:\program files\borland\delphi6\Bin\dclcds60.bpl=Borland Base Cached ClientDataset Component
+C:\Program Files\Borland\Delphi6\Bin\dclmid60.bpl=Borland MyBase DataAccess Components
+C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\JvCoreD6D.bpl=JVCL Core Components
+C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\JvStdCtrlsD6D.bpl=JVCL Standard Controls
+C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\PNGImage_D6.bpl=PNGImage
+C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\tbx_d6.bpl=Toolbar2000 -- TBX Extensions (Alex Denisov)
+C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\tb2k_d6.bpl=Toolbar2000 Components (Jordan Russell)
+c:\program files\borland\delphi6\Projects\Bpl\tbxdsgn_d6.bpl=Toolbar2000 -- TBX Extensions Design Package (Alex Denisov)
+C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\tb2kdsgn_d6.bpl=Toolbar2000 Design Package (Jordan Russell)
+c:\program files\borland\delphi6\Bin\applet60.bpl=Borland Control Panel Applet Package
+F:\Delphi\Components\DevExpress\OrgChart Suite\Lib\dcldxOrgCD6.bpl=ExpressOrgChart by Developer Express Inc.
+F:\Delphi\Components\DevExpress\OrgChart Suite\Lib\dcldxDBOrD6.bpl=ExpressDBOrgChart by Developer Express Inc.

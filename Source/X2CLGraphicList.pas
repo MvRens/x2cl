@@ -523,6 +523,9 @@ var
 
 begin
   Result  := False;
+  if (AIndex < 0) or (AIndex >= Count) then
+    exit;
+
   if (not Assigned(FContainer)) or
      (not Assigned(FContainer.Graphics[AIndex].Picture.Graphic)) or
      (FContainer.Graphics[AIndex].Picture.Graphic.Empty) then

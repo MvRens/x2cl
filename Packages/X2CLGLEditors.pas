@@ -13,11 +13,21 @@ uses
   DesignIntf;
 
 type
+  TX2GraphicsProperty       = class(TClassProperty)
+  public
+    function AllEqual(): Boolean; override;
+    procedure Edit(); override;
+    function GetAttributes(): TPropertyAttributes; override;
+  end;
+
   TX2GraphicContainerEditor = class(TComponentEditor)
   private
     procedure FindGraphics(const Prop: IProperty);
   public
     procedure Edit(); override;
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): String; override;
+    function GetVerbCount(): Integer; override;
   end;
 
   TX2GraphicListEditor      = class(TComponentEditor)
@@ -27,10 +37,31 @@ type
 
 implementation
 uses
+  Classes,
   SysUtils,
   TypInfo,
-  Dialogs,
-  X2CLGraphicList;
+
+  X2CLGraphicList,
+  X2CLGraphicsEditor;
+
+
+{==================== TX2GraphicsProperty
+  Editor
+========================================}
+function TX2GraphicsProperty.AllEqual;
+begin
+  Result  := (PropCount = 1);
+end;
+
+procedure TX2GraphicsProperty.Edit;
+begin
+  TfrmGraphicsEditor.Execute(TComponent(GetComponent(0)));
+end;
+
+function TX2GraphicsProperty.GetAttributes;
+begin
+  Result  := [paDialog, paReadOnly];
+end;
 
 
 {============== TX2GraphicContainerEditor
@@ -54,6 +85,21 @@ begin
   finally
     FreeAndNil(dsComponents);
   end;
+end;
+
+procedure TX2GraphicContainerEditor.ExecuteVerb;
+begin
+  Edit();
+end;
+
+function TX2GraphicContainerEditor.GetVerb;
+begin
+  Result  := 'Graphics Editor...';
+end;
+
+function TX2GraphicContainerEditor.GetVerbCount;
+begin
+  Result  := 1;
 end;
 
 

@@ -33,6 +33,7 @@ requires
 
 contains
   X2CLGLReg in '..\X2CLGLReg.pas',
-  X2CLGLEditors in '..\X2CLGLEditors.pas';
+  X2CLGLEditors in '..\X2CLGLEditors.pas',
+  X2CLGraphicsEditor in '..\X2CLGraphicsEditor.pas' {frmGraphicsEditor};
 
 end.

@@ -22,6 +22,12 @@ uses
   Controls,
   Graphics;
 
+{$IFDEF VER150}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_CAST OFF}
+{$ENDIF}
+
+
 type
   // Forward declarations
   TX2GraphicList      = class;

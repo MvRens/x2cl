@@ -108,14 +108,25 @@ type
   private
     FBackground:      TColor;
     FContainer:       TX2GraphicContainer;
+    FEnabled:         Boolean;
     FStretchMode:     TX2GLStretchMode;
+    FUpdateCount:     Integer;
 
     procedure SetBackground(const Value: TColor);
     procedure SetContainer(const Value: TX2GraphicContainer);
     procedure SetStretchMode(const Value: TX2GLStretchMode);
+    procedure SetEnabled(const Value: Boolean);
   protected
     procedure DefineProperties(Filer: TFiler); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+
+    function DrawGraphic(const AIndex: Integer;
+                         const ACanvas: TCanvas;
+                         const AX, AY: Integer;
+                         const AEnabled: Boolean = True): Boolean;
+
+    procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
+                     Style: Cardinal; Enabled: Boolean = True); override;
 
     procedure CreateImage(const AIndex: Integer; var AImage, AMask: TBitmap); virtual;
     procedure AddImage(const AIndex: Integer); virtual;
@@ -123,14 +134,19 @@ type
     procedure DeleteImage(const AIndex: Integer); virtual;
 
     procedure RebuildImages(); virtual;
+
+    procedure BeginUpdate();
+    procedure EndUpdate();
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
 
     procedure Loaded(); override;
+    procedure Change(); override;
   published
     property Background:    TColor                read FBackground  write SetBackground   default clBtnFace;
     property Container:     TX2GraphicContainer   read FContainer   write SetContainer;
+    property Enabled:       Boolean               read FEnabled     write SetEnabled;
     property StretchMode:   TX2GLStretchMode      read FStretchMode write SetStretchMode  default smCrop;
   end;
 
@@ -345,6 +361,14 @@ begin
   RebuildImages();
 end;
 
+procedure TX2GraphicList.Change;
+begin
+  inherited;
+
+  if FUpdateCount = 0 then
+    RebuildImages();
+end;
+
 
 destructor TX2GraphicList.Destroy;
 begin
@@ -358,21 +382,16 @@ end;
 {========================= TX2GraphicList
   Graphics
 ========================================}
-procedure TX2GraphicList.CreateImage;
-  function DrawGraphic(const ADest: TCanvas; const AIndex: Integer): Boolean;
+function TX2GraphicList.DrawGraphic;
+  procedure InternalDrawGraphic(const ADest: TCanvas);
   var
     rDest:        TRect;
 
   begin
-    Result  := False;
-    if not Assigned(FContainer.Graphics[AIndex].Picture) then
-      exit;
-      
     with FContainer.Graphics[AIndex].Picture do
-    begin
       if (FStretchMode = smCrop) or
          ((Width <= Self.Width) and (Height <= Self.Height)) then
-        ADest.Draw(0, 0, Graphic)
+        ADest.Draw(AX, AY, Graphic)
       else
       begin
         rDest := Rect(0, 0, Width, Height);
@@ -384,11 +403,65 @@ procedure TX2GraphicList.CreateImage;
 
         ADest.StretchDraw(rDest, Graphic);
       end;
-    end;
-
-    Result  := True;
   end;
 
+var
+  bmpBackground:        TBitmap;
+  bmpBlend:             TBitmap;
+
+begin
+  Result  := False;
+  if not Assigned(FContainer) then
+    exit;
+
+  if FContainer.Graphics[AIndex].Picture.Graphic.Empty then
+    exit;
+
+  if AEnabled then
+    // Enabled, simply draw the graphic
+    InternalDrawGraphic(ACanvas)
+  else
+  begin
+    // Disabled, need to draw the image using 50% transparency. There's only
+    // one problem; not all TGraphic's support that, and neither is there a
+    // generic way of determining a pixel's transparency. So instead, we
+    // blend the background with a copy of the background with the graphic
+    // painted on it...
+    bmpBackground := TBitmap.Create();
+    bmpBlend      := TBitmap.Create();
+    try
+      // Get background from canvas
+      with bmpBackground do
+      begin
+        Width       := Self.Width;
+        Height      := Self.Height;
+        PixelFormat := pf24bit;
+        Canvas.CopyRect(Rect(0, 0, Width, Height), ACanvas,
+                        Rect(AX, AY, AX + Width, AY + Height));
+      end;
+
+      bmpBlend.Assign(bmpBackground);
+      InternalDrawGraphic(bmpBlend.Canvas);
+
+      // TODO Blend graphic with background
+
+      // TODO Copy blended graphic back
+    finally
+      FreeAndNil(bmpBlend);
+      FreeAndNil(bmpBackground);
+    end;
+  end;
+
+  Result  := True;
+end;
+
+procedure TX2GraphicList.DoDraw;
+begin
+  DrawGraphic(Index, Canvas, X, Y, Enabled);
+end;
+
+
+procedure TX2GraphicList.CreateImage;
   function RGBTriple(const AColor: TColor): TRGBTriple;
   var
     cColor:       Cardinal;
@@ -442,7 +515,7 @@ begin
     begin
       Brush.Color       := FBackground;
       FillRect(Rect(0, 0, Width, Height));
-      bOk               := DrawGraphic(Canvas, AIndex);
+      bOk               := DrawGraphic(AIndex, Canvas, 0, 0, FEnabled);
     end;
   end;
 
@@ -476,7 +549,7 @@ begin
       begin
         Brush.Color       := clBlack;
         FillRect(Rect(0, 0, Width, Height));
-        DrawGraphic(Canvas, AIndex);
+        DrawGraphic(AIndex, Canvas, 0, 0, FEnabled);
       end;
     end;
 
@@ -526,19 +599,24 @@ begin
   if csLoading in ComponentState then
     exit;
 
-  bmpImage  := TBitmap.Create();
-  bmpMask   := TBitmap.Create();
+  BeginUpdate();
   try
-    CreateImage(AIndex, bmpImage, bmpMask);
-    Assert(AIndex <= Self.Count, 'AAAH! Images out of sync! *panics*');
+    bmpImage  := TBitmap.Create();
+    bmpMask   := TBitmap.Create();
+    try
+      CreateImage(AIndex, bmpImage, bmpMask);
+      Assert(AIndex <= Self.Count, 'AAAH! Images out of sync! *panics*');
 
-    if AIndex = Self.Count then
-      Add(bmpImage, bmpMask)
-    else
-      Insert(AIndex, bmpImage, bmpMask);
+      if AIndex = Self.Count then
+        Add(bmpImage, bmpMask)
+      else
+        Insert(AIndex, bmpImage, bmpMask);
+    finally
+      FreeAndNil(bmpMask);
+      FreeAndNil(bmpImage);
+    end;
   finally
-    FreeAndNil(bmpMask);
-    FreeAndNil(bmpImage);
+    EndUpdate();
   end;
 end;
 
@@ -551,20 +629,30 @@ begin
   if csLoading in ComponentState then
     exit;
 
-  bmpImage  := TBitmap.Create();
-  bmpMask   := TBitmap.Create();
+  BeginUpdate();
   try
-    CreateImage(AIndex, bmpImage, bmpMask);
-    Replace(AIndex, bmpImage, bmpMask);
+    bmpImage  := TBitmap.Create();
+    bmpMask   := TBitmap.Create();
+    try
+      CreateImage(AIndex, bmpImage, bmpMask);
+      Replace(AIndex, bmpImage, bmpMask);
+    finally
+      FreeAndNil(bmpMask);
+      FreeAndNil(bmpImage);
+    end;
   finally
-    FreeAndNil(bmpMask);
-    FreeAndNil(bmpImage);
+    EndUpdate();
   end;
 end;
 
 procedure TX2GraphicList.DeleteImage;
 begin
-  Delete(AIndex);
+  BeginUpdate();
+  try
+    Delete(AIndex);
+  finally
+    EndUpdate();
+  end;
 end;
 
 
@@ -577,13 +665,18 @@ begin
      (Width = 0) or (Height = 0) then
     exit;
 
-  Clear();
+  BeginUpdate();
+  try
+    Clear();
 
-  if not Assigned(FContainer) then
-    exit;
+    if not Assigned(FContainer) then
+      exit;
 
-  for iIndex  := 0 to FContainer.Graphics.Count - 1 do
-    AddImage(iIndex);
+    for iIndex  := 0 to FContainer.Graphics.Count - 1 do
+      AddImage(iIndex);
+  finally
+    EndUpdate();
+  end;
 end;
 
 
@@ -640,10 +733,28 @@ begin
   RebuildImages();
 end;
 
+procedure TX2GraphicList.SetEnabled;
+begin
+  FEnabled := Value;
+  RebuildImages();
+end;
+
 procedure TX2GraphicList.SetStretchMode;
 begin
   FStretchMode := Value;
   RebuildImages();
+end;
+
+
+procedure TX2GraphicList.BeginUpdate;
+begin
+  Inc(FUpdateCount);
+end;
+
+procedure TX2GraphicList.EndUpdate;
+begin
+  Assert(FUpdateCount > 0, 'EndUpdate without matching BeginUpdate!');
+  Dec(FUpdateCount);
 end;
 
 end.

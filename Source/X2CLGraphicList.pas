@@ -152,7 +152,6 @@ type
 
 implementation
 uses
-  Dialogs,
   ImgList,
   SysUtils;
 
@@ -169,10 +168,10 @@ type
 ========================================}
 constructor TX2GraphicCollectionItem.Create;
 begin
-  inherited;
-
   FPicture                := TPicture.Create();
   FPicture.PictureAdapter := Self;
+
+  inherited;
 end;
 
 destructor TX2GraphicCollectionItem.Destroy;
@@ -351,6 +350,7 @@ begin
   inherited;
 
   FBackground   := clBtnFace;
+  BkColor       := clNone;
   FStretchMode  := smCrop;
 end;
 
@@ -385,23 +385,59 @@ end;
 function TX2GraphicList.DrawGraphic;
   procedure InternalDrawGraphic(const ADest: TCanvas);
   var
+    bmpTemp:      TBitmap;
+    iHeight:      Integer;
+    iWidth:       Integer;
     rDest:        TRect;
+    rSource:      TRect;
 
   begin
     with FContainer.Graphics[AIndex].Picture do
-      if (FStretchMode = smCrop) or
-         ((Width <= Self.Width) and (Height <= Self.Height)) then
+      if (Width <= Self.Width) and (Height <= Self.Height) then
         ADest.Draw(AX, AY, Graphic)
       else
       begin
-        rDest := Rect(0, 0, Width, Height);
-        if rDest.Right > Self.Width then
-          rDest.Right   := Self.Width;
+        iWidth  := Width;
+        iHeight := Height;
 
-        if rDest.Bottom > Self.Height then
-          rDest.Bottom  := Self.Height;
+        if iWidth > Self.Width then
+          iWidth  := Self.Width;
 
-        ADest.StretchDraw(rDest, Graphic);
+        if iHeight > Self.Height then
+          iHeight := Self.Height;
+
+        rDest   := Rect(AX, AY, AX + iWidth, AY + iHeight);
+        rSource := Rect(0, 0, iWidth, iHeight);
+
+        case FStretchMode of
+          smCrop:
+            begin
+              bmpTemp := TBitmap.Create();
+              try
+                with bmpTemp do
+                begin
+                  Width       := iWidth;
+                  Height      := iHeight;
+                  PixelFormat := pf24bit;
+
+                  // Copy existing content
+                  Canvas.CopyRect(rSource, ADest, rDest);
+
+                  // Overlay graphic
+                  Canvas.Draw(0, 0, Graphic);
+
+                  // Copy back
+                  ADest.CopyRect(rDest, Canvas, rDest);
+                end;
+              finally
+                FreeAndNil(bmpTemp);
+              end;
+            end;
+          smStretch:
+            // Note: some TGraphic's don't support StretchDraw and will
+            //       always crop. Nothing we can do about that...
+            ADest.StretchDraw(rDest, Graphic);
+        end;
       end;
   end;
 
@@ -411,10 +447,9 @@ var
 
 begin
   Result  := False;
-  if not Assigned(FContainer) then
-    exit;
-
-  if FContainer.Graphics[AIndex].Picture.Graphic.Empty then
+  if (not Assigned(FContainer)) or
+     (not Assigned(FContainer.Graphics[AIndex].Picture.Graphic)) or
+     (FContainer.Graphics[AIndex].Picture.Graphic.Empty) then
     exit;
 
   if AEnabled then
@@ -445,7 +480,8 @@ begin
 
       // TODO Blend graphic with background
 
-      // TODO Copy blended graphic back
+      // Copy blended graphic back
+      ACanvas.Draw(AX, AY, bmpBlend);
     finally
       FreeAndNil(bmpBlend);
       FreeAndNil(bmpBackground);
@@ -723,12 +759,18 @@ end;
 procedure TX2GraphicList.SetContainer;
 begin
   if Assigned(FContainer) then
+  begin
     FContainer.UnregisterList(Self);
+    FContainer.RemoveFreeNotification(Self);
+  end;
 
   FContainer := Value;
 
   if Assigned(FContainer) then
+  begin
+    FContainer.FreeNotification(Self);
     FContainer.RegisterList(Self);
+  end;
 
   RebuildImages();
 end;

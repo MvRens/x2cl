@@ -25,6 +25,7 @@ type
     tbMain:                       TToolBar;
     tbTest:                       TToolButton;
     tvTest:                       TTreeView;
+    glMainDisabled: TX2GraphicList;
   end;
 
 implementation

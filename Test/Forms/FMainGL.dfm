@@ -1,6 +1,6 @@
 object frmMain: TfrmMain
-  Left = 216
-  Top = 133
+  Left = 327
+  Top = 167
   Width = 477
   Height = 251
   Caption = 'GraphicList Test'
@@ -23,6 +23,7 @@ object frmMain: TfrmMain
     AutoSize = True
     ButtonHeight = 54
     ButtonWidth = 55
+    DisabledImages = glMainDisabled
     EdgeBorders = [ebTop, ebBottom]
     Flat = True
     Images = glMain
@@ -31,6 +32,7 @@ object frmMain: TfrmMain
       Left = 0
       Top = 0
       Caption = 'tbTest'
+      Enabled = False
       ImageIndex = 0
     end
   end
@@ -204,8 +206,7 @@ object frmMain: TfrmMain
     Height = 48
     Width = 48
     Container = gcMain
-    Enabled = False
-    StretchMode = smStretch
+    Enabled = True
     Left = 400
     Top = 12
   end
@@ -217,6 +218,7 @@ object frmMain: TfrmMain
       Caption = '&Test'
       object mnuTestImage: TMenuItem
         Caption = '&Image'
+        Enabled = False
         ImageIndex = 0
       end
     end
@@ -226,8 +228,16 @@ object frmMain: TfrmMain
     Width = 48
     Background = clWindow
     Container = gcMain
-    Enabled = False
+    Enabled = True
     Left = 428
     Top = 12
+  end
+  object glMainDisabled: TX2GraphicList
+    Height = 48
+    Width = 48
+    Container = gcMain
+    Enabled = False
+    Left = 428
+    Top = 40
   end
 end

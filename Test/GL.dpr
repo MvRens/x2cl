@@ -1,8 +1,6 @@
 program GL;
 
 uses
-  madExcept,
-  madLinkDisAsm,
   Forms,
   FMainGL in 'Forms\FMainGL.pas' {frmMain};
 

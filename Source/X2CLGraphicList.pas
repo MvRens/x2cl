@@ -146,7 +146,7 @@ type
   published
     property Background:    TColor                read FBackground  write SetBackground   default clBtnFace;
     property Container:     TX2GraphicContainer   read FContainer   write SetContainer;
-    property Enabled:       Boolean               read FEnabled     write SetEnabled;
+    property Enabled:       Boolean               read FEnabled     write SetEnabled      default True;
     property StretchMode:   TX2GLStretchMode      read FStretchMode write SetStretchMode  default smCrop;
   end;
 
@@ -351,6 +351,7 @@ begin
 
   FBackground   := clBtnFace;
   BkColor       := clNone;
+  FEnabled      := True;
   FStretchMode  := smCrop;
 end;
 
@@ -444,6 +445,10 @@ function TX2GraphicList.DrawGraphic;
 var
   bmpBackground:        TBitmap;
   bmpBlend:             TBitmap;
+  iX:                   Integer;
+  iY:                   Integer;
+  pBackground:          PRGBTripleArray;
+  pBlend:               PRGBTripleArray;
 
 begin
   Result  := False;
@@ -478,7 +483,23 @@ begin
       bmpBlend.Assign(bmpBackground);
       InternalDrawGraphic(bmpBlend.Canvas);
 
-      // TODO Blend graphic with background
+      // Blend graphic with background at 50%
+      for iY  := 0 to bmpBackground.Height - 1 do
+      begin
+        pBackground := bmpBackground.ScanLine[iY];
+        pBlend      := bmpBlend.ScanLine[iY];
+        
+        for iX  := 0 to bmpBackground.Width - 1 do
+          with pBlend^[iX] do
+          begin
+            rgbtBlue    := ((pBackground^[iX].rgbtBlue shl 7) +
+                            (rgbtBlue shl 7)) shr 8;
+            rgbtGreen   := ((pBackground^[iX].rgbtGreen shl 7) +
+                            (rgbtGreen shl 7)) shr 8;
+            rgbtRed     := ((pBackground^[iX].rgbtRed shl 7) +
+                            (rgbtRed shl 7)) shr 8;
+          end;
+      end;
 
       // Copy blended graphic back
       ACanvas.Draw(AX, AY, bmpBlend);

@@ -2,9 +2,10 @@
   :: X2CLGraphicList contains a container component for TGraphic
   :: descendants and a replacement for TImageList.
   ::
-  :: Many thanks to Erik Stok. While I had the idea to create these components,
-  :: he created TPngImageList and worked out many of the problems I thought we
-  :: would face. His original (Dutch) article can be found at:
+  :: Many thanks to Erik Stok. Before I could even work out the idea, he not
+  :: only had a similar idea, but created TPngImageList and worked out many of
+  :: the problems I thought we would face. His original (Dutch) article can
+  :: be found at:
   ::   http://www.erikstok.net/delphi/artikelen/xpicons.html
   ::
   :: Last changed:    $Date$
@@ -44,6 +45,8 @@ type
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy(); override;
+
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property Picture:       TPicture  read FPicture write SetPicture;
   end;
@@ -78,7 +81,6 @@ type
   TX2GraphicContainer   = class(TComponent)
   private
     FGraphics:        TX2GraphicCollection;
-
     FLists:           TList;
 
     procedure SetGraphics(const Value: TX2GraphicCollection);
@@ -92,6 +94,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
+
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property Graphics:      TX2GraphicCollection  read FGraphics  write SetGraphics;
   end;
@@ -141,6 +145,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
 
+    procedure AssignTo(Dest: TPersistent); override;
+
     procedure Loaded(); override;
     procedure Change(); override;
   published
@@ -179,6 +185,16 @@ begin
   FreeAndNil(FPicture);
 
   inherited;
+end;
+
+
+procedure TX2GraphicCollectionItem.AssignTo;
+begin
+  if Dest is TX2GraphicCollectionItem then
+    with TX2GraphicCollectionItem(Dest) do
+      Picture := Self.Picture
+  else
+    inherited;
 end;
 
 
@@ -275,6 +291,18 @@ begin
 
   inherited;
 end;
+
+
+procedure TX2GraphicContainer.AssignTo;
+begin
+  if Dest is TX2GraphicContainer then
+    with TX2GraphicContainer(Dest) do
+      Graphics  := Self.Graphics
+  else
+    inherited;
+end;
+
+
 
 procedure TX2GraphicContainer.Notification;
 begin
@@ -376,6 +404,21 @@ begin
   SetContainer(nil);
 
   inherited;
+end;
+
+
+procedure TX2GraphicList.AssignTo;
+begin
+  if Dest is TX2GraphicList then
+    with TX2GraphicList(Dest) do
+    begin
+      Background  := Self.Background;
+      Container   := Self.Container;
+      Enabled     := Self.Enabled;
+      StretchMode := Self.StretchMode;
+    end
+  else
+    inherited;
 end;
 
 

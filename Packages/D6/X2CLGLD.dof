@@ -56,6 +56,10 @@ HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=0
@@ -81,9 +85,6 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
-[HistoryLists\hlUnitAliases]
-Count=1
-Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [Excluded Packages]
 C:\Program Files\Borland\Delphi6\Bin\dcldb60.bpl=Borland Database Components
 c:\program files\borland\delphi6\Projects\Bpl\VirtualTreesD6D.bpl=Virtual Treeview
@@ -191,15 +192,6 @@ c:\program files\borland\delphi6\Bin\dcldbxcds60.bpl=Borland Local DBX ClientDat
 H:\Downloads\commentexpert.bpl=Comment Expert v1.0 Alpha
 c:\program files\borland\delphi6\Projects\Bpl\dclIndy60.bpl=Internet Direct (Indy) for D6 Property and Component Editors
 C:\WINDOWS\System32\ibevnt60.bpl=Borland Interbase Event Alerter Component
-[Included Packages]
-C:\Program Files\Borland\Delphi6\Bin\dclstd60.bpl=Borland Standard Components
-F:\Delphi\Components\madCollection\madBasic\Delphi 6\madBasic_.bpl=madBasic 1.1f  ·  www.madshi.net
-F:\Delphi\Components\madCollection\madDisAsm\Delphi 6\madDisAsm_.bpl=madDisAsm 2.0a  ·  www.madshi.net
-F:\Delphi\Components\madCollection\madExcept\Delphi 6\madExcept_.bpl=madExcept 2.6a  ·  www.madshi.net
-F:\Delphi\Components\madCollection\madExcept\Delphi 6\madExceptWizard_.bpl=madExceptWizard 2.6  ·  www.madshi.net
-c:\program files\borland\delphi6\Bin\dclsmpedit60.bpl=Borland Editor Script Enhancements
-C:\PROGRA~1\Borland\Delphi6\Projects\Bpl\ThemeManager6.bpl=Windows XP Theme Manager
-c:\program files\borland\delphi6\Projects\Bpl\X2CLGLD.bpl=X²CL GraphicList (Designtime)
-c:\program files\borland\delphi6\Bin\dclnet60.bpl=Borland Internet Components
-F:\Delphi\Components\madCollection\madExcept\Delphi 6\madExceptIde_.bpl=madExceptIde 1.0b  ·  www.madshi.net
-c:\program files\borland\delphi6\Bin\dclemacsedit60.bpl=Borland Editor Emacs Enhancements
+[HistoryLists\hlUnitAliases]
+Count=1
+Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

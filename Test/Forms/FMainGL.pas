@@ -18,6 +18,7 @@ type
   TfrmMain = class(TForm)
     gcMain:                       TX2GraphicContainer;
     glMain:                       TX2GraphicList;
+    glMainDisabled:               TX2GraphicList;
     glTree:                       TX2GraphicList;
     mnuMain:                      TMainMenu;
     mnuTest:                      TMenuItem;
@@ -25,7 +26,6 @@ type
     tbMain:                       TToolBar;
     tbTest:                       TToolButton;
     tvTest:                       TTreeView;
-    glMainDisabled: TX2GraphicList;
   end;
 
 implementation

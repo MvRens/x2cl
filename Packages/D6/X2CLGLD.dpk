@@ -28,9 +28,11 @@ package X2CLGLD;
 
 requires
   rtl,
-  X2CLGL;
+  X2CLGL,
+  designide;
 
 contains
-  X2CLGLReg in '..\X2CLGLReg.pas';
+  X2CLGLReg in '..\X2CLGLReg.pas',
+  X2CLGLEditors in '..\X2CLGLEditors.pas';
 
 end.

@@ -13,11 +13,17 @@ interface
 implementation
 uses
   Classes,
-  X2CLGraphicList;
+  DesignIntf,
+  X2CLGraphicList,
+  X2CLGLEditors;
+
+{$R ..\Resources\GraphicList.dcr}
 
 procedure Register;
 begin
   RegisterComponents('X²Software', [TX2GraphicContainer, TX2GraphicList]);
+  RegisterComponentEditor(TX2GraphicContainer, TX2GraphicContainerEditor);
+  RegisterComponentEditor(TX2GraphicList, TX2GraphicListEditor);
 end;
 
 end.

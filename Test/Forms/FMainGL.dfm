@@ -206,7 +206,6 @@ object frmMain: TfrmMain
     Height = 48
     Width = 48
     Container = gcMain
-    Enabled = True
     Left = 400
     Top = 12
   end
@@ -228,7 +227,6 @@ object frmMain: TfrmMain
     Width = 48
     Background = clWindow
     Container = gcMain
-    Enabled = True
     Left = 428
     Top = 12
   end

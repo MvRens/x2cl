@@ -238,6 +238,3 @@ H:\Downloads\commentexpert.bpl=Comment Expert v1.0 Alpha
 c:\program files\borland\delphi6\Projects\Bpl\dclIndy60.bpl=Internet Direct (Indy) for D6 Property and Component Editors
 C:\WINDOWS\System32\ibevnt60.bpl=Borland Interbase Event Alerter Component
 c:\program files\borland\delphi6\Projects\Bpl\PngComponentsDesigntime.bpl=Png components designtime
-[HistoryLists\hlUnitAliases]
-Count=1
-Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

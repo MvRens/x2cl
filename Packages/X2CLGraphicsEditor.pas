@@ -291,7 +291,7 @@ begin
     begin
       pGraphic.Picture.LoadFromFile(dlgOpen.FileName);
       if Length(pGraphic.Name) = 0 then
-        pGraphic.Name := ExtractFileName(dlgOpen.FileName);
+        pGraphic.Name := ChangeFileExt(ExtractFileName(dlgOpen.FileName), '');
 
       UpdatePreview();
     end;

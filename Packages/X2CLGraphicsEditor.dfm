@@ -21,7 +21,6 @@ object frmGraphicsEditor: TfrmGraphicsEditor
     Top = 0
     Width = 4
     Height = 424
-    Cursor = crHSplit
   end
   object pnlImage: TPanel
     Left = 193
@@ -586,7 +585,7 @@ object frmGraphicsEditor: TfrmGraphicsEditor
       Caption = '&Delete'
       Hint = 'Delete Graphic'
       ImageIndex = 1
-      ShortCut = 46
+      ShortCut = 16430
       OnExecute = actDeleteExecute
     end
     object actOpen: TAction
@@ -607,7 +606,7 @@ object frmGraphicsEditor: TfrmGraphicsEditor
       Caption = '&Clear'
       Hint = 'Clear Graphic'
       ImageIndex = 4
-      ShortCut = 16430
+      ShortCut = 24622
       OnExecute = actClearExecute
     end
     object actUp: TAction

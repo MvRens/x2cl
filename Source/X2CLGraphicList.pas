@@ -78,6 +78,9 @@ type
     constructor Create(const AContainer: TX2GraphicContainer);
 
     function Add(): TX2GraphicCollectionItem;
+    function IndexByName(const AName: String): Integer;
+    function GraphicByName(const AName: String): TX2GraphicCollectionItem;
+    function PictureByName(const AName: String): TPicture;
 
     property Items[Index: Integer]:   TX2GraphicCollectionItem  read GetItem
                                                                 write SetItem; default;
@@ -105,6 +108,10 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
+
+    function IndexByName(const AName: String): Integer;
+    function GraphicByName(const AName: String): TX2GraphicCollectionItem;
+    function PictureByName(const AName: String): TPicture;
 
     procedure AssignTo(Dest: TPersistent); override;
   published
@@ -183,7 +190,7 @@ type
 {=============== TX2GraphicCollectionItem
   Initialization
 ========================================}
-constructor TX2GraphicCollectionItem.Create;
+constructor TX2GraphicCollectionItem.Create(Collection: TCollection);
 begin
   FPicture                := TPicture.Create();
   FPicture.PictureAdapter := Self;
@@ -191,7 +198,7 @@ begin
   inherited;
 end;
 
-destructor TX2GraphicCollectionItem.Destroy;
+destructor TX2GraphicCollectionItem.Destroy();
 begin
   FreeAndNil(FPicture);
 
@@ -199,7 +206,7 @@ begin
 end;
 
 
-procedure TX2GraphicCollectionItem.AssignTo;
+procedure TX2GraphicCollectionItem.AssignTo(Dest: TPersistent);
 begin
   if Dest is TX2GraphicCollectionItem then
     with TX2GraphicCollectionItem(Dest) do
@@ -209,7 +216,8 @@ begin
 end;
 
 
-function TX2GraphicCollectionItem.QueryInterface;
+function TX2GraphicCollectionItem.QueryInterface(const IID: TGUID;
+                                                 out Obj): HResult;
 begin
   if GetInterface(IID, Obj) then
     Result := 0
@@ -217,18 +225,18 @@ begin
     Result := E_NOINTERFACE;
 end;
 
-function TX2GraphicCollectionItem._AddRef;
+function TX2GraphicCollectionItem._AddRef(): Integer;
 begin
   Result  := -1;
 end;
 
-function TX2GraphicCollectionItem._Release;
+function TX2GraphicCollectionItem._Release(): Integer;
 begin
   Result  := -1;
 end;
 
 
-function TX2GraphicCollectionItem.GetDisplayName;
+function TX2GraphicCollectionItem.GetDisplayName(): String;
 begin
   if Length(FName) > 0 then
     Result  := FName
@@ -237,18 +245,18 @@ begin
 end;
 
 
-procedure TX2GraphicCollectionItem.NotifierChanged;
+procedure TX2GraphicCollectionItem.NotifierChanged();
 begin
   Changed(False);
 end;
 
-procedure TX2GraphicCollectionItem.SetName;
+procedure TX2GraphicCollectionItem.SetName(const Value: String);
 begin
   FName := Value;
   Changed(False);
 end;
 
-procedure TX2GraphicCollectionItem.SetPicture;
+procedure TX2GraphicCollectionItem.SetPicture(const Value: TPicture);
 begin
   FPicture.Assign(Value);
 end;
@@ -257,7 +265,7 @@ end;
 {=================== TX2GraphicCollection
   Item Management
 ========================================}
-constructor TX2GraphicCollection.Create;
+constructor TX2GraphicCollection.Create(const AContainer: TX2GraphicContainer);
 begin
   inherited Create(TX2GraphicCollectionItem);
 
@@ -265,21 +273,59 @@ begin
 end;
 
 
-function TX2GraphicCollection.Add;
+function TX2GraphicCollection.Add(): TX2GraphicCollectionItem;
 begin
   Result  := TX2GraphicCollectionItem(inherited Add());
 end;
 
 
-procedure TX2GraphicCollection.Notify;
+function TX2GraphicCollection.IndexByName(const AName: String): Integer;
+var
+  iIndex:     Integer;
+
+begin
+  Result  := -1;
+  for iIndex  := Pred(Count) downto 0 do
+    if SameText(Items[iIndex].Name, AName) then
+    begin
+      Result  := iIndex;
+      break;
+    end;
+end;
+
+function TX2GraphicCollection.GraphicByName(const AName: String): TX2GraphicCollectionItem;
+var
+  iIndex:     Integer;
+
+begin
+  Result  := nil;
+  iIndex  := IndexByName(AName);
+  if iIndex > -1 then
+    Result  := Items[iIndex];
+end;
+
+function TX2GraphicCollection.PictureByName(const AName: String): TPicture;
+var
+  pGraphic:     TX2GraphicCollectionItem;
+
+begin
+  Result    := nil;
+  pGraphic  := GraphicByName(AName);
+  if Assigned(pGraphic) then
+    Result  := pGraphic.Picture;
+end;
+
+
+procedure TX2GraphicCollection.Notify(Item: TCollectionItem;
+                                      Action: TCollectionNotification);
 begin
   inherited;
-  
+
   if Assigned(FContainer) then
     FContainer.Notify(Item, Action);
 end;
 
-procedure TX2GraphicCollection.Update;
+procedure TX2GraphicCollection.Update(Item: TCollectionItem);
 begin
   inherited;
 
@@ -288,12 +334,12 @@ begin
 end;
 
 
-function TX2GraphicCollection.GetItem;
+function TX2GraphicCollection.GetItem(Index: Integer): TX2GraphicCollectionItem;
 begin
   Result  := TX2GraphicCollectionItem(inherited GetItem(Index));
 end;
 
-procedure TX2GraphicCollection.SetItem;
+procedure TX2GraphicCollection.SetItem(Index: Integer; Value: TX2GraphicCollectionItem);
 begin
   inherited SetItem(Index, Value);
 end;
@@ -302,7 +348,7 @@ end;
 {==================== TX2GraphicContainer
   Initialization
 ========================================}
-constructor TX2GraphicContainer.Create;
+constructor TX2GraphicContainer.Create(AOwner: TComponent);
 begin
   inherited;
 
@@ -310,7 +356,7 @@ begin
   FLists    := TList.Create();
 end;
 
-destructor TX2GraphicContainer.Destroy;
+destructor TX2GraphicContainer.Destroy();
 begin
   FreeAndNil(FGraphics);
   FreeAndNil(FLists);
@@ -319,7 +365,23 @@ begin
 end;
 
 
-procedure TX2GraphicContainer.AssignTo;
+function TX2GraphicContainer.IndexByName(const AName: String): Integer;
+begin
+  Result  := FGraphics.IndexByName(AName);
+end;
+
+function TX2GraphicContainer.GraphicByName(const AName: String): TX2GraphicCollectionItem;
+begin
+  Result  := FGraphics.GraphicByName(AName);
+end;
+
+function TX2GraphicContainer.PictureByName(const AName: String): TPicture;
+begin
+  Result  := FGraphics.PictureByName(AName);
+end;
+
+
+procedure TX2GraphicContainer.AssignTo(Dest: TPersistent);
 begin
   if Dest is TX2GraphicContainer then
     with TX2GraphicContainer(Dest) do
@@ -330,7 +392,7 @@ end;
 
 
 
-procedure TX2GraphicContainer.Notification;
+procedure TX2GraphicContainer.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if not Assigned(FLists) then
     exit;
@@ -348,7 +410,8 @@ begin
   inherited;
 end;
 
-procedure TX2GraphicContainer.Notify;
+procedure TX2GraphicContainer.Notify(Item: TCollectionItem;
+                                     Action: TCollectionNotification);
 var
   iList:      Integer;
 
@@ -363,7 +426,7 @@ begin
   end;
 end;
 
-procedure TX2GraphicContainer.Update;
+procedure TX2GraphicContainer.Update(Item: TCollectionItem);
 var
   iList:      Integer;
 
@@ -377,19 +440,19 @@ begin
 end;
 
 
-procedure TX2GraphicContainer.RegisterList;
+procedure TX2GraphicContainer.RegisterList(const AList: TX2GraphicList);
 begin
   if FLists.IndexOf(AList) = -1 then
     FLists.Add(AList);
 end;
 
-procedure TX2GraphicContainer.UnregisterList;
+procedure TX2GraphicContainer.UnregisterList(const AList: TX2GraphicList);
 begin
   FLists.Remove(AList);
 end;
 
 
-procedure TX2GraphicContainer.SetGraphics;
+procedure TX2GraphicContainer.SetGraphics(const Value: TX2GraphicCollection);
 begin
   FGraphics.Assign(Value);
 end;
@@ -399,7 +462,7 @@ end;
 {========================= TX2GraphicList
   Initialization
 ========================================}
-constructor TX2GraphicList.Create;
+constructor TX2GraphicList.Create(AOwner: TComponent);
 begin
   inherited;
 
@@ -409,14 +472,14 @@ begin
   FStretchMode  := smCrop;
 end;
 
-procedure TX2GraphicList.Loaded;
+procedure TX2GraphicList.Loaded();
 begin
   inherited;
 
   RebuildImages();
 end;
 
-procedure TX2GraphicList.Change;
+procedure TX2GraphicList.Change();
 begin
   inherited;
 
@@ -425,7 +488,7 @@ begin
 end;
 
 
-destructor TX2GraphicList.Destroy;
+destructor TX2GraphicList.Destroy();
 begin
   SetContainer(nil);
 
@@ -433,7 +496,7 @@ begin
 end;
 
 
-procedure TX2GraphicList.AssignTo;
+procedure TX2GraphicList.AssignTo(Dest: TPersistent);
 begin
   if Dest is TX2GraphicList then
     with TX2GraphicList(Dest) do
@@ -452,7 +515,10 @@ end;
 {========================= TX2GraphicList
   Graphics
 ========================================}
-function TX2GraphicList.DrawGraphic;
+function TX2GraphicList.DrawGraphic(const AIndex: Integer;
+                                    const ACanvas: TCanvas;
+                                    const AX, AY: Integer;
+                                    const AEnabled: Boolean = True): Boolean;
   procedure InternalDrawGraphic(const ADest: TCanvas;
                                 const ADestX, ADestY: Integer);
   var
@@ -588,13 +654,15 @@ begin
   Result  := True;
 end;
 
-procedure TX2GraphicList.DoDraw;
+procedure TX2GraphicList.DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
+                                Style: Cardinal; Enabled: Boolean = True);
 begin
   DrawGraphic(Index, Canvas, X, Y, Enabled);
 end;
 
 
-procedure TX2GraphicList.CreateImage;
+procedure TX2GraphicList.CreateImage(const AIndex: Integer;
+                                     var AImage, AMask: TBitmap);
   function RGBTriple(const AColor: TColor): TRGBTriple;
   var
     cColor:       Cardinal;
@@ -723,7 +791,7 @@ begin
   end;
 end;
 
-procedure TX2GraphicList.AddImage;
+procedure TX2GraphicList.AddImage(const AIndex: Integer);
 var
   bmpImage:       TBitmap;
   bmpMask:        TBitmap;
@@ -753,7 +821,7 @@ begin
   end;
 end;
 
-procedure TX2GraphicList.UpdateImage;
+procedure TX2GraphicList.UpdateImage(const AIndex: Integer);
 var
   bmpImage:       TBitmap;
   bmpMask:        TBitmap;
@@ -778,7 +846,7 @@ begin
   end;
 end;
 
-procedure TX2GraphicList.DeleteImage;
+procedure TX2GraphicList.DeleteImage(const AIndex: Integer);
 begin
   BeginUpdate();
   try
@@ -789,7 +857,7 @@ begin
 end;
 
 
-procedure TX2GraphicList.RebuildImages;
+procedure TX2GraphicList.RebuildImages();
 var
   iIndex:       Integer;
 
@@ -816,7 +884,7 @@ end;
 {========================= TX2GraphicList
   Properties
 ========================================}
-procedure TX2GraphicList.DefineProperties;
+procedure TX2GraphicList.DefineProperties(Filer: TFiler);
 var
   pType:        TClass;
 
@@ -838,22 +906,23 @@ begin
   end;
 end;
 
-procedure TX2GraphicList.Notification;
+procedure TX2GraphicList.Notification(AComponent: TComponent;
+                                      Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = FContainer) then
     FContainer  := nil;
-    
+
   inherited;
 end;
 
 
-procedure TX2GraphicList.SetBackground;
+procedure TX2GraphicList.SetBackground(const Value: TColor);
 begin
   FBackground := Value;
   RebuildImages();
 end;
 
-procedure TX2GraphicList.SetContainer;
+procedure TX2GraphicList.SetContainer(const Value: TX2GraphicContainer);
 begin
   if Assigned(FContainer) then
   begin
@@ -872,25 +941,25 @@ begin
   RebuildImages();
 end;
 
-procedure TX2GraphicList.SetEnabled;
+procedure TX2GraphicList.SetEnabled(const Value: Boolean);
 begin
   FEnabled := Value;
   RebuildImages();
 end;
 
-procedure TX2GraphicList.SetStretchMode;
+procedure TX2GraphicList.SetStretchMode(const Value: TX2GLStretchMode);
 begin
   FStretchMode := Value;
   RebuildImages();
 end;
 
 
-procedure TX2GraphicList.BeginUpdate;
+procedure TX2GraphicList.BeginUpdate();
 begin
   Inc(FUpdateCount);
 end;
 
-procedure TX2GraphicList.EndUpdate;
+procedure TX2GraphicList.EndUpdate();
 begin
   Assert(FUpdateCount > 0, 'EndUpdate without matching BeginUpdate!');
   Dec(FUpdateCount);

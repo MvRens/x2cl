@@ -125,19 +125,25 @@ type
 
   {
     :$ ImageList replacement for graphics.
+
+    :: If you are only using components which use ImageList.Draw directly
+    :: instead of the ImageList_Draw API (for ex. TMainMenu), set the Convert
+    :: property to False to save some processing.
   }
   TX2GraphicList        = class(TImageList)
   private
     FBackground:      TColor;
     FContainer:       TX2GraphicContainer;
+    FConvert:         Boolean;
     FEnabled:         Boolean;
     FStretchMode:     TX2GLStretchMode;
     FUpdateCount:     Integer;
 
     procedure SetBackground(const Value: TColor);
     procedure SetContainer(const Value: TX2GraphicContainer);
-    procedure SetStretchMode(const Value: TX2GLStretchMode);
+    procedure SetConvert(const Value: Boolean);
     procedure SetEnabled(const Value: Boolean);
+    procedure SetStretchMode(const Value: TX2GLStretchMode);
   protected
     procedure DefineProperties(Filer: TFiler); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -170,6 +176,7 @@ type
   published
     property Background:    TColor                read FBackground  write SetBackground   default clBtnFace;
     property Container:     TX2GraphicContainer   read FContainer   write SetContainer;
+    property Convert:       Boolean               read FConvert     write SetConvert      default True;
     property Enabled:       Boolean               read FEnabled     write SetEnabled      default True;
     property StretchMode:   TX2GLStretchMode      read FStretchMode write SetStretchMode  default smCrop;
   end;
@@ -468,6 +475,7 @@ begin
 
   FBackground   := clBtnFace;
   BkColor       := clNone;
+  FConvert      := True;
   FEnabled      := True;
   FStretchMode  := smCrop;
 end;
@@ -859,6 +867,7 @@ end;
 
 procedure TX2GraphicList.RebuildImages();
 var
+  bmpTemp:      TBitmap;
   iIndex:       Integer;
 
 begin
@@ -873,8 +882,23 @@ begin
     if not Assigned(FContainer) then
       exit;
 
-    for iIndex  := 0 to FContainer.Graphics.Count - 1 do
-      AddImage(iIndex);
+    if FConvert then
+    begin
+      for iIndex  := 0 to FContainer.Graphics.Count - 1 do
+        AddImage(iIndex);
+    end else
+    begin
+      bmpTemp := TBitmap.Create();
+      try
+        bmpTemp.Width               := Self.Width;
+        bmpTemp.Height              := Self.Height;
+        bmpTemp.Canvas.Brush.Color  := clWhite;
+        bmpTemp.Canvas.FillRect(Rect(0, 0, bmpTemp.Width, bmpTemp.Height));
+        Add(bmpTemp, bmpTemp);
+      finally
+        FreeAndNil(bmpTemp);
+      end;
+    end;
   finally
     EndUpdate();
   end;
@@ -941,6 +965,15 @@ begin
   RebuildImages();
 end;
 
+procedure TX2GraphicList.SetConvert(const Value: Boolean);
+begin
+  if Value <> FConvert then
+  begin
+    FConvert  := Value;
+    RebuildImages();
+  end;
+end;
+
 procedure TX2GraphicList.SetEnabled(const Value: Boolean);
 begin
   FEnabled := Value;
@@ -966,3 +999,6 @@ begin
 end;
 
 end.
+
+
+

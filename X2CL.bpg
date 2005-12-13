@@ -9,15 +9,16 @@ MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
 DCC = $(ROOT)\bin\dcc32.exe $**
 BRCC = $(ROOT)\bin\brcc32.exe $**
 #------------------------------------------------------------------------------
-PROJECTS = X2CLGL.bpl X2CLGLD.bpl
+PROJECTS = X2CLGLD.bpl X2CLGL.bpl
 #------------------------------------------------------------------------------
 default: $(PROJECTS)
 #------------------------------------------------------------------------------
 
-X2CLGL.bpl: Packages\D6\X2CLGL.dpk
+
+X2CLGLD.bpl: Packages\D7\X2CLGLD.dpk
   $(DCC)
 
-X2CLGLD.bpl: Packages\D6\X2CLGLD.dpk
+X2CLGL.bpl: Packages\D7\X2CLGL.dpk
   $(DCC)
 
 

@@ -224,6 +224,8 @@ begin
 
   lstGraphics.ItemIndex := iIndex;
   UpdatePreview();
+  
+  actOpen.Execute();
 end;
 
 procedure TfrmGraphicsEditor.actDeleteExecute;

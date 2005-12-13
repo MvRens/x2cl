@@ -705,6 +705,19 @@ var
   pMask:      PByteArray;
 
 begin
+  if not FConvert then
+  begin
+    AImage                    := TBitmap.Create();
+    AImage.Width              := Self.Width;
+    AImage.Height             := Self.Height;
+    AImage.Canvas.Brush.Color := clWhite;
+    AImage.Canvas.FillRect(Rect(0, 0, AImage.Width, AImage.Height));
+
+    AMask   := TBitmap.Create();
+    AMask.Assign(AImage);
+    exit;
+  end;
+
   // Technique used here: draw the image twice, once on the background color,
   // once on black. Loop through the two images, check if a pixel is the
   // background color on one image and black on the other; if so then it's
@@ -838,6 +851,9 @@ begin
   if csLoading in ComponentState then
     exit;
 
+  if (AIndex < 0) or (AIndex >= Count) then
+    exit;
+
   BeginUpdate();
   try
     bmpImage  := TBitmap.Create();
@@ -867,7 +883,6 @@ end;
 
 procedure TX2GraphicList.RebuildImages();
 var
-  bmpTemp:      TBitmap;
   iIndex:       Integer;
 
 begin
@@ -882,23 +897,8 @@ begin
     if not Assigned(FContainer) then
       exit;
 
-    if FConvert then
-    begin
-      for iIndex  := 0 to FContainer.Graphics.Count - 1 do
-        AddImage(iIndex);
-    end else
-    begin
-      bmpTemp := TBitmap.Create();
-      try
-        bmpTemp.Width               := Self.Width;
-        bmpTemp.Height              := Self.Height;
-        bmpTemp.Canvas.Brush.Color  := clWhite;
-        bmpTemp.Canvas.FillRect(Rect(0, 0, bmpTemp.Width, bmpTemp.Height));
-        Add(bmpTemp, bmpTemp);
-      finally
-        FreeAndNil(bmpTemp);
-      end;
-    end;
+    for iIndex  := 0 to FContainer.Graphics.Count - 1 do
+      AddImage(iIndex);
   finally
     EndUpdate();
   end;

@@ -100,7 +100,7 @@ Conditionals=
 DebugSourceDirs=
 UsePackages=0
 [Parameters]
-RunParams=ip-to-country.csv countries.csv geo.db
+RunParams=
 HostApplication=
 Launcher=
 UseLauncher=0

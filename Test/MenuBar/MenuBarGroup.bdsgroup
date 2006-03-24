@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<PersonalityInfo>
+		<Option>
+			<Option Name="Personality">Default.Personality</Option>
+			<Option Name="ProjectType"></Option>
+			<Option Name="Version">1.0</Option>
+			<Option Name="GUID">{899F97C0-66A5-4324-BD71-C5E037D59CA1}</Option>
+		</Option>
+	</PersonalityInfo>
+	<Default.Personality>  <Projects>
+      <Projects Name="MenuBarTest.exe">MenuBarTest.bdsproj</Projects>
+      <Projects Name="X2CLMB.bpl">..\..\Packages\D2006\X2CLMB.bdsproj</Projects>
+      <Projects Name="X2CLMBD.bpl">..\..\Packages\D2006\X2CLMBD.bdsproj</Projects>
+      <Projects Name="ColorBlender.exe">..\..\..\..\Archive\Tests\2006\ColorBlender\ColorBlender.bdsproj</Projects>
+      <Projects Name="Targets">MenuBarTest.exe X2CLMB.bpl X2CLMBD.bpl ColorBlender.exe</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+</BorlandProject>

@@ -5,7 +5,7 @@
   :: Revision:        $Rev$
   :: Author:          $Author$
 }
-unit X2CLmusikCubePainter;
+unit X2CLmusikCubeMenuBarPainter;
 
 interface
 uses
@@ -74,7 +74,7 @@ type
   end;
 
   // #ToDo1 (MvR) 19-3-2006: Custom base class
-  TX2MenuBarmusikCubePainter = class(TX2MenuBarPainter)
+  TX2MenuBarmusikCubePainter = class(TX2CustomMenuBarPainter)
   private
     FColor:             TColor;
     FGroupColors:       TX2MenuBarmCColors;
@@ -121,10 +121,6 @@ type
 implementation
 uses
   SysUtils;
-
-type
-  PRGBArray = ^TRGBArray;
-  TRGBArray = array[Word] of TRGBTriple;
 
 
 { TX2MenuBarmusikCubePainter }
@@ -184,9 +180,9 @@ begin
   with IndicatorColors.Selected do
   begin
     BorderAlpha := 252;
-    BorderColor := clHighlight;
+    BorderColor := clActiveCaption;
     FillAlpha   := 252;
-    FillColor   := clHighlight;
+    FillColor   := clActiveCaption;
   end;
 
   { Item buttons }

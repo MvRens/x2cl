@@ -15,14 +15,16 @@ uses
   Classes,
   DesignIntf,
   X2CLMenuBar,
-  X2CLmusikCubePainter;
+  X2CLmusikCubeMenuBarPainter,
+  X2CLunaMenuBarPainter;
 
 {.$R ..\Resources\MenuBar.dcr}
 
 procedure Register;
 begin
   RegisterComponents('X2Software', [TX2MenuBar,
-                                    TX2MenuBarmusikCubePainter]);
+                                    TX2MenuBarmusikCubePainter,
+                                    TX2MenuBarunaPainter]);
 end;
 
 end.

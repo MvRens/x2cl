@@ -12,6 +12,7 @@ object frmMain: TfrmMain
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object bvlMenu: TBevel
@@ -39,6 +40,7 @@ object frmMain: TfrmMain
     Groups = <
       item
         Caption = 'Share'
+        ImageIndex = 0
         Expanded = True
         Items = <
           item
@@ -60,16 +62,9 @@ object frmMain: TfrmMain
       end
       item
         Caption = 'Group'
+        ImageIndex = 1
         Expanded = False
         Items = <
-          item
-            Caption = 'Menu Item'
-            ImageIndex = -1
-          end
-          item
-            Caption = 'Menu Item'
-            ImageIndex = -1
-          end
           item
             Caption = 'Menu Item'
             ImageIndex = -1
@@ -77,11 +72,13 @@ object frmMain: TfrmMain
       end
       item
         Caption = 'Group without items'
+        ImageIndex = 2
         Expanded = False
         Items = <>
       end>
     ImageList = glMenu
-    Painter = mbPainter
+    Options = [mboAllowCollapseAll]
+    Painter = mcPainter
   end
   object seAnimationTime: TJvSpinEdit
     Left = 364
@@ -98,7 +95,7 @@ object frmMain: TfrmMain
     Left = 220
     Top = 80
     Width = 133
-    Height = 153
+    Height = 77
     BevelOuter = bvNone
     TabOrder = 2
     object rbmusikCube: TRadioButton
@@ -110,22 +107,32 @@ object frmMain: TfrmMain
       Checked = True
       TabOrder = 0
       TabStop = True
+      OnClick = PainterClick
     end
     object rbUnameIT: TRadioButton
       Left = 0
-      Top = 20
+      Top = 17
       Width = 113
       Height = 17
       Caption = 'Uname-IT style'
-      Enabled = False
       TabOrder = 1
+      OnClick = PainterClick
+    end
+    object chkBlurShadow: TCheckBox
+      Left = 20
+      Top = 36
+      Width = 97
+      Height = 17
+      Caption = 'Blur shadow'
+      TabOrder = 2
+      OnClick = chkBlurShadowClick
     end
   end
   object Panel2: TPanel
     Left = 364
     Top = 80
     Width = 129
-    Height = 153
+    Height = 89
     BevelOuter = bvNone
     TabOrder = 3
     object rbSliding: TRadioButton
@@ -135,7 +142,7 @@ object frmMain: TfrmMain
       Height = 17
       Caption = 'Sliding animation'
       Checked = True
-      TabOrder = 0
+      TabOrder = 1
       TabStop = True
       OnClick = AnimationClick
     end
@@ -145,18 +152,54 @@ object frmMain: TfrmMain
       Width = 113
       Height = 17
       Caption = 'No animation'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = AnimationClick
     end
     object rbFade: TRadioButton
       Left = 0
-      Top = 40
+      Top = 60
       Width = 113
       Height = 17
       Caption = 'Fading animation'
       Enabled = False
-      TabOrder = 2
+      TabOrder = 3
     end
+    object rbResolve: TRadioButton
+      Left = 0
+      Top = 40
+      Width = 113
+      Height = 17
+      Caption = 'Resolving animation'
+      TabOrder = 2
+      OnClick = AnimationClick
+    end
+  end
+  object chkAutoCollapse: TCheckBox
+    Left = 220
+    Top = 200
+    Width = 89
+    Height = 17
+    Caption = 'Auto collapse'
+    TabOrder = 4
+    OnClick = chkAutoCollapseClick
+  end
+  object chkAllowCollapseAll: TCheckBox
+    Left = 220
+    Top = 240
+    Width = 101
+    Height = 17
+    Caption = 'Allow collapse all'
+    TabOrder = 6
+    OnClick = chkAllowCollapseAllClick
+  end
+  object chkAutoSelectItem: TCheckBox
+    Left = 220
+    Top = 220
+    Width = 101
+    Height = 17
+    Caption = 'Auto select item'
+    TabOrder = 5
+    OnClick = chkAutoSelectItemClick
   end
   object gcMenu: TX2GraphicContainer
     Graphics = <
@@ -271,8 +314,16 @@ object frmMain: TfrmMain
     Left = 208
     Top = 8
   end
-  object mbPainter: TX2MenuBarmusikCubePainter
+  object mcPainter: TX2MenuBarmusikCubePainter
+    AnimationStyle = asSlide
+    AnimationTime = 250
     Left = 152
     Top = 8
+  end
+  object unaPainter: TX2MenuBarunaPainter
+    AnimationStyle = asSlide
+    AnimationTime = 250
+    Left = 152
+    Top = 36
   end
 end

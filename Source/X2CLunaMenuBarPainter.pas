@@ -47,10 +47,10 @@ uses
 procedure Blur(ASource: Graphics.TBitmap);
 var
   refBitmap:      Graphics.TBitmap;
-  lines:          array[0..2] of PRGBArray;
-  lineDest:       PRGBArray;
+  lines:          array[0..2] of PRGBAArray;
+  lineDest:       PRGBAArray;
   lineIndex:      Integer;
-  line:           PRGBArray;
+  line:           PRGBAArray;
   xPos:           Integer;
   yPos:           Integer;
   maxX:           Integer;
@@ -61,7 +61,7 @@ var
   samples:        Integer;
 
 begin
-  ASource.PixelFormat := pf24bit;
+  ASource.PixelFormat := pf32bit;
   refBitmap           := Graphics.TBitmap.Create();
   try
     refBitmap.Assign(ASource);
@@ -97,27 +97,27 @@ begin
 
             with line^[xPos] do
             begin
-              Inc(sumBlue, rgbtBlue);
-              Inc(sumGreen, rgbtGreen);
-              Inc(sumRed, rgbtRed);
+              Inc(sumBlue, rgbBlue);
+              Inc(sumGreen, rgbGreen);
+              Inc(sumRed, rgbRed);
               Inc(samples);
             end;
 
             if xPos > 0 then
               with line^[Pred(xPos)] do
               begin
-                Inc(sumBlue, rgbtBlue);
-                Inc(sumGreen, rgbtGreen);
-                Inc(sumRed, rgbtRed);
+                Inc(sumBlue, rgbBlue);
+                Inc(sumGreen, rgbGreen);
+                Inc(sumRed, rgbRed);
                 Inc(samples);
               end;
 
             if xPos < maxX then
               with line^[Succ(xPos)] do
               begin
-                Inc(sumBlue, rgbtBlue);
-                Inc(sumGreen, rgbtGreen);
-                Inc(sumRed, rgbtRed);
+                Inc(sumBlue, rgbBlue);
+                Inc(sumGreen, rgbGreen);
+                Inc(sumRed, rgbRed);
                 Inc(samples);
               end;
           end;
@@ -125,9 +125,9 @@ begin
         if samples > 0 then
           with lineDest^[xPos] do
           begin
-            rgbtBlue  := sumBlue div samples;
-            rgbtGreen := sumGreen div samples;
-            rgbtRed   := sumRed div samples;
+            rgbBlue   := sumBlue div samples;
+            rgbGreen  := sumGreen div samples;
+            rgbRed    := sumRed div samples;
           end;
       end;
     end;
@@ -230,7 +230,7 @@ begin
     begin
       shadowBitmap  := Graphics.TBitmap.Create();
       try
-        shadowBitmap.PixelFormat  := pf24bit;
+        shadowBitmap.PixelFormat  := pf32bit;
         shadowBitmap.Width        := (ABounds.Right - ABounds.Left + 4);
         shadowBitmap.Height       := (ABounds.Bottom - ABounds.Top + 4);
 

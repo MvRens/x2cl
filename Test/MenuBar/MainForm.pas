@@ -35,11 +35,12 @@ type
     rbFade: TRadioButton;
     rbUnameIT: TRadioButton;
     unaPainter: TX2MenuBarunaPainter;
-    rbResolve: TRadioButton;
+    rbDissolve: TRadioButton;
     chkAutoCollapse: TCheckBox;
     chkAllowCollapseAll: TCheckBox;
     chkAutoSelectItem: TCheckBox;
     chkBlurShadow: TCheckBox;
+    chkScrollbar: TCheckBox;
     procedure chkBlurShadowClick(Sender: TObject);
     procedure chkAutoSelectItemClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -61,8 +62,8 @@ var
 begin
   if rbSliding.Checked then
     style := asSlide
-  else if rbResolve.Checked then
-    style := asResolve
+  else if rbDissolve.Checked then
+    style := asDissolve
   else
     style := asNone;
 

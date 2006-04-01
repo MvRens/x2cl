@@ -2,7 +2,7 @@ object frmMain: TfrmMain
   Left = 300
   Top = 219
   Caption = 'X2MenuBar Test'
-  ClientHeight = 360
+  ClientHeight = 381
   ClientWidth = 550
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,14 +19,14 @@ object frmMain: TfrmMain
     Left = 137
     Top = 0
     Width = 8
-    Height = 360
+    Height = 381
     Align = alLeft
     Shape = bsLeftLine
     ExplicitLeft = 141
   end
   object lblAnimationTime: TLabel
-    Left = 364
-    Top = 32
+    Left = 356
+    Top = 24
     Width = 98
     Height = 13
     Caption = 'Animation time (ms):'
@@ -35,7 +35,7 @@ object frmMain: TfrmMain
     Left = 0
     Top = 0
     Width = 137
-    Height = 360
+    Height = 381
     Align = alLeft
     Groups = <
       item
@@ -75,14 +75,104 @@ object frmMain: TfrmMain
         ImageIndex = 2
         Expanded = False
         Items = <>
+      end
+      item
+        Caption = 'Biiiiig group.'
+        ImageIndex = -1
+        Expanded = False
+        Items = <
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end
+          item
+            Caption = 'Menu Item'
+            ImageIndex = -1
+          end>
       end>
     ImageList = glMenu
     Options = [mboAllowCollapseAll]
     Painter = mcPainter
   end
   object seAnimationTime: TJvSpinEdit
-    Left = 364
-    Top = 48
+    Left = 356
+    Top = 40
     Width = 81
     Height = 21
     CheckMinValue = True
@@ -92,8 +182,8 @@ object frmMain: TfrmMain
     OnChange = seAnimationTimeChange
   end
   object Panel1: TPanel
-    Left = 220
-    Top = 80
+    Left = 212
+    Top = 72
     Width = 133
     Height = 77
     BevelOuter = bvNone
@@ -129,8 +219,8 @@ object frmMain: TfrmMain
     end
   end
   object Panel2: TPanel
-    Left = 364
-    Top = 80
+    Left = 356
+    Top = 72
     Width = 129
     Height = 89
     BevelOuter = bvNone
@@ -164,19 +254,19 @@ object frmMain: TfrmMain
       Enabled = False
       TabOrder = 3
     end
-    object rbResolve: TRadioButton
+    object rbDissolve: TRadioButton
       Left = 0
       Top = 40
       Width = 113
       Height = 17
-      Caption = 'Resolving animation'
+      Caption = 'Dissolving animation'
       TabOrder = 2
       OnClick = AnimationClick
     end
   end
   object chkAutoCollapse: TCheckBox
-    Left = 220
-    Top = 200
+    Left = 212
+    Top = 192
     Width = 89
     Height = 17
     Caption = 'Auto collapse'
@@ -184,8 +274,8 @@ object frmMain: TfrmMain
     OnClick = chkAutoCollapseClick
   end
   object chkAllowCollapseAll: TCheckBox
-    Left = 220
-    Top = 240
+    Left = 212
+    Top = 232
     Width = 101
     Height = 17
     Caption = 'Allow collapse all'
@@ -193,13 +283,23 @@ object frmMain: TfrmMain
     OnClick = chkAllowCollapseAllClick
   end
   object chkAutoSelectItem: TCheckBox
-    Left = 220
-    Top = 220
+    Left = 212
+    Top = 212
     Width = 101
     Height = 17
     Caption = 'Auto select item'
     TabOrder = 5
     OnClick = chkAutoSelectItemClick
+  end
+  object chkScrollbar: TCheckBox
+    Left = 356
+    Top = 192
+    Width = 121
+    Height = 17
+    Caption = 'Scrollbar'
+    Checked = True
+    State = cbChecked
+    TabOrder = 7
   end
   object gcMenu: TX2GraphicContainer
     Graphics = <

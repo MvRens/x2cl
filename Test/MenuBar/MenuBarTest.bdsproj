@@ -124,7 +124,7 @@
 			<Directories Name="PackageDLLOutputDir"></Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath">..\..\Source</Directories>
-			<Directories Name="Packages"></Directories>
+			<Directories Name="Packages">vclx;vcl;rtl;dbrtl;vcldb;vclib;ibxpress;xmlrtl;vclie;inet;inetdbbde;inetdbxpress;IndyCore;IndySystem;soaprtl;dsnap;IndyProtocols;bdertl;teeui;teedb;tee;vcldbx;dsnapcon;websnap;webdsnap;vclactnband;JvAppFrmD10R;JvCoreD10R;JvBandsD10R;JvCmpD10R;JvCryptD10R;JvCtrlsD10R;JvCustomD10R;JvDBD10R;JvDlgsD10R;JvDockingD10R;JvInterpreterD10R;JvJansD10R;JvManagedThreadsD10R;JvMMD10R;JvNetD10R;JvPageCompsD10R;JvPrintPreviewD10R;JvRuntimeDesignD10R;JvStdCtrlsD10R;JvSystemD10R;JvTimeFrameworkD10R;JvValidatorsD10R;JvWizardD10R;GR32_DSGN_D2006;GR32_D2006;PNGImageD2006;BMSpinEditD2006;CPBD2006;madBasic_;madDisAsm_;madExcept_;PKGSplitPanels70;ZComponent;ZParseSql;ZCore;ZDbc;ZPlain;cxLibraryD10;cxEditorsD10;dxThemeD10;cxDataD10;cxExtEditorsD10;cxPageControlD10;cxGridD10;MPHexEditor_D7;X2CLMB</Directories>
 			<Directories Name="Conditionals"></Directories>
 			<Directories Name="DebugSourceDirs"></Directories>
 			<Directories Name="UsePackages">False</Directories>

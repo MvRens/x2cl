@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 300
   Top = 219
   Caption = 'X2MenuBar Test'
-  ClientHeight = 381
-  ClientWidth = 550
+  ClientHeight = 379
+  ClientWidth = 548
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,13 +16,14 @@ object frmMain: TfrmMain
   PixelsPerInch = 96
   TextHeight = 13
   object bvlMenu: TBevel
-    Left = 137
+    Left = 125
     Top = 0
     Width = 8
-    Height = 381
+    Height = 379
     Align = alLeft
     Shape = bsLeftLine
-    ExplicitLeft = 141
+    ExplicitLeft = 148
+    ExplicitTop = -4
   end
   object lblAnimationTime: TLabel
     Left = 356
@@ -34,9 +35,11 @@ object frmMain: TfrmMain
   object mbTest: TX2MenuBar
     Left = 0
     Top = 0
-    Width = 137
-    Height = 381
+    Width = 125
+    Height = 379
     Align = alLeft
+    AnimationStyle = asSlide
+    AnimationTime = 250
     Groups = <
       item
         Caption = 'Share'
@@ -58,6 +61,14 @@ object frmMain: TfrmMain
           item
             Caption = 'Video'
             ImageIndex = 3
+          end
+          item
+            Caption = 'Invisible item'
+            Visible = False
+          end
+          item
+            Caption = 'Disabled item'
+            Enabled = False
           end>
       end
       item
@@ -67,7 +78,6 @@ object frmMain: TfrmMain
         Items = <
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end>
       end
       item
@@ -78,97 +88,90 @@ object frmMain: TfrmMain
       end
       item
         Caption = 'Biiiiig group.'
-        ImageIndex = -1
         Expanded = False
         Items = <
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
           end
           item
             Caption = 'Menu Item'
-            ImageIndex = -1
+          end>
+      end
+      item
+        Caption = 'Disabled group'
+        Enabled = False
+        Expanded = False
+        Items = <
+          item
+            Caption = 'Menu Item'
+          end
+          item
+            Caption = 'Menu Item'
+          end
+          item
+            Caption = 'Menu Item'
           end>
       end>
     ImageList = glMenu
-    Options = [mboAllowCollapseAll]
     Painter = mcPainter
+    ExplicitLeft = 8
   end
   object seAnimationTime: TJvSpinEdit
     Left = 356
@@ -221,8 +224,8 @@ object frmMain: TfrmMain
   object Panel2: TPanel
     Left = 356
     Top = 72
-    Width = 129
-    Height = 89
+    Width = 169
+    Height = 101
     BevelOuter = bvNone
     TabOrder = 3
     object rbSliding: TRadioButton
@@ -251,8 +254,8 @@ object frmMain: TfrmMain
       Width = 113
       Height = 17
       Caption = 'Fading animation'
-      Enabled = False
       TabOrder = 3
+      OnClick = AnimationClick
     end
     object rbDissolve: TRadioButton
       Left = 0
@@ -263,10 +266,19 @@ object frmMain: TfrmMain
       TabOrder = 2
       OnClick = AnimationClick
     end
+    object rbSlideFade: TRadioButton
+      Left = 0
+      Top = 80
+      Width = 153
+      Height = 17
+      Caption = 'Fading + sliding animation'
+      TabOrder = 4
+      OnClick = AnimationClick
+    end
   end
   object chkAutoCollapse: TCheckBox
     Left = 212
-    Top = 192
+    Top = 200
     Width = 89
     Height = 17
     Caption = 'Auto collapse'
@@ -275,7 +287,7 @@ object frmMain: TfrmMain
   end
   object chkAllowCollapseAll: TCheckBox
     Left = 212
-    Top = 232
+    Top = 240
     Width = 101
     Height = 17
     Caption = 'Allow collapse all'
@@ -284,7 +296,7 @@ object frmMain: TfrmMain
   end
   object chkAutoSelectItem: TCheckBox
     Left = 212
-    Top = 212
+    Top = 220
     Width = 101
     Height = 17
     Caption = 'Auto select item'
@@ -293,13 +305,25 @@ object frmMain: TfrmMain
   end
   object chkScrollbar: TCheckBox
     Left = 356
-    Top = 192
+    Top = 200
     Width = 121
     Height = 17
     Caption = 'Scrollbar'
     Checked = True
     State = cbChecked
     TabOrder = 7
+    OnClick = chkScrollbarClick
+  end
+  object chkHideScrollbar: TCheckBox
+    Left = 356
+    Top = 221
+    Width = 121
+    Height = 17
+    Caption = 'Hide Scrollbar'
+    Checked = True
+    State = cbChecked
+    TabOrder = 8
+    OnClick = chkHideScrollbarClick
   end
   object gcMenu: TX2GraphicContainer
     Graphics = <
@@ -415,14 +439,11 @@ object frmMain: TfrmMain
     Top = 8
   end
   object mcPainter: TX2MenuBarmusikCubePainter
-    AnimationStyle = asSlide
-    AnimationTime = 250
     Left = 152
     Top = 8
   end
   object unaPainter: TX2MenuBarunaPainter
-    AnimationStyle = asSlide
-    AnimationTime = 250
+    BlurShadow = False
     Left = 152
     Top = 36
   end

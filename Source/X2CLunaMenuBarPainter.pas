@@ -15,24 +15,21 @@ uses
   X2CLMenuBar;
 
 type
-  // #ToDo1 (MvR) 27-3-2006: arrow gets cut off one pixel when collapsing a group
   TX2MenuBarunaPainter = class(TX2CustomMenuBarPainter)
   private
     FBlurShadow:    Boolean;
+    
     procedure SetBlurShadow(const Value: Boolean);
   protected
     function ApplyMargins(const ABounds: TRect): TRect; override;
     function GetSpacing(AElement: TX2MenuBarSpacingElement): Integer; override;
     function GetGroupHeaderHeight(AGroup: TX2MenuBarGroup): Integer; override;
-    function GetGroupHeight(AGroup: TX2MenuBarGroup): Integer; override;
     function GetItemHeight(AItem: TX2MenuBarItem): Integer; override;
 
     procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect); override;
     procedure DrawGroupHeader(ACanvas: TCanvas; AGroup: TX2MenuBarGroup; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
     procedure DrawItem(ACanvas: TCanvas; AItem: TX2MenuBarItem; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
   published
-    property AnimationStyle;
-    property AnimationTime;
     property BlurShadow:      Boolean read FBlurShadow  write SetBlurShadow;
   end;
 
@@ -172,14 +169,6 @@ begin
   Result := 22;
 end;
 
-function TX2MenuBarunaPainter.GetGroupHeight(AGroup: TX2MenuBarGroup): Integer;
-begin
-  Result := GetSpacing(seBeforeFirstItem) +
-            (AGroup.Items.Count * (GetSpacing(seBeforeItem) + 21 +
-                                   GetSpacing(seAfterItem))) +
-            GetSpacing(seAfterLastItem);
-end;
-
 function TX2MenuBarunaPainter.GetItemHeight(AItem: TX2MenuBarItem): Integer;
 begin
   Result := 21;
@@ -299,8 +288,7 @@ begin
   if (mdsSelected in AState) then
   begin
     { Focus rectangle }
-    SetTextColor(ACanvas.Handle, ColorToRGB(clBlack));
-    DrawFocusRect(ACanvas.Handle, focusBounds);
+    DrawFocusRect(ACanvas, focusBounds);
 
     { Arrow }
     ACanvas.Brush.Color := clBlue;
@@ -326,8 +314,13 @@ begin
   Dec(textBounds.Right, 4);
 
   SetBkMode(ACanvas.Handle, TRANSPARENT);
-  ACanvas.Font.Style  := [];
-  
+
+  if not AItem.Visible then
+    { Design-time }
+    ACanvas.Font.Style  := [fsItalic]
+  else
+    ACanvas.Font.Style  := [];
+
   DrawText(ACanvas, AItem.Caption, textBounds, taRightJustify, taVerticalCenter,
            False, csEllipsis);
 end;

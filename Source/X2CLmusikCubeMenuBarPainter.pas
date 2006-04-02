@@ -96,22 +96,17 @@ type
     procedure DrawBlended(ACanvas: TCanvas; AImageList: TCustomImageList; AX, AY, AImageIndex: Integer; AAlpha: Byte);
 
     function GetGroupHeaderHeight(AGroup: TX2MenuBarGroup): Integer; override;
-    function GetGroupHeight(AGroup: TX2MenuBarGroup): Integer; override;
     function GetItemHeight(AItem: TX2MenuBarItem): Integer; override;
 
     procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect); override;
     procedure DrawGroupHeader(ACanvas: TCanvas; AGroup: TX2MenuBarGroup; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
     procedure DrawItem(ACanvas: TCanvas; AItem: TX2MenuBarItem; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
-
-    function GetScrollerClass(): TX2CustomMenuBarScrollerClass; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
 
     procedure ResetColors();
   published
-    property AnimationStyle;
-    property AnimationTime;
     property Color:           TColor              read FColor           write SetColor stored False;
     property GroupColors:     TX2MenuBarmCColors  read FGroupColors     write SetGroupColors stored False;
     property GroupHeight:     Integer             read FGroupHeight     write SetGroupHeight stored False;
@@ -120,78 +115,9 @@ type
     property ItemHeight:      Integer             read FItemHeight      write SetItemHeight stored False;
   end;
 
-  TX2MenuBarmusikCubeScroller = class(TX2MenuBarScrollbarScroller)
-  private
-    function GetPainter(): TX2MenuBarmusikCubePainter;
-  protected
-    procedure DrawArrowButton(ACanvas: TCanvas; const ABounds: TRect; ADirection: TScrollbarArrowDirection); override;
-    procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect); override;
-    procedure DrawThumb(ACanvas: TCanvas; const ABounds: TRect); override;
-
-    property Painter: TX2MenuBarmusikCubePainter read GetPainter;
-  end;
-
 implementation
 uses
   SysUtils;
-
-
-{ TX2MenuBarmusikCubeScroller }
-procedure TX2MenuBarmusikCubeScroller.DrawArrowButton(ACanvas: TCanvas;
-                                                      const ABounds: TRect;
-                                                      ADirection: TScrollbarArrowDirection);
-const
-  ArrowChars:     array[TScrollbarArrowDirection] of Char = ('t', 'u');
-
-var
-  oldFont:            TFont;
-
-begin
-  // #ToDo1 (MvR) 1-4-2006: use separate colors
-  with Painter.GroupColors.Normal do
-  begin
-    ACanvas.Brush.Color := MixFill(Painter.Color);
-    ACanvas.Pen.Color   := MixBorder(Painter.Color);
-    ACanvas.Rectangle(ABounds);
-  end;
-
-  oldFont := TFont.Create();
-  oldFont.Assign(ACanvas.Font);
-  try
-    ACanvas.Font.Color  := clWindowText;
-    ACanvas.Font.Name   := 'Marlett';
-    ACanvas.Font.Size   := 10;
-    ACanvas.Font.Style  := [];
-
-    DrawText(ACanvas, ArrowChars[ADirection], ABounds, taCenter,
-             taVerticalCenter);
-  finally
-    ACanvas.Font.Assign(oldFont);
-    FreeAndNil(oldFont); 
-  end;
-end;
-
-procedure TX2MenuBarmusikCubeScroller.DrawBackground(ACanvas: TCanvas;
-                                                     const ABounds: TRect);
-begin
-  with Painter.ItemColors.Hot do
-  begin
-    ACanvas.Brush.Color := MixFill(Painter.Color);
-    ACanvas.FillRect(ABounds);
-  end;
-end;
-
-procedure TX2MenuBarmusikCubeScroller.DrawThumb(ACanvas: TCanvas;
-                                                const ABounds: TRect);
-begin
-  //
-end;
-
-
-function TX2MenuBarmusikCubeScroller.GetPainter(): TX2MenuBarmusikCubePainter;
-begin
-  Result  := (inherited MenuBar.Painter as TX2MenuBarmusikCubePainter);
-end;
 
 
 { TX2MenuBarmusikCubePainter }
@@ -300,12 +226,6 @@ var
   iconBuffer:       Graphics.TBitmap;
   sourceRect:       TRect;
   destRect:         TRect;
-  sourceRow:        PRGBAArray;
-  destRow:          PRGBAArray;
-  xPos:             Integer;
-  yPos:             Integer;
-  backAlpha:        Integer;
-  iconAlpha:        Integer;
 
 begin
   backBuffer  := Graphics.TBitmap.Create();
@@ -324,25 +244,7 @@ begin
       iconBuffer.Assign(backBuffer);
       AImageList.Draw(iconBuffer.Canvas, 0, 0, AImageIndex);
 
-      backAlpha := AAlpha;
-      iconAlpha := 256 - AAlpha;
-
-      for yPos := 0 to Pred(iconBuffer.Height) do
-      begin
-        sourceRow := iconBuffer.ScanLine[yPos];
-        destRow   := backBuffer.ScanLine[yPos];
-
-        for xPos := 0 to Pred(iconBuffer.Width) do
-          with destRow^[xPos] do
-          begin
-            rgbRed    := ((rgbRed * backAlpha) +
-                          (sourceRow^[xPos].rgbRed * iconAlpha)) shr 8;
-            rgbGreen  := ((rgbGreen * backAlpha) +
-                          (sourceRow^[xPos].rgbGreen * iconAlpha)) shr 8;
-            rgbBlue   := ((rgbBlue * backAlpha) +
-                          (sourceRow^[xPos].rgbBlue * iconAlpha)) shr 8;
-          end;
-      end;
+      X2CLMenuBar.DrawBlended(backBuffer, iconBuffer, AAlpha);
     finally
       FreeAndNil(iconBuffer);
     end;
@@ -359,22 +261,11 @@ begin
   Result := FGroupHeight;
 end;
 
-function TX2MenuBarmusikCubePainter.GetGroupHeight(AGroup: TX2MenuBarGroup): Integer;
-begin
-  Result := (AGroup.Items.Count * FGroupHeight);
-end;
-
 function TX2MenuBarmusikCubePainter.GetItemHeight(AItem: TX2MenuBarItem): Integer;
 begin
   Result := FItemHeight;
 end;
 
-
-function TX2MenuBarmusikCubePainter.GetScrollerClass: TX2CustomMenuBarScrollerClass;
-begin
-//  Result := TX2MenuBarmusikCubeScroller;
-  Result  := TX2MenuBarScrollbarScroller;  
-end;
 
 procedure TX2MenuBarmusikCubePainter.DrawBackground(ACanvas: TCanvas;
                                                     const ABounds: TRect);
@@ -410,6 +301,11 @@ begin
     Dec(textBounds.Right, 2);
 
     ACanvas.Font.Style  := [fsBold];
+    if AGroup.Enabled then
+      ACanvas.Font.Color  := clWindowText
+    else
+      ACanvas.Font.Color  := clGrayText;
+
     DrawText(ACanvas, AGroup.Caption, textBounds, taLeftJustify,
              taVerticalCenter, False, csEllipsis);
   end;
@@ -472,12 +368,16 @@ begin
       Inc(textBounds.Left, imageList.Width + 4);
     end;
 
-    if mdsSelected in AState then
+    if not AItem.Visible then
+      { Design-time }
+      ACanvas.Font.Style  := [fsItalic]
+    else if mdsSelected in AState then
       ACanvas.Font.Style  := [fsBold]
     else
       ACanvas.Font.Style  := [];
 
-    DrawText(ACanvas, AItem.Caption, textBounds);
+    DrawText(ACanvas, AItem.Caption, textBounds, taLeftJustify, taVerticalCenter,
+             False, csEllipsis);
   end;
 end;
 

@@ -9,6 +9,7 @@ uses
   ImgList,
   Mask,
   StdCtrls,
+  XPMan,
 
   JvExMask,
   JvSpin,
@@ -41,6 +42,10 @@ type
     chkAutoSelectItem: TCheckBox;
     chkBlurShadow: TCheckBox;
     chkScrollbar: TCheckBox;
+    chkHideScrollbar: TCheckBox;
+    rbSlideFade: TRadioButton;
+    procedure chkHideScrollbarClick(Sender: TObject);
+    procedure chkScrollbarClick(Sender: TObject);
     procedure chkBlurShadowClick(Sender: TObject);
     procedure chkAutoSelectItemClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -64,35 +69,29 @@ begin
     style := asSlide
   else if rbDissolve.Checked then
     style := asDissolve
+  else if rbSlideFade.Checked then
+    style := asSlideFade
+  else if rbFade.Checked then
+    style := asFade
   else
     style := asNone;
 
-  mcPainter.AnimationStyle := style;
-  unaPainter.AnimationStyle := style;
+  mbTest.AnimationStyle := style;
 end;
 
 procedure TfrmMain.chkAllowCollapseAllClick(Sender: TObject);
 begin
-  if chkAllowCollapseAll.Checked then
-    mbTest.Options  := mbTest.Options + [mboAllowCollapseAll]
-  else
-    mbTest.Options  := mbTest.Options - [mboAllowCollapseAll];
+  mbTest.AllowCollapseAll := chkAllowCollapseAll.Checked;
 end;
 
 procedure TfrmMain.chkAutoCollapseClick(Sender: TObject);
 begin
-  if chkAutoCollapse.Checked then
-    mbTest.Options := mbTest.Options + [mboAutoCollapse]
-  else
-    mbTest.Options := mbTest.Options - [mboAutoCollapse];
+  mbTest.AutoCollapse := chkAutoCollapse.Checked;
 end;
 
 procedure TfrmMain.chkAutoSelectItemClick(Sender: TObject);
 begin
-  if chkAutoSelectItem.Checked then
-    mbTest.Options := mbTest.Options + [mboAutoSelectItem]
-  else
-    mbTest.Options := mbTest.Options - [mboAutoSelectItem];
+  mbTest.AutoSelectItem := chkAutoSelectItem.Checked;
 end;
 
 procedure TfrmMain.chkBlurShadowClick(Sender: TObject);
@@ -100,11 +99,23 @@ begin
   unaPainter.BlurShadow := chkBlurShadow.Checked;
 end;
 
+procedure TfrmMain.chkHideScrollbarClick(Sender: TObject);
+begin
+  mbTest.HideScrollbar := chkHideScrollbar.Checked;
+end;
+
+procedure TfrmMain.chkScrollbarClick(Sender: TObject);
+begin
+  mbTest.Scrollbar := chkScrollbar.Checked;
+end;
+
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
-  chkAutoCollapse.Checked := mboAutoCollapse in mbTest.Options;
-  chkAutoSelectItem.Checked := mboAutoSelectItem in mbTest.Options;
-  chkAllowCollapseAll.Checked := mboAllowCollapseAll in mbTest.Options;
+  chkAutoCollapse.Checked := mbTest.AutoCollapse;
+  chkAutoSelectItem.Checked := mbTest.AutoSelectItem;
+  chkAllowCollapseAll.Checked := mbTest.AllowCollapseAll;
+  chkScrollbar.Checked := mbTest.Scrollbar;
+  chkHideScrollbar.Checked := mbTest.HideScrollbar;
 end;
 
 procedure TfrmMain.PainterClick(Sender: TObject);
@@ -126,8 +137,7 @@ end;
 
 procedure TfrmMain.seAnimationTimeChange(Sender: TObject);
 begin
-  mcPainter.AnimationTime := seAnimationTime.AsInteger;
-  unaPainter.AnimationTime := seAnimationTime.AsInteger;
+  mbTest.AnimationTime := seAnimationTime.AsInteger;
 end;
 
 end.

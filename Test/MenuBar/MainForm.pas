@@ -44,6 +44,22 @@ type
     chkScrollbar: TCheckBox;
     chkHideScrollbar: TCheckBox;
     rbSlideFade: TRadioButton;
+    lbEvents: TListBox;
+    Button2: TButton;
+    Button3: TButton;
+    Button4: TButton;
+    Button5: TButton;
+    Button6: TButton;
+    chkHotHand: TCheckBox;
+    procedure mbTestSelectedChanging(Sender: TObject; Item,
+      NewItem: TX2CustomMenuBarItem; var Allowed: Boolean);
+    procedure mbTestSelectedChanged(Sender: TObject;
+      Item: TX2CustomMenuBarItem);
+    procedure chkHotHandClick(Sender: TObject);
+    procedure mbTestExpanding(Sender: TObject; Group: TX2MenuBarGroup; var Allowed: Boolean);
+    procedure mbTestExpanded(Sender: TObject; Group: TX2MenuBarGroup);
+    procedure mbTestCollapsing(Sender: TObject; Group: TX2MenuBarGroup; var Allowed: Boolean);
+    procedure mbTestCollapsed(Sender: TObject; Group: TX2MenuBarGroup);
     procedure chkHideScrollbarClick(Sender: TObject);
     procedure chkScrollbarClick(Sender: TObject);
     procedure chkBlurShadowClick(Sender: TObject);
@@ -54,9 +70,13 @@ type
     procedure PainterClick(Sender: TObject);
     procedure AnimationClick(Sender: TObject);
     procedure seAnimationTimeChange(Sender: TObject);
+  private
+    procedure Event(const AMsg: String);
   end;
 
 implementation
+uses
+  X2UtHandCursor;
 
 {$R *.dfm}
 
@@ -104,9 +124,27 @@ begin
   mbTest.HideScrollbar := chkHideScrollbar.Checked;
 end;
 
+procedure TfrmMain.chkHotHandClick(Sender: TObject);
+begin
+  if chkHotHand.Checked then
+  begin
+    mbTest.CursorGroup  := crHandPoint;
+    mbTest.CursorItem   := crHandPoint;
+  end else
+  begin
+    mbTest.CursorGroup  := crDefault;
+    mbTest.CursorItem   := crDefault;
+  end;
+end;
+
 procedure TfrmMain.chkScrollbarClick(Sender: TObject);
 begin
   mbTest.Scrollbar := chkScrollbar.Checked;
+end;
+
+procedure TfrmMain.Event(const AMsg: String);
+begin
+  lbEvents.ItemIndex := lbEvents.Items.Add(AMsg);
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
@@ -116,6 +154,49 @@ begin
   chkAllowCollapseAll.Checked := mbTest.AllowCollapseAll;
   chkScrollbar.Checked := mbTest.Scrollbar;
   chkHideScrollbar.Checked := mbTest.HideScrollbar;
+end;
+
+procedure TfrmMain.mbTestCollapsed(Sender: TObject; Group: TX2MenuBarGroup);
+begin
+  Event('OnCollapsed(' + Group.Caption + ')');
+end;
+
+procedure TfrmMain.mbTestCollapsing(Sender: TObject; Group: TX2MenuBarGroup; var Allowed: Boolean);
+begin
+  Event('OnCollapsing(' + Group.Caption + ')');
+end;
+
+procedure TfrmMain.mbTestExpanded(Sender: TObject; Group: TX2MenuBarGroup);
+begin
+  Event('OnExpanded(' + Group.Caption + ')');
+end;
+
+procedure TfrmMain.mbTestExpanding(Sender: TObject; Group: TX2MenuBarGroup; var Allowed: Boolean);
+begin
+  Event('OnExpanding(' + Group.Caption + ')');
+end;
+
+procedure TfrmMain.mbTestSelectedChanged(Sender: TObject; Item: TX2CustomMenuBarItem);
+begin
+  Event('OnSelectedChanged(' + Item.Caption + ')');
+end;
+
+procedure TfrmMain.mbTestSelectedChanging(Sender: TObject; Item, NewItem: TX2CustomMenuBarItem; var Allowed: Boolean);
+var
+  itemCaption: String;
+  newItemCaption: String;
+
+begin
+  itemCaption     := '';
+  newItemCaption  := '';
+
+  if Assigned(Item) then
+    itemCaption     := Item.Caption;
+
+  if Assigned(NewItem) then
+    newItemCaption  := NewItem.Caption;
+
+  Event('OnSelectedChanging(' + itemCaption + ', ' + newItemCaption + ')');
 end;
 
 procedure TfrmMain.PainterClick(Sender: TObject);

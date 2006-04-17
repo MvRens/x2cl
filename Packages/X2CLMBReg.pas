@@ -16,7 +16,8 @@ uses
   DesignIntf,
   X2CLMenuBar,
   X2CLmusikCubeMenuBarPainter,
-  X2CLunaMenuBarPainter;
+  X2CLunaMenuBarPainter,
+  X2CLMBEditors;
 
 {.$R ..\Resources\MenuBar.dcr}
 
@@ -25,6 +26,8 @@ begin
   RegisterComponents('X2Software', [TX2MenuBar,
                                     TX2MenuBarmusikCubePainter,
                                     TX2MenuBarunaPainter]);
+
+  RegisterComponentEditor(TX2CustomMenuBar, TX2MenuBarComponentEditor);
 end;
 
 end.

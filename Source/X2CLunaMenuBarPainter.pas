@@ -240,21 +240,25 @@ begin
   ACanvas.Brush.Color := $00E9E9E9;
 
   { Rounded rectangle }
-  if (mdsSelected in AState) or (mdsHot in AState) or
-     (mdsGroupSelected in AState) then
+  if AGroup.Enabled and ((mdsSelected in AState) or (mdsHot in AState) or
+                         (mdsGroupSelected in AState)) then
     ACanvas.Pen.Color := $00BE6363
   else
     ACanvas.Pen.Color := clBlack;
 
-  ACanvas.Font.Color  := ACanvas.Pen.Color;
   ACanvas.RoundRect(ABounds.Left, ABounds.Top, ABounds.Right, ABounds.Bottom, 5, 5);
+
+  if AGroup.Enabled then
+    ACanvas.Font.Color  := ACanvas.Pen.Color
+  else
+    ACanvas.Font.Color  := clGray;
 
   textRect            := ABounds;
   Inc(textRect.Left, 4);
   Dec(textRect.Right, 4);
 
   { Image }
-  imageList := AGroup.MenuBar.ImageList;
+  imageList := AGroup.MenuBar.Images;
   if Assigned(imageList) then
   begin
     if AGroup.ImageIndex > -1 then
@@ -304,10 +308,13 @@ begin
   end;
 
   { Text }
-  if (mdsSelected in AState) or (mdsHot in AState) then
-    ACanvas.Font.Color  := clBlack
+  if AItem.Enabled then
+    if (mdsSelected in AState) or (mdsHot in AState) then
+      ACanvas.Font.Color  := clBlack
+    else
+      ACanvas.Font.Color  := $00404040
   else
-    ACanvas.Font.Color  := $00404040;
+    ACanvas.Font.Color  := clSilver;
 
   textBounds  := focusBounds;
   Inc(textBounds.Left, 4);

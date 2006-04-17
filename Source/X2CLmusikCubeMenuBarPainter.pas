@@ -39,6 +39,8 @@ type
     property OnChange:    TNotifyEvent    read FOnChange  write FOnChange;
   public
     constructor Create();
+    
+    procedure Assign(Source: TPersistent); override;
 
     function MixBorder(AColor: TColor): TColor;
     function MixFill(AColor: TColor): TColor;
@@ -67,6 +69,8 @@ type
   public
     constructor Create();
     destructor Destroy(); override;
+
+    procedure Assign(Source: TPersistent); override;
   published
     property Hot:       TX2MenuBarmCColor read FHot       write SetHot;
     property Normal:    TX2MenuBarmCColor read FNormal    write SetNormal;
@@ -350,7 +354,7 @@ begin
     textBounds            := itemBounds;
     Inc(textBounds.Left, 4);
 
-    imageList := MenuBar.ImageList;
+    imageList := MenuBar.Images;
     if Assigned(imageList) then
     begin
       if AItem.ImageIndex > -1 then
@@ -451,6 +455,20 @@ begin
   FBorderColor  := clNone;
   FFillAlpha    := 255;
   FFillColor    := clNone;
+end;
+
+procedure TX2MenuBarmCColor.Assign(Source: TPersistent);
+begin
+  if Source is TX2MenuBarmCColor then
+    with TX2MenuBarmCColor(Source) do
+    begin
+      Self.BorderColor  := BorderColor;
+      Self.BorderAlpha  := BorderAlpha;
+      Self.FillColor    := FillColor;
+      Self.FillAlpha    := FillAlpha;
+    end
+  else
+    inherited;
 end;
 
 
@@ -557,6 +575,19 @@ begin
   FreeAndNil(FHot);
 
   inherited;
+end;
+
+procedure TX2MenuBarmCColors.Assign(Source: TPersistent);
+begin
+  if Source is TX2MenuBarmCColors then
+    with TX2MenuBarmCColors(Source) do
+    begin
+      Self.Hot.Assign(Hot);
+      Self.Normal.Assign(Normal);
+      Self.Selected.Assign(Selected);
+    end
+  else
+    inherited;
 end;
 
 

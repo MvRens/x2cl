@@ -3,7 +3,7 @@ object frmMain: TfrmMain
   Top = 219
   Caption = 'X2MenuBar Test'
   ClientHeight = 379
-  ClientWidth = 548
+  ClientWidth = 589
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -26,8 +26,8 @@ object frmMain: TfrmMain
     ExplicitTop = -4
   end
   object lblAnimationTime: TLabel
-    Left = 356
-    Top = 24
+    Left = 424
+    Top = 20
     Width = 98
     Height = 13
     Caption = 'Animation time (ms):'
@@ -38,8 +38,15 @@ object frmMain: TfrmMain
     Width = 125
     Height = 379
     Align = alLeft
-    AnimationStyle = asSlide
-    AnimationTime = 250
+    Groups = <>
+    Images = glMenu
+    OnCollapsed = mbTestCollapsed
+    OnCollapsing = mbTestCollapsing
+    OnExpanded = mbTestExpanded
+    OnExpanding = mbTestExpanding
+    OnSelectedChanged = mbTestSelectedChanged
+    OnSelectedChanging = mbTestSelectedChanging
+    Painter = mcPainter
     Groups = <
       item
         Caption = 'Share'
@@ -169,13 +176,10 @@ object frmMain: TfrmMain
             Caption = 'Menu Item'
           end>
       end>
-    ImageList = glMenu
-    Painter = mcPainter
-    ExplicitLeft = 8
   end
   object seAnimationTime: TJvSpinEdit
-    Left = 356
-    Top = 40
+    Left = 424
+    Top = 36
     Width = 81
     Height = 21
     CheckMinValue = True
@@ -185,8 +189,8 @@ object frmMain: TfrmMain
     OnChange = seAnimationTimeChange
   end
   object Panel1: TPanel
-    Left = 212
-    Top = 72
+    Left = 280
+    Top = 68
     Width = 133
     Height = 77
     BevelOuter = bvNone
@@ -222,9 +226,9 @@ object frmMain: TfrmMain
     end
   end
   object Panel2: TPanel
-    Left = 356
-    Top = 72
-    Width = 169
+    Left = 424
+    Top = 68
+    Width = 153
     Height = 101
     BevelOuter = bvNone
     TabOrder = 3
@@ -277,8 +281,8 @@ object frmMain: TfrmMain
     end
   end
   object chkAutoCollapse: TCheckBox
-    Left = 212
-    Top = 200
+    Left = 280
+    Top = 196
     Width = 89
     Height = 17
     Caption = 'Auto collapse'
@@ -286,8 +290,8 @@ object frmMain: TfrmMain
     OnClick = chkAutoCollapseClick
   end
   object chkAllowCollapseAll: TCheckBox
-    Left = 212
-    Top = 240
+    Left = 280
+    Top = 236
     Width = 101
     Height = 17
     Caption = 'Allow collapse all'
@@ -295,8 +299,8 @@ object frmMain: TfrmMain
     OnClick = chkAllowCollapseAllClick
   end
   object chkAutoSelectItem: TCheckBox
-    Left = 212
-    Top = 220
+    Left = 280
+    Top = 216
     Width = 101
     Height = 17
     Caption = 'Auto select item'
@@ -304,8 +308,8 @@ object frmMain: TfrmMain
     OnClick = chkAutoSelectItemClick
   end
   object chkScrollbar: TCheckBox
-    Left = 356
-    Top = 200
+    Left = 424
+    Top = 196
     Width = 121
     Height = 17
     Caption = 'Scrollbar'
@@ -315,8 +319,8 @@ object frmMain: TfrmMain
     OnClick = chkScrollbarClick
   end
   object chkHideScrollbar: TCheckBox
-    Left = 356
-    Top = 221
+    Left = 424
+    Top = 217
     Width = 121
     Height = 17
     Caption = 'Hide Scrollbar'
@@ -324,6 +328,77 @@ object frmMain: TfrmMain
     State = cbChecked
     TabOrder = 8
     OnClick = chkHideScrollbarClick
+  end
+  object lbEvents: TListBox
+    Left = 152
+    Top = 267
+    Width = 421
+    Height = 93
+    ItemHeight = 13
+    TabOrder = 9
+  end
+  object Button1: TButton
+    Left = 152
+    Top = 68
+    Width = 113
+    Height = 25
+    Caption = 'SelectFirst'
+    Enabled = False
+    TabOrder = 10
+  end
+  object Button2: TButton
+    Left = 152
+    Top = 96
+    Width = 113
+    Height = 25
+    Caption = 'SelectPrior'
+    Enabled = False
+    TabOrder = 11
+  end
+  object Button3: TButton
+    Left = 152
+    Top = 124
+    Width = 113
+    Height = 25
+    Caption = 'SelectNext'
+    Enabled = False
+    TabOrder = 12
+  end
+  object Button4: TButton
+    Left = 152
+    Top = 152
+    Width = 113
+    Height = 25
+    Caption = 'SelectLast'
+    Enabled = False
+    TabOrder = 13
+  end
+  object Button5: TButton
+    Left = 152
+    Top = 180
+    Width = 113
+    Height = 25
+    Caption = 'SelectGroupByIndex'
+    Enabled = False
+    TabOrder = 14
+  end
+  object Button6: TButton
+    Left = 152
+    Top = 208
+    Width = 113
+    Height = 25
+    Caption = 'SelectItemByIndex'
+    Enabled = False
+    TabOrder = 15
+  end
+  object chkHotHand: TCheckBox
+    Left = 424
+    Top = 236
+    Width = 149
+    Height = 17
+    Caption = 'Hand cursor for hot items'
+    TabOrder = 16
+    OnClick = chkHotHandClick
   end
   object gcMenu: TX2GraphicContainer
     Graphics = <

@@ -2,6 +2,9 @@
   :: X2CLMenuBar is a generic group/items menu. Through the various painters,
   :: it can resemble styles such as the musikCube or BBox/Uname-IT menu bars.
   ::
+  :: Part of the X2Software Component Library
+  ::    http://www.x2software.net/
+  ::
   :: Last changed:    $Date$
   :: Revision:        $Rev$
   :: Author:          $Author$
@@ -10,6 +13,7 @@ unit X2CLMenuBar;
 
 interface
 uses
+  ActnList,
   Classes,
   Contnrs,
   Controls,
@@ -31,7 +35,7 @@ const
 type
   // #ToDo1 (MvR) 25-3-2006: various Select methods for key support
   // #ToDo1 (MvR) 1-4-2006: scroll wheel support
-  // #ToDo1 (MvR) 2-4-2006: OnGetAnimationClass event?
+  // #ToDo1 (MvR) 29-4-2006: action support
   TX2CustomMenuBarAnimatorClass = class of TX2CustomMenuBarAnimator;
   TX2CustomMenuBarAnimator = class;
   TX2CustomMenuBarPainterClass = class of TX2CustomMenuBarPainter;
@@ -62,6 +66,7 @@ type
 
   TX2MenuBarSelectAction          = (saBefore, saAfter, saBoth);
 
+  TX2ComponentNotificationEvent   = procedure(Sender: TObject; AComponent: TComponent; Operation: TOperation) of object;
   TX2MenuBarExpandingEvent        = procedure(Sender: TObject; Group: TX2MenuBarGroup; var Allowed: Boolean) of object;
   TX2MenuBarExpandedEvent         = procedure(Sender: TObject; Group: TX2MenuBarGroup) of object;
   TX2MenuBarSelectedChangingEvent = procedure(Sender: TObject; Item, NewItem: TX2CustomMenUBarItem; var Allowed: Boolean) of object;
@@ -159,18 +164,62 @@ type
   end;
 
   {
+    :$ Action link for menu items and groups.
+  }
+  TX2MenuBarActionLink = class(TActionLink)
+  private
+    FClient:      TX2CustomMenuBarItem;
+  protected
+    procedure AssignClient(AClient: TObject); override;
+
+    function IsCaptionLinked(): Boolean; override;
+    function IsEnabledLinked(): Boolean; override;
+    function IsImageIndexLinked(): Boolean; override;
+    function IsVisibleLinked(): Boolean; override;
+    procedure SetCaption(const Value: string); override;
+    procedure SetEnabled(Value: Boolean); override;
+    procedure SetImageIndex(Value: Integer); override;
+    procedure SetVisible(Value: Boolean); override;
+
+    property Client:  TX2CustomMenuBarItem  read FClient;
+  end;
+
+  {
+    :$ Provides component notifications for collection items.
+  }
+  TX2ComponentNotification = class(TComponent)
+  private
+    FOnNotification:    TX2ComponentNotificationEvent;
+  published
+  protected
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+  published
+    property OnNotification: TX2ComponentNotificationEvent  read FOnNotification  write FOnNotification;
+  end;
+
+  {
     :$ Base class for menu items and groups.
   }
   TX2CustomMenuBarItem = class(TCollectionItem)
   private
+    FAction:        TBasicAction;
+    FActionLink:    TX2MenuBarActionLink;
     FCaption:       String;
     FData:          TObject;
     FEnabled:       Boolean;
     FImageIndex:    TImageIndex;
     FOwnsData:      Boolean;
     FVisible:       Boolean;
+
+    FNotification:  TX2ComponentNotification;
+  private
+    procedure DoActionChange(Sender: TObject);
   protected
+    procedure ActionChange(Sender: TObject; CheckDefaults: Boolean); virtual;
+
+    function IsCaptionStored(): Boolean; virtual;
     function GetMenuBar(): TX2CustomMenuBar; virtual;
+    procedure SetAction(const Value: TBasicAction);
     procedure SetCaption(const Value: String); virtual;
     procedure SetData(const Value: TObject); virtual;
     procedure SetEnabled(const Value: Boolean); virtual;
@@ -182,14 +231,16 @@ type
 
     procedure Assign(Source: TPersistent); override;
 
-    property Data:          TObject           read FData        write SetData;
-    property OwnsData:      Boolean           read FOwnsData    write FOwnsData;
-    property MenuBar:       TX2CustomMenuBar  read GetMenuBar;
+    property ActionLink:    TX2MenuBarActionLink  read FActionLink;
+    property Data:          TObject               read FData        write SetData;
+    property OwnsData:      Boolean               read FOwnsData    write FOwnsData;
+    property MenuBar:       TX2CustomMenuBar      read GetMenuBar;
   published
-    property Caption:       String            read FCaption     write SetCaption;
-    property Enabled:       Boolean           read FEnabled     write SetEnabled default True;
-    property ImageIndex:    TImageIndex       read FImageIndex  write SetImageIndex default -1;
-    property Visible:       Boolean           read FVisible     write SetVisible default True;
+    property Action:        TBasicAction          read FAction      write SetAction;
+    property Caption:       String                read FCaption     write SetCaption      stored IsCaptionStored;
+    property Enabled:       Boolean               read FEnabled     write SetEnabled      default True;
+    property ImageIndex:    TImageIndex           read FImageIndex  write SetImageIndex   default -1;
+    property Visible:       Boolean               read FVisible     write SetVisible      default True;
   end;
 
   {
@@ -213,6 +264,8 @@ type
   TX2MenuBarItem = class(TX2CustomMenuBarItem)
   private
     function GetGroup(): TX2MenuBarGroup;
+  protected
+    function IsCaptionStored(): Boolean; override;
   public
     constructor Create(Collection: TCollection); override;
 
@@ -247,6 +300,8 @@ type
     procedure SetExpanded(const Value: Boolean);
     procedure SetItems(const Value: TX2MenuBarItems);
   protected
+  protected
+    function IsCaptionStored(): Boolean; override;
     procedure SetEnabled(const Value: Boolean); override;
 
     procedure InternalSetExpanded(const Value: Boolean);
@@ -393,6 +448,15 @@ type
 
     function HitTest(const APoint: TPoint): TX2MenuBarHitTest; overload;
     function HitTest(AX, AY: Integer): TX2MenuBarHitTest; overload;
+
+    function SelectFirst(): TX2CustomMenuBarItem;
+    function SelectLast(): TX2CustomMenuBarItem;
+    function SelectNext(): TX2CustomMenuBarItem;
+    function SelectPrior(): TX2CustomMenuBarItem;
+
+    function SelectGroup(AIndex: Integer): TX2MenuBarGroup;
+    function SelectItem(AIndex: Integer; AGroup: TX2MenuBarGroup = nil): TX2CustomMenuBarItem; overload;
+    function SelectItem(AIndex: Integer; AGroup: Integer = -1): TX2CustomMenuBarItem; overload;
 
     property Groups:        TX2MenuBarGroups        read FGroups        write SetGroups;
     property Images:        TCustomImageList        read FImages        write SetImages;
@@ -768,6 +832,72 @@ begin
 end;
 
 
+{ TX2MenuBarActionLink }
+procedure TX2MenuBarActionLink.AssignClient(AClient: TObject);
+begin
+  FClient := (AClient as TX2CustomMenuBarItem);
+end;
+
+function TX2MenuBarActionLink.IsCaptionLinked(): Boolean;
+begin
+  Result  := inherited IsCaptionLinked() and
+             (Client.Caption = (Action as TCustomAction).Caption);
+end;
+
+function TX2MenuBarActionLink.IsEnabledLinked(): Boolean;
+begin
+  Result  := inherited IsCaptionLinked() and
+             (Client.Enabled = (Action as TCustomAction).Enabled);
+end;
+
+function TX2MenuBarActionLink.IsImageIndexLinked(): Boolean;
+begin
+  Result  := inherited IsCaptionLinked() and
+             (Client.ImageIndex = (Action as TCustomAction).ImageIndex);
+end;
+
+function TX2MenuBarActionLink.IsVisibleLinked(): Boolean;
+begin
+  Result  := inherited IsCaptionLinked() and
+             (Client.Visible = (Action as TCustomAction).Visible);
+end;
+
+procedure TX2MenuBarActionLink.SetCaption(const Value: string);
+begin
+  if IsCaptionLinked() then
+    Client.Caption    := Value;
+end;
+
+procedure TX2MenuBarActionLink.SetEnabled(Value: Boolean);
+begin
+  if IsEnabledLinked() then
+    Client.Enabled    := Value;
+end;
+
+procedure TX2MenuBarActionLink.SetImageIndex(Value: Integer);
+begin
+  if IsImageIndexLinked() then
+    Client.ImageIndex := Value;
+end;
+
+procedure TX2MenuBarActionLink.SetVisible(Value: Boolean);
+begin
+  if IsVisibleLinked() then
+    Client.Visible    := Value;
+end;
+
+
+{ TX2ComponentNotification }
+procedure TX2ComponentNotification.Notification(AComponent: TComponent;
+                                                Operation: TOperation);
+begin
+  if Assigned(FOnNotification) then
+    FOnNotification(Self, AComponent, Operation);
+
+  inherited;
+end;
+
+
 { TX2CustomMenuBarItem }
 constructor TX2CustomMenuBarItem.Create(Collection: TCollection);
 begin
@@ -782,16 +912,64 @@ end;
 destructor TX2CustomMenuBarItem.Destroy();
 begin
   Data  := nil;
+  FreeAndNil(FActionLink);
+  FreeAndNil(FNotification);
 
   inherited;
 end;
 
 
+procedure TX2CustomMenuBarItem.Assign(Source: TPersistent);
+begin
+  if Source is TX2CustomMenuBarItem then
+    with TX2CustomMenuBarItem(Source) do
+    begin
+      Self.Caption  := Caption;
+      Self.Data     := Data;
+      Self.OwnsData := OwnsData;
+    end
+  else
+    inherited;
+end;
+
+
+procedure TX2CustomMenuBarItem.DoActionChange(Sender: TObject);
+begin
+  if Sender = Action then
+    ActionChange(Sender, False);
+end;
+
+procedure TX2CustomMenuBarItem.ActionChange(Sender: TObject;
+                                            CheckDefaults: Boolean);
+begin
+  if Sender is TCustomAction then
+    with TCustomAction(Sender) do
+    begin
+      if (not CheckDefaults) or (not Self.IsCaptionStored()) then
+        Self.Caption    := Caption;
+
+      if (not CheckDefaults) or Self.Enabled then
+        Self.Enabled    := Enabled;
+
+      if (not CheckDefaults) or (Self.ImageIndex = -1) then
+        Self.ImageIndex := ImageIndex;
+
+      if (not CheckDefaults) or Self.Visible then
+        Self.Visible    := Visible;
+    end;
+end;
+
+
+function TX2CustomMenuBarItem.IsCaptionStored(): Boolean;
+begin
+  Result  := (Length(Caption) > 0);
+end;
+
 function TX2CustomMenuBarItem.GetMenuBar(): TX2CustomMenuBar;
 var
   parentCollection: TCollection;
   parentOwner: TPersistent;
-   
+
 begin
   Result            := nil;
   parentCollection  := Collection;
@@ -814,19 +992,37 @@ begin
   end;
 end;
 
-procedure TX2CustomMenuBarItem.Assign(Source: TPersistent);
+procedure TX2CustomMenuBarItem.SetAction(const Value: TBasicAction);
 begin
-  if Source is TX2CustomMenuBarItem then
-    with TX2CustomMenuBarItem(Source) do
-    begin
-      Self.Caption  := Caption;
-      Self.Data     := Data;
-      Self.OwnsData := OwnsData;
-    end
-  else
-    inherited;
-end;
+  if Value <> FAction then
+  begin
+    if Assigned(FAction) then
+      FAction.RemoveFreeNotification(FNotification);
 
+    FAction := Value;
+
+    if Assigned(FAction) then
+    begin
+      if not Assigned(FActionLink) then
+      begin
+        FActionLink           := TX2MenuBarActionLink.Create(Self);
+        FActionLink.OnChange  := DoActionChange;
+      end;
+
+      FActionLink.Action    := Value;
+
+      if not Assigned(FNotification) then
+        FNotification := TX2ComponentNotification.Create(nil);
+
+      ActionChange(Value, csLoading in Value.ComponentState);
+      FAction.FreeNotification(FNotification);
+    end else
+    begin
+      FreeAndNil(FActionLink);
+      FreeAndNil(FNotification); 
+    end;
+  end;
+end;
 
 procedure TX2CustomMenuBarItem.SetCaption(const Value: String);
 begin
@@ -901,6 +1097,13 @@ begin
 
   inherited;
 end;
+
+
+function TX2MenuBarItem.IsCaptionStored(): Boolean;
+begin
+  Result  := (Caption <> SDefaultItemCaption);
+end;
+
 
 function TX2MenuBarItem.GetGroup(): TX2MenuBarGroup;
 begin
@@ -1017,6 +1220,11 @@ begin
 
   if Assigned(groupCollection) and (groupCollection.UpdateCount = 0) then
     groupCollection.Update(Item);
+end;
+
+function TX2MenuBarGroup.IsCaptionStored(): Boolean;
+begin
+  Result  := (Caption <> SDefaultGroupCaption);
 end;
 
 procedure TX2MenuBarGroup.SetEnabled(const Value: Boolean);
@@ -1666,6 +1874,58 @@ begin
 end;
 
 
+function TX2CustomMenuBar.SelectFirst(): TX2CustomMenuBarItem;
+begin
+  // #ToDo1 (MvR) 29-4-2006: implement this
+  Result := nil;
+end;
+
+function TX2CustomMenuBar.SelectLast(): TX2CustomMenuBarItem;
+begin
+  // #ToDo1 (MvR) 29-4-2006: implement this
+  Result := nil;
+end;
+
+function TX2CustomMenuBar.SelectNext(): TX2CustomMenuBarItem;
+begin
+  // #ToDo1 (MvR) 29-4-2006: implement this
+  Result := nil;
+end;
+
+function TX2CustomMenuBar.SelectPrior(): TX2CustomMenuBarItem;
+begin
+  // #ToDo1 (MvR) 29-4-2006: implement this
+  Result := nil;
+end;
+
+
+function TX2CustomMenuBar.SelectGroup(AIndex: Integer): TX2MenuBarGroup;
+begin
+  // #ToDo1 (MvR) 29-4-2006: implement this
+  Result  := nil;
+end;
+
+function TX2CustomMenuBar.SelectItem(AIndex: Integer;
+                                     AGroup: TX2MenuBarGroup): TX2CustomMenuBarItem;
+begin
+  // #ToDo1 (MvR) 29-4-2006: implement this
+  Result  := nil;
+end;
+
+function TX2CustomMenuBar.SelectItem(AIndex, AGroup: Integer): TX2CustomMenuBarItem;
+var
+  group:      TX2MenuBarGroup;
+
+begin
+  group := nil;
+  if (AGroup > 0) and (AGroup < Groups.Count) then
+    group := Groups[AGroup];
+
+  Result  := SelectItem(AIndex, group);
+end;
+
+
+
 procedure TX2CustomMenuBar.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if Operation = opRemove then
@@ -2106,6 +2366,9 @@ begin
             group.Expanded  := True;
         end;
       end;
+
+      if Assigned(FSelectedItem) and Assigned(FSelectedItem.Action) then
+        FSelectedItem.ActionLink.Execute(Self);
 
       DoSelectedChanged();
       Invalidate();

@@ -1,6 +1,9 @@
 {
   :: Implements a Uname-IT-style painter for the X2MenuBar.
   ::
+  :: Part of the X2Software Component Library
+  ::    http://www.x2software.net/
+  ::
   :: Last changed:    $Date$
   :: Revision:        $Rev$
   :: Author:          $Author$

@@ -1,7 +1,9 @@
 {
-  :: Implements the animators for the MenuBar.
+  :: Implements the animators for the MenuBar. Though they are tightly
+  :: interlinked (for now), this keeps the main unit clean.
   ::
-  :: Though they are tightly interlinked (for now), this keeps the units clean.
+  :: Part of the X2Software Component Library
+  ::    http://www.x2software.net/
   ::
   :: Last changed:    $Date$
   :: Revision:        $Rev$

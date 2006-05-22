@@ -17,11 +17,10 @@ uses
   X2CLGraphicList,
   X2CLMenuBar,
   X2CLmusikCubeMenuBarPainter,
-  X2CLunaMenuBarPainter;
+  X2CLunaMenuBarPainter, ActnList;
 
 type
   TfrmMain = class(TForm)
-    mbTest:               TX2MenuBar;
     mcPainter: TX2MenuBarmusikCubePainter;
     gcMenu: TX2GraphicContainer;
     glMenu: TX2GraphicList;
@@ -51,6 +50,9 @@ type
     Button5: TButton;
     Button6: TButton;
     chkHotHand: TCheckBox;
+    mbTest: TX2MenuBar;
+    alMenu: TActionList;
+    actTest: TAction;
     procedure mbTestSelectedChanging(Sender: TObject; Item,
       NewItem: TX2CustomMenuBarItem; var Allowed: Boolean);
     procedure mbTestSelectedChanged(Sender: TObject;
@@ -70,15 +72,23 @@ type
     procedure PainterClick(Sender: TObject);
     procedure AnimationClick(Sender: TObject);
     procedure seAnimationTimeChange(Sender: TObject);
+    procedure actTestExecute(Sender: TObject);
   private
     procedure Event(const AMsg: String);
   end;
 
 implementation
 uses
+  Dialogs,
+  
   X2UtHandCursor;
 
 {$R *.dfm}
+
+procedure TfrmMain.actTestExecute(Sender: TObject);
+begin
+  ShowMessage('Action saying: hi!');
+end;
 
 procedure TfrmMain.AnimationClick(Sender: TObject);
 var

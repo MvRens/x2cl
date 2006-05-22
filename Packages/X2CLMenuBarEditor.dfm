@@ -14,6 +14,7 @@ object frmMenuBarEditor: TfrmMenuBarEditor
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -30,9 +31,6 @@ object frmMenuBarEditor: TfrmMenuBarEditor
     ReadOnly = True
     TabOrder = 0
     OnChange = tvMenuChange
-    ExplicitTop = 20
-    ExplicitWidth = 252
-    ExplicitHeight = 281
   end
   object sbStatus: TStatusBar
     Left = 0
@@ -43,8 +41,6 @@ object frmMenuBarEditor: TfrmMenuBarEditor
       item
         Width = 50
       end>
-    ExplicitTop = 307
-    ExplicitWidth = 252
   end
   object tbMenu: TToolBar
     Left = 0
@@ -58,7 +54,6 @@ object frmMenuBarEditor: TfrmMenuBarEditor
     List = True
     ShowCaptions = True
     TabOrder = 2
-    ExplicitWidth = 252
     object tbAddGroup: TToolButton
       Left = 0
       Top = 0

@@ -32,151 +32,6 @@ object frmMain: TfrmMain
     Height = 13
     Caption = 'Animation time (ms):'
   end
-  object mbTest: TX2MenuBar
-    Left = 0
-    Top = 0
-    Width = 125
-    Height = 379
-    Align = alLeft
-    Groups = <>
-    Images = glMenu
-    OnCollapsed = mbTestCollapsed
-    OnCollapsing = mbTestCollapsing
-    OnExpanded = mbTestExpanded
-    OnExpanding = mbTestExpanding
-    OnSelectedChanged = mbTestSelectedChanged
-    OnSelectedChanging = mbTestSelectedChanging
-    Painter = mcPainter
-    Groups = <
-      item
-        Caption = 'Share'
-        ImageIndex = 0
-        Expanded = True
-        Items = <
-          item
-            Caption = 'File'
-            ImageIndex = 0
-          end
-          item
-            Caption = 'Folder'
-            ImageIndex = 1
-          end
-          item
-            Caption = 'Photo'
-            ImageIndex = 2
-          end
-          item
-            Caption = 'Video'
-            ImageIndex = 3
-          end
-          item
-            Caption = 'Invisible item'
-            Visible = False
-          end
-          item
-            Caption = 'Disabled item'
-            Enabled = False
-          end>
-      end
-      item
-        Caption = 'Group'
-        ImageIndex = 1
-        Expanded = False
-        Items = <
-          item
-            Caption = 'Menu Item'
-          end>
-      end
-      item
-        Caption = 'Group without items'
-        ImageIndex = 2
-        Expanded = False
-        Items = <>
-      end
-      item
-        Caption = 'Biiiiig group.'
-        Expanded = False
-        Items = <
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end>
-      end
-      item
-        Caption = 'Disabled group'
-        Enabled = False
-        Expanded = False
-        Items = <
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end
-          item
-            Caption = 'Menu Item'
-          end>
-      end>
-  end
   object seAnimationTime: TJvSpinEdit
     Left = 424
     Top = 36
@@ -185,7 +40,7 @@ object frmMain: TfrmMain
     CheckMinValue = True
     ButtonKind = bkStandard
     Value = 250.000000000000000000
-    TabOrder = 1
+    TabOrder = 0
     OnChange = seAnimationTimeChange
   end
   object Panel1: TPanel
@@ -194,7 +49,7 @@ object frmMain: TfrmMain
     Width = 133
     Height = 77
     BevelOuter = bvNone
-    TabOrder = 2
+    TabOrder = 1
     object rbmusikCube: TRadioButton
       Left = 0
       Top = 0
@@ -231,7 +86,7 @@ object frmMain: TfrmMain
     Width = 153
     Height = 101
     BevelOuter = bvNone
-    TabOrder = 3
+    TabOrder = 2
     object rbSliding: TRadioButton
       Left = 0
       Top = 20
@@ -286,7 +141,7 @@ object frmMain: TfrmMain
     Width = 89
     Height = 17
     Caption = 'Auto collapse'
-    TabOrder = 4
+    TabOrder = 3
     OnClick = chkAutoCollapseClick
   end
   object chkAllowCollapseAll: TCheckBox
@@ -295,7 +150,7 @@ object frmMain: TfrmMain
     Width = 101
     Height = 17
     Caption = 'Allow collapse all'
-    TabOrder = 6
+    TabOrder = 5
     OnClick = chkAllowCollapseAllClick
   end
   object chkAutoSelectItem: TCheckBox
@@ -304,7 +159,7 @@ object frmMain: TfrmMain
     Width = 101
     Height = 17
     Caption = 'Auto select item'
-    TabOrder = 5
+    TabOrder = 4
     OnClick = chkAutoSelectItemClick
   end
   object chkScrollbar: TCheckBox
@@ -315,7 +170,7 @@ object frmMain: TfrmMain
     Caption = 'Scrollbar'
     Checked = True
     State = cbChecked
-    TabOrder = 7
+    TabOrder = 6
     OnClick = chkScrollbarClick
   end
   object chkHideScrollbar: TCheckBox
@@ -326,7 +181,7 @@ object frmMain: TfrmMain
     Caption = 'Hide Scrollbar'
     Checked = True
     State = cbChecked
-    TabOrder = 8
+    TabOrder = 7
     OnClick = chkHideScrollbarClick
   end
   object lbEvents: TListBox
@@ -335,7 +190,7 @@ object frmMain: TfrmMain
     Width = 421
     Height = 93
     ItemHeight = 13
-    TabOrder = 9
+    TabOrder = 8
   end
   object Button1: TButton
     Left = 152
@@ -344,7 +199,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = 'SelectFirst'
     Enabled = False
-    TabOrder = 10
+    TabOrder = 9
   end
   object Button2: TButton
     Left = 152
@@ -353,7 +208,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = 'SelectPrior'
     Enabled = False
-    TabOrder = 11
+    TabOrder = 10
   end
   object Button3: TButton
     Left = 152
@@ -362,7 +217,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = 'SelectNext'
     Enabled = False
-    TabOrder = 12
+    TabOrder = 11
   end
   object Button4: TButton
     Left = 152
@@ -371,7 +226,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = 'SelectLast'
     Enabled = False
-    TabOrder = 13
+    TabOrder = 12
   end
   object Button5: TButton
     Left = 152
@@ -380,7 +235,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = 'SelectGroupByIndex'
     Enabled = False
-    TabOrder = 14
+    TabOrder = 13
   end
   object Button6: TButton
     Left = 152
@@ -389,7 +244,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = 'SelectItemByIndex'
     Enabled = False
-    TabOrder = 15
+    TabOrder = 14
   end
   object chkHotHand: TCheckBox
     Left = 424
@@ -397,8 +252,131 @@ object frmMain: TfrmMain
     Width = 149
     Height = 17
     Caption = 'Hand cursor for hot items'
-    TabOrder = 16
+    TabOrder = 15
     OnClick = chkHotHandClick
+  end
+  object mbTest: TX2MenuBar
+    Left = 0
+    Top = 0
+    Width = 125
+    Height = 379
+    Align = alLeft
+    Groups = <
+      item
+        Caption = 'Share'
+        ImageIndex = 0
+        Expanded = True
+        Items = <
+          item
+            Caption = 'File'
+            ImageIndex = 0
+          end
+          item
+            Caption = 'Folder'
+            ImageIndex = 1
+          end
+          item
+            Caption = 'Photo'
+            ImageIndex = 2
+          end
+          item
+            Caption = 'Video'
+            ImageIndex = 3
+          end
+          item
+            Caption = 'Invisible item'
+            Visible = False
+          end
+          item
+            Caption = 'Disabled item'
+            Enabled = False
+          end>
+      end
+      item
+        Caption = 'Actions test'
+        ImageIndex = 1
+        Expanded = False
+        Items = <
+          item
+            Action = actTest
+            Caption = 'I'#39'm an action!'
+            ImageIndex = 1
+          end>
+      end
+      item
+        Caption = 'Group without items'
+        ImageIndex = 2
+        Expanded = False
+        Items = <>
+      end
+      item
+        Caption = 'Biiiiig group.'
+        Expanded = False
+        Items = <
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end
+          item
+          end>
+      end
+      item
+        Caption = 'Disabled group'
+        Enabled = False
+        Expanded = False
+        Items = <
+          item
+          end
+          item
+          end
+          item
+          end>
+      end>
+    Images = glMenu
+    OnCollapsed = mbTestCollapsed
+    OnCollapsing = mbTestCollapsing
+    OnExpanded = mbTestExpanded
+    OnExpanding = mbTestExpanding
+    OnSelectedChanged = mbTestSelectedChanged
+    OnSelectedChanging = mbTestSelectedChanging
+    Painter = mcPainter
+    ExplicitLeft = -6
   end
   object gcMenu: TX2GraphicContainer
     Graphics = <
@@ -521,5 +499,15 @@ object frmMain: TfrmMain
     BlurShadow = False
     Left = 152
     Top = 36
+  end
+  object alMenu: TActionList
+    Images = glMenu
+    Left = 236
+    Top = 8
+    object actTest: TAction
+      Caption = 'I'#39'm an action!'
+      ImageIndex = 1
+      OnExecute = actTestExecute
+    end
   end
 end

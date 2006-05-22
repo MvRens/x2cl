@@ -35,6 +35,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
     procedure tvMenuChange(Sender: TObject; Node: TTreeNode);
+    procedure FormActivate(Sender: TObject);
   private
     FDesigner:            IDesigner;
     FMenuBar:             TX2CustomMenuBar;
@@ -112,6 +113,22 @@ begin
   tbMenu.EdgeBorders  := [];
   tbMenu.DrawingStyle := dsGradient;
   {$ENDIF}
+end;
+
+procedure TfrmMenuBarEditor.FormActivate(Sender: TObject);
+var
+  item:     TX2CustomMenuBarItem;
+
+begin
+  if Assigned(tvMenu.Selected) then
+  begin
+    item  := TX2CustomMenuBarItem(tvMenu.Selected.Data);
+
+    if Assigned(Designer) then
+      Designer.SelectComponent(item);
+  end;
+
+  UpdateUI();
 end;
 
 procedure TfrmMenuBarEditor.FormClose(Sender: TObject; var Action: TCloseAction);

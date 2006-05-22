@@ -1,6 +1,9 @@
 {
   :: Implements a musikCube-style painter for the X2MenuBar.
   ::
+  :: Part of the X2Software Component Library
+  ::    http://www.x2software.net/
+  ::
   :: Last changed:    $Date$
   :: Revision:        $Rev$
   :: Author:          $Author$
@@ -14,41 +17,35 @@ uses
   ImgList,
   Windows,
 
+  X2CLGraphics,
   X2CLMenuBar;
 
 type
-  // #ToDo1 (MvR) 19-3-2006: IsStored implementations
-  // #ToDo1 (MvR) 19-3-2006: cache positions
   TX2MenuBarmCColor   = class(TPersistent)
   private
-    FBorderAlpha:   Byte;
-    FBorderColor:   TColor;
-    FFillAlpha:     Byte;
-    FFillColor:     TColor;
-    FOnChange:      TNotifyEvent;
+    FBorder:            TX2Color32;
+    FFill:              TX2Color32;
+    FDefaultBorder:     TX2Color32;
+    FDefaultFill:       TX2Color32;
+    FOnChange:          TNotifyEvent;
 
-    procedure SetBorderAlpha(const Value: Byte);
-    procedure SetBorderColor(const Value: TColor);
-    procedure SetFillAlpha(const Value: Byte);
-    procedure SetFillColor(const Value: TColor);
+    procedure SetBorder(const Value: TX2Color32);
+    procedure SetFill(const Value: TX2Color32);
+    function IsBorderStored(): Boolean;
+    function IsFillStored(): Boolean;
   protected
     procedure DoChange();
 
-    function MixColors(ABackColor, AForeColor: TColor; AAlpha: Byte): TColor;
+    procedure SetDefaultColors(ABorder, AFill: TX2Color32);
 
-    property OnChange:    TNotifyEvent    read FOnChange  write FOnChange;
+    property DefaultBorder: TX2Color32    read FDefaultBorder write FDefaultBorder;
+    property DefaultFill:   TX2Color32    read FDefaultFill   write FDefaultFill;
+    property OnChange:      TNotifyEvent  read FOnChange      write FOnChange;
   public
-    constructor Create();
-    
     procedure Assign(Source: TPersistent); override;
-
-    function MixBorder(AColor: TColor): TColor;
-    function MixFill(AColor: TColor): TColor;
   published
-    property BorderColor:   TColor  read  FBorderColor  write SetBorderColor;
-    property BorderAlpha:   Byte    read  FBorderAlpha  write SetBorderAlpha;
-    property FillColor:     TColor  read  FFillColor    write SetFillColor;
-    property FillAlpha:     Byte    read  FFillAlpha    write SetFillAlpha;
+    property Border:      TX2Color32  read FBorder  write SetBorder stored IsBorderStored;
+    property Fill:        TX2Color32  read FFill    write SetFill   stored IsFillStored;
   end;
 
   TX2MenuBarmCColors  = class(TPersistent)
@@ -156,57 +153,28 @@ end;
 procedure TX2MenuBarmusikCubePainter.ResetColors();
 begin
   { Group buttons }
-  with GroupColors.Hot do
-  begin
-    BorderColor := clBtnShadow;
-    FillAlpha   := 128;
-    FillColor   := clBtnShadow;
-  end;
+  GroupColors.Hot.SetDefaultColors(     Color32(clBtnShadow),
+                                        Color32(clBtnShadow, 128));
 
-  with GroupColors.Normal do
-  begin
-    BorderAlpha := 64;
-    BorderColor := clBtnShadow;
-    FillAlpha   := 64;
-    FillColor   := clBtnShadow;
-  end;
+  GroupColors.Normal.SetDefaultColors(  Color32(clBtnShadow, 64),
+                                        Color32(clBtnShadow, 64));
 
-  with GroupColors.Selected do
-  begin
-    BorderColor := clBtnShadow;
-    FillColor   := clBtnHighlight;
-  end;
+  GroupColors.Selected.SetDefaultColors(Color32(clBtnShadow),
+                                        Color32(clBtnHighlight));
 
   { Indicator }
-  with IndicatorColors.Selected do
-  begin
-    BorderAlpha := 252;
-    BorderColor := clActiveCaption;
-    FillAlpha   := 252;
-    FillColor   := clActiveCaption;
-  end;
+  IndicatorColors.Selected.SetDefaultColors(Color32(clActiveCaption, 252),
+                                            Color32(clActiveCaption, 252));
 
   { Item buttons }
-  with ItemColors.Hot do
-  begin
-    BorderColor := clBtnShadow;
-    FillAlpha   := 114;
-    FillColor   := clBtnHighlight;
-  end;
+  ItemColors.Hot.SetDefaultColors(      Color32(clBtnShadow),
+                                        Color32(clBtnHighlight, 114));
 
-  with ItemColors.Normal do
-  begin
-    BorderAlpha := 50;
-    BorderColor := clBtnHighlight;
-    FillAlpha   := 50;
-    FillColor   := clBtnHighlight;
-  end;
+  ItemColors.Normal.SetDefaultColors(   Color32(clBtnHighlight, 50),
+                                        Color32(clBtnHighlight, 50));
 
-  with ItemColors.Selected do
-  begin
-    BorderColor := clBtnShadow;
-    FillColor   := clBtnHighlight;
-  end;
+  ItemColors.Selected.SetDefaultColors( Color32(clBtnShadow),
+                                        Color32(clBtnHighlight));
 end;
 
 
@@ -294,9 +262,9 @@ begin
   begin
     groupColor  := GetColor(GroupColors, AState);
 
-    Brush.Color := groupColor.MixFill(Color);
+    Brush.Color := Blend(Color, groupColor.Fill);
     Brush.Style := bsSolid;
-    Pen.Color   := groupColor.MixBorder(Color);
+    Pen.Color   := Blend(Color, groupColor.Border);
     Pen.Style   := psSolid;
     Rectangle(ABounds);
 
@@ -338,16 +306,16 @@ begin
     itemBounds            := ABounds;
     indicatorBounds       := itemBounds;
     indicatorBounds.Right := indicatorBounds.Left + 6;
-    Brush.Color           := indicatorColor.MixFill(Color);
+    Brush.Color           := Blend(Color, indicatorColor.Fill);
     Brush.Style           := bsSolid;
-    Pen.Color             := indicatorColor.MixBorder(Color);
+    Pen.Color             := Blend(Color, indicatorColor.Border);
     Pen.Style             := psSolid;
     Rectangle(itemBounds);
 
     itemBounds.Left       := indicatorBounds.Right;
-    Brush.Color           := itemColor.MixFill(Color);
+    Brush.Color           := Blend(Color, itemColor.Fill);
     Brush.Style           := bsSolid;
-    Pen.Color             := itemColor.MixBorder(Color);
+    Pen.Color             := Blend(Color, itemColor.Border);
     Pen.Style             := psSolid;
     Rectangle(itemBounds);
 
@@ -447,25 +415,15 @@ end;
 
 
 { TX2MenuBarmCColor }
-constructor TX2MenuBarmCColor.Create();
-begin
-  inherited;
-
-  FBorderAlpha  := 255;
-  FBorderColor  := clNone;
-  FFillAlpha    := 255;
-  FFillColor    := clNone;
-end;
-
 procedure TX2MenuBarmCColor.Assign(Source: TPersistent);
 begin
   if Source is TX2MenuBarmCColor then
     with TX2MenuBarmCColor(Source) do
     begin
-      Self.BorderColor  := BorderColor;
-      Self.BorderAlpha  := BorderAlpha;
-      Self.FillColor    := FillColor;
-      Self.FillAlpha    := FillAlpha;
+      Self.DefaultBorder  := DefaultBorder;
+      Self.DefaultFill    := DefaultFill;
+      Self.Border         := Border;
+      Self.Fill           := Fill;
     end
   else
     inherited;
@@ -478,77 +436,39 @@ begin
     FOnChange(Self);
 end;
 
-
-function TX2MenuBarmCColor.MixColors(ABackColor, AForeColor: TColor;
-                                     AAlpha: Byte): TColor;
-var
-  cBack:        Cardinal;
-  cFore:        Cardinal;
-  bBack:        Byte;
-
+procedure TX2MenuBarmCColor.SetDefaultColors(ABorder, AFill: TX2Color32);
 begin
-  { Source: X2UtGraphics.BlendColors }
-  cBack   := ColorToRGB(ABackColor);
-  cFore   := ColorToRGB(AForeColor);
-  bBack   := 255 - AAlpha;
-
-  Result  := RGB(((GetRValue(cBack) * bBack) +
-                  (GetRValue(cFore) * AAlpha)) shr 8,
-                 ((GetGValue(cBack) * bBack) +
-                  (GetGValue(cFore) * AAlpha)) shr 8,
-                 ((GetBValue(cBack) * bBack) +
-                  (GetBValue(cFore) * AAlpha)) shr 8);
-end;
-
-function TX2MenuBarmCColor.MixBorder(AColor: TColor): TColor;
-begin
-  if BorderColor = clNone then
-    Result  := AColor
-  else
-    Result  := MixColors(AColor, BorderColor, BorderAlpha);
-end;
-
-function TX2MenuBarmCColor.MixFill(AColor: TColor): TColor;
-begin
-  if FillColor = clNone then
-    Result  := AColor
-  else
-    Result  := MixColors(AColor, FillColor, FillAlpha);
+  FDefaultBorder  := ABorder;
+  FDefaultFill    := AFill;
+  FBorder         := ABorder;
+  FFill           := AFill;
 end;
 
 
-procedure TX2MenuBarmCColor.SetBorderAlpha(const Value: Byte);
+function TX2MenuBarmCColor.IsBorderStored(): Boolean;
 begin
-  if Value <> FBorderAlpha then
+  Result  := (FBorder <> FDefaultBorder);
+end;
+
+function TX2MenuBarmCColor.IsFillStored(): Boolean;
+begin
+  Result  := (FFill <> FDefaultFill);
+end;
+
+procedure TX2MenuBarmCColor.SetBorder(const Value: TX2Color32);
+begin
+  if Value <> FBorder then
   begin
-    FBorderAlpha := Value;
+    FBorder := Value;
     DoChange();
   end;
 end;
 
-procedure TX2MenuBarmCColor.SetBorderColor(const Value: TColor);
+procedure TX2MenuBarmCColor.SetFill(const Value: TX2Color32);
 begin
-  if Value <> FBorderColor then
+  if Value <> FFill then
   begin
-    FBorderColor := Value;
-    DoChange();
-  end;
-end;
-
-procedure TX2MenuBarmCColor.SetFillAlpha(const Value: Byte);
-begin
-  if Value <> FFillAlpha then
-  begin
-    FFillAlpha := Value;
-    DoChange();
-  end;
-end;
-
-procedure TX2MenuBarmCColor.SetFillColor(const Value: TColor);
-begin
-  if Value <> FFillColor then
-  begin
-    FFillColor := Value;
+    FFill := Value;
     DoChange();
   end;
 end;

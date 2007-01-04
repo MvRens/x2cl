@@ -11,7 +11,6 @@ uses
   Menus,
   PNGImage,
   ToolWin,
-  IconXP,
   X2CLGraphicList;
 
 type

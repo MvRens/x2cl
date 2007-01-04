@@ -21,9 +21,10 @@ uses
 
 procedure Register;
 begin
+  RegisterNoIcon([TX2GraphicContainerItem]);
+
   RegisterComponents('X2Software', [TX2GraphicContainer, TX2GraphicList]);
 
-  RegisterPropertyEditor(TypeInfo(TX2GraphicCollection), TX2GraphicContainer, 'Graphics', TX2GraphicsProperty);
   RegisterComponentEditor(TX2GraphicContainer, TX2GraphicContainerEditor);
   RegisterComponentEditor(TX2GraphicList, TX2GraphicListEditor);
 end;

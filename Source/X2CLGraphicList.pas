@@ -7,7 +7,6 @@
   :: the problems I thought we would face. His original (Dutch) article can
   :: be found at:
   ::   http://www.erikstok.net/delphi/artikelen/xpicons.html
-  ::
   :: Last changed:    $Date$
   :: Revision:        $Rev$
   :: Author:          $Author$
@@ -36,54 +35,42 @@ type
   {
     :$ Holds a single graphic.
   }
-  TX2GraphicCollectionItem  = class(TCollectionItem, IChangeNotifier)
+  TX2GraphicContainerItem = class(TComponent, IChangeNotifier)
   private
-    FName:              String;
+    FContainer:         TX2GraphicContainer;
     FPicture:           TPicture;
+    FPictureName:       String;
 
+    function GetIndex(): Integer;
+    procedure SetContainer(const Value: TX2GraphicContainer);
+    procedure SetIndex(const Value: Integer);
     procedure SetPicture(const Value: TPicture);
-    procedure SetName(const Value: String);
+    procedure SetPictureName(const Value: String);
   protected
-    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
-    function _AddRef(): Integer; stdcall;
-    function _Release(): Integer; stdcall;
+    procedure Changed(); virtual;
+    procedure InternalSetContainer(const AContainer: TX2GraphicContainer); virtual;
 
-    function GetDisplayName(): String; override;
+    function GenerateName(): String;
 
     procedure NotifierChanged();
     procedure IChangeNotifier.Changed = NotifierChanged;
+
+    procedure ReadState(Reader: TReader); override;
+    procedure SetParentComponent(AParent: TComponent); override;
   public
-    constructor Create(Collection: TCollection); override;
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
 
+    function GetParentComponent(): TComponent; override;
+    function HasParent(): Boolean; override;
+
     procedure AssignTo(Dest: TPersistent); override;
-  published
-    property Name:          String    read FName    write SetName;
-    property Picture:       TPicture  read FPicture write SetPicture;
-  end;
-
-  {
-    :$ Holds a collection of graphics.
-  }
-  TX2GraphicCollection      = class(TCollection)
-  private
-    FContainer:       TX2GraphicContainer;
-
-    function GetItem(Index: Integer): TX2GraphicCollectionItem;
-    procedure SetItem(Index: Integer; Value: TX2GraphicCollectionItem);
-  protected
-    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
-    procedure Update(Item: TCollectionItem); override;
   public
-    constructor Create(const AContainer: TX2GraphicContainer);
-
-    function Add(): TX2GraphicCollectionItem;
-    function IndexByName(const AName: String): Integer;
-    function GraphicByName(const AName: String): TX2GraphicCollectionItem;
-    function PictureByName(const AName: String): TPicture;
-
-    property Items[Index: Integer]:   TX2GraphicCollectionItem  read GetItem
-                                                                write SetItem; default;
+    property Container:     TX2GraphicContainer read FContainer   write SetContainer stored False;
+    property Index:         Integer             read GetIndex     write SetIndex stored False;
+  published
+    property Picture:       TPicture            read FPicture     write SetPicture;
+    property PictureName:   String              read FPictureName write SetPictureName;
   end;
 
   {
@@ -94,28 +81,48 @@ type
   }
   TX2GraphicContainer   = class(TComponent)
   private
-    FGraphics:        TX2GraphicCollection;
-    FLists:           TList;
+    FConversionRequired:  Boolean;
+    FGraphics:          TList;
+    FLists:               TList;
 
-    procedure SetGraphics(const Value: TX2GraphicCollection);
+    function GetGraphicCount(): Integer;
+    function GetGraphics(Index: Integer): TX2GraphicContainerItem;
+    procedure SetGraphics(Index: Integer; const Value: TX2GraphicContainerItem);
   protected
+    procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
+    procedure SetChildOrder(Component: TComponent; Order: Integer); override;
+    procedure SetName(const NewName: TComponentName); override;
+
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
-    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); virtual;
-    procedure Update(Item: TCollectionItem); virtual;
+
+    procedure ConvertGraphics(Reader: TReader);
+    procedure DefineProperties(Filer: TFiler); override;
+
+    procedure AddGraphic(const AGraphic: TX2GraphicContainerItem); virtual;
+    procedure RemoveGraphic(const AGraphic: TX2GraphicContainerItem); virtual;
+    procedure UpdateGraphic(const AGraphic: TX2GraphicContainerItem); virtual;
 
     procedure RegisterList(const AList: TX2GraphicList);
     procedure UnregisterList(const AList: TX2GraphicList);
+
+    property ConversionRequired: Boolean read FConversionRequired write FConversionRequired;
+
+    property GraphicsList: TList read FGraphics;
+    property Lists: TList read FLists;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
 
+    procedure Clear();
+
     function IndexByName(const AName: String): Integer;
-    function GraphicByName(const AName: String): TX2GraphicCollectionItem;
+    function GraphicByName(const AName: String): TX2GraphicContainerItem;
     function PictureByName(const AName: String): TPicture;
 
     procedure AssignTo(Dest: TPersistent); override;
-  published
-    property Graphics:      TX2GraphicCollection  read FGraphics  write SetGraphics;
+
+    property Graphics[Index: Integer]:  TX2GraphicContainerItem read GetGraphics  write SetGraphics;
+    property GraphicCount:              Integer                 read GetGraphicCount;
   end;
 
   {
@@ -156,7 +163,7 @@ type
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
                      Style: Cardinal; Enabled: Boolean = True); override;
 
-    procedure CreateImage(const AIndex: Integer; var AImage, AMask: TBitmap); virtual;
+    procedure BuildImage(const AIndex: Integer; const AImage, AMask: TBitmap); virtual;
     procedure AddImage(const AIndex: Integer); virtual;
     procedure UpdateImage(const AIndex: Integer); virtual;
     procedure DeleteImage(const AIndex: Integer); virtual;
@@ -183,6 +190,7 @@ type
 
 implementation
 uses
+  Forms,
   ImgList,
   SysUtils;
 
@@ -194,162 +202,233 @@ type
 
 
 
-{=============== TX2GraphicCollectionItem
+  { Used for conversion purposes from the old collection-based Graphics property
+    to the new TComponent structure. }
+  TDeprecatedGraphicItem = class(TCollectionItem)
+  private
+    FName:              String;
+    FPicture:           TPicture;
+
+    procedure SetPicture(const Value: TPicture);
+  public
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy(); override;
+  published
+    property Name:          String    read FName    write FName;
+    property Picture:       TPicture  read FPicture write SetPicture;
+  end;
+
+
+
+{================ TX2GraphicContainerItem
   Initialization
 ========================================}
-constructor TX2GraphicCollectionItem.Create(Collection: TCollection);
+constructor TX2GraphicContainerItem.Create(AOwner: TComponent);
 begin
+  inherited;
+
   FPicture                := TPicture.Create();
   FPicture.PictureAdapter := Self;
-
-  inherited;
 end;
 
-destructor TX2GraphicCollectionItem.Destroy();
+destructor TX2GraphicContainerItem.Destroy();
 begin
+  if Assigned(Container) then
+    Container.RemoveGraphic(Self);
+
   FreeAndNil(FPicture);
 
   inherited;
 end;
 
 
-procedure TX2GraphicCollectionItem.AssignTo(Dest: TPersistent);
+procedure TX2GraphicContainerItem.AssignTo(Dest: TPersistent);
 begin
-  if Dest is TX2GraphicCollectionItem then
-    with TX2GraphicCollectionItem(Dest) do
-      Picture := Self.Picture
+  if Dest is TX2GraphicContainerItem then
+    with TX2GraphicContainerItem(Dest) do
+    begin
+      Picture := Self.Picture;
+      PictureName := Self.PictureName;
+    end
   else
     inherited;
 end;
 
 
-function TX2GraphicCollectionItem.QueryInterface(const IID: TGUID;
-                                                 out Obj): HResult;
+procedure TX2GraphicContainerItem.NotifierChanged();
 begin
-  if GetInterface(IID, Obj) then
-    Result := 0
+  Changed();
+end;
+
+
+procedure TX2GraphicContainerItem.InternalSetContainer(const AContainer: TX2GraphicContainer);
+begin
+  FContainer := AContainer;
+end;
+
+
+
+procedure TX2GraphicContainerItem.Changed();
+begin
+  if Assigned(Container) then
+    Container.UpdateGraphic(Self);
+end;
+
+
+
+function TX2GraphicContainerItem.GetParentComponent(): TComponent;
+begin
+  if Assigned(Container) then
+    Result := Container
   else
-    Result := E_NOINTERFACE;
+    Result := inherited GetParentComponent();
 end;
 
-function TX2GraphicCollectionItem._AddRef(): Integer;
+function TX2GraphicContainerItem.HasParent(): Boolean;
 begin
-  Result  := -1;
-end;
-
-function TX2GraphicCollectionItem._Release(): Integer;
-begin
-  Result  := -1;
-end;
-
-
-function TX2GraphicCollectionItem.GetDisplayName(): String;
-begin
-  if Length(FName) > 0 then
-    Result  := FName
+  if Assigned(Container) then
+    Result := True
   else
-    Result  := inherited GetDisplayName();
+    Result := inherited HasParent();
 end;
 
 
-procedure TX2GraphicCollectionItem.NotifierChanged();
+
+procedure TX2GraphicContainerItem.ReadState(Reader: TReader);
 begin
-  Changed(False);
+  inherited;
+
+  if Reader.Parent is TX2GraphicContainer then
+    Container := TX2GraphicContainer(Reader.Parent);
 end;
 
-procedure TX2GraphicCollectionItem.SetName(const Value: String);
+procedure TX2GraphicContainerItem.SetParentComponent(AParent: TComponent);
 begin
-  FName := Value;
-  Changed(False);
+  if not (csLoading in ComponentState) and (AParent is TX2GraphicContainer) then
+    Container := TX2GraphicContainer(AParent);
 end;
 
-procedure TX2GraphicCollectionItem.SetPicture(const Value: TPicture);
+
+function TX2GraphicContainerItem.GetIndex(): Integer;
+begin
+  Result := -1;
+  if Assigned(Container) then
+    Result := Container.GraphicsList.IndexOf(Self);
+end;
+
+procedure TX2GraphicContainerItem.SetContainer(const Value: TX2GraphicContainer);
+begin
+  if Value <> Container then
+  begin
+    if Assigned(Container) then
+      Container.RemoveGraphic(Self);
+
+    if Assigned(Value) then
+      Value.AddGraphic(Self);
+
+    if not (csLoading in ComponentState) then
+      Name := GenerateName();
+  end;
+end;
+
+procedure TX2GraphicContainerItem.SetIndex(const Value: Integer);
+var
+  count:      Integer;
+  curIndex:   Integer;
+  newIndex:   Integer;
+
+begin
+  curIndex := GetIndex();
+
+  if curIndex > -1 then
+  begin
+    count     := Container.GraphicsList.Count;
+    newIndex  := Value;
+
+    if newIndex < 0 then
+      newIndex := 0;
+
+    if newIndex >= count then
+      newIndex := Pred(count);
+
+    if newIndex <> curIndex then
+      Container.GraphicsList.Move(curIndex, newIndex);
+  end;
+end;
+
+procedure TX2GraphicContainerItem.SetPicture(const Value: TPicture);
 begin
   FPicture.Assign(Value);
 end;
 
-
-{=================== TX2GraphicCollection
-  Item Management
-========================================}
-constructor TX2GraphicCollection.Create(const AContainer: TX2GraphicContainer);
+procedure TX2GraphicContainerItem.SetPictureName(const Value: String);
 begin
-  inherited Create(TX2GraphicCollectionItem);
+  if Value <> FPictureName then
+  begin
+    FPictureName := Value;
 
-  FContainer  := AContainer;
+    if not (csLoading in ComponentState) then
+      Name := GenerateName();
+  end;
 end;
 
 
-function TX2GraphicCollection.Add(): TX2GraphicCollectionItem;
-begin
-  Result  := TX2GraphicCollectionItem(inherited Add());
-end;
+function TX2GraphicContainerItem.GenerateName(): String;
+  function ValidComponentName(const AComponent: TComponent; const AName: String): Boolean;
+  var
+    checkOwner:   TComponent;
+    existing:     TComponent;
 
+  begin
+    Result := True;
+    checkOwner := AComponent;
 
-function TX2GraphicCollection.IndexByName(const AName: String): Integer;
-var
-  iIndex:     Integer;
-
-begin
-  Result  := -1;
-  for iIndex  := Pred(Count) downto 0 do
-    if SameText(Items[iIndex].Name, AName) then
+    while Assigned(checkOwner) do
     begin
-      Result  := iIndex;
-      break;
+      existing := checkOwner.FindComponent(AName);
+
+      if Assigned(existing) and (existing <> Self) then
+      begin
+        Result := False;
+        exit;
+      end;
+
+      checkOwner := checkOwner.Owner;
     end;
-end;
+  end;
 
-function TX2GraphicCollection.GraphicByName(const AName: String): TX2GraphicCollectionItem;
+
+const
+  Alpha = ['A'..'Z', 'a'..'z', '_'];
+  AlphaNumeric = Alpha + ['0'..'9'];
+
 var
-  iIndex:     Integer;
+  charIndex:    Integer;
+  counter:      Integer;
+  resultName:   String;
+
 
 begin
-  Result  := nil;
-  iIndex  := IndexByName(AName);
-  if iIndex > -1 then
-    Result  := Items[iIndex];
+  if Assigned(Container) then
+    Result := Container.Name
+  else
+    Result := 'GraphicContainerItem';
+
+  for charIndex := 1 to Length(PictureName) do
+    if PictureName[charIndex] in AlphaNumeric then
+      Result := Result + PictureName[charIndex];
+
+
+  resultName  := Result;
+  counter     := 0;
+
+  while not ValidComponentName(Self, Result) do
+  begin
+    Inc(counter);
+    Result := resultName + IntToStr(counter); 
+  end;
 end;
 
-function TX2GraphicCollection.PictureByName(const AName: String): TPicture;
-var
-  pGraphic:     TX2GraphicCollectionItem;
-
-begin
-  Result    := nil;
-  pGraphic  := GraphicByName(AName);
-  if Assigned(pGraphic) then
-    Result  := pGraphic.Picture;
-end;
-
-
-procedure TX2GraphicCollection.Notify(Item: TCollectionItem;
-                                      Action: TCollectionNotification);
-begin
-  inherited;
-
-  if Assigned(FContainer) then
-    FContainer.Notify(Item, Action);
-end;
-
-procedure TX2GraphicCollection.Update(Item: TCollectionItem);
-begin
-  inherited;
-
-  if Assigned(FContainer) then
-    FContainer.Update(Item);
-end;
-
-
-function TX2GraphicCollection.GetItem(Index: Integer): TX2GraphicCollectionItem;
-begin
-  Result  := TX2GraphicCollectionItem(inherited GetItem(Index));
-end;
-
-procedure TX2GraphicCollection.SetItem(Index: Integer; Value: TX2GraphicCollectionItem);
-begin
-  inherited SetItem(Index, Value);
-end;
 
 
 {==================== TX2GraphicContainer
@@ -359,12 +438,14 @@ constructor TX2GraphicContainer.Create(AOwner: TComponent);
 begin
   inherited;
 
-  FGraphics := TX2GraphicCollection.Create(Self);
+  FGraphics := TList.Create();
   FLists    := TList.Create();
 end;
 
 destructor TX2GraphicContainer.Destroy();
 begin
+  Clear();
+  
   FreeAndNil(FGraphics);
   FreeAndNil(FLists);
 
@@ -373,95 +454,264 @@ end;
 
 
 function TX2GraphicContainer.IndexByName(const AName: String): Integer;
+var
+  graphicIndex: Integer;
+
 begin
-  Result  := FGraphics.IndexByName(AName);
+  Result  := -1;
+
+  for graphicIndex := Pred(GraphicCount) downto 0 do
+    if SameText(Graphics[graphicIndex].Name, AName) then
+    begin
+      Result := graphicIndex;
+      break;
+    end;
 end;
 
-function TX2GraphicContainer.GraphicByName(const AName: String): TX2GraphicCollectionItem;
+function TX2GraphicContainer.GraphicByName(const AName: String): TX2GraphicContainerItem;
+var
+  graphicIndex: Integer;
+
 begin
-  Result  := FGraphics.GraphicByName(AName);
+  Result        := nil;
+  graphicIndex  := IndexByName(AName);
+  if graphicIndex > -1 then
+    Result  := Graphics[graphicIndex];
 end;
 
 function TX2GraphicContainer.PictureByName(const AName: String): TPicture;
+var
+  graphic: TX2GraphicContainerItem;
+
 begin
-  Result  := FGraphics.PictureByName(AName);
+  Result  := nil;
+  graphic := GraphicByName(AName);
+  if Assigned(graphic) then
+    Result  := graphic.Picture;
 end;
 
 
 procedure TX2GraphicContainer.AssignTo(Dest: TPersistent);
+var
+  destContainer: TX2GraphicContainer;
+  graphicIndex: Integer;
+
 begin
   if Dest is TX2GraphicContainer then
-    with TX2GraphicContainer(Dest) do
-      Graphics  := Self.Graphics
+  begin
+    destContainer := TX2GraphicContainer(Dest);
+    destContainer.Clear();
+
+    for graphicIndex := 0 to Pred(Self.GraphicCount) do
+      with TX2GraphicContainerItem.Create(destContainer) do
+      begin
+        Assign(Self.Graphics[graphicIndex]);
+        Container := destContainer;
+      end;
+  end
   else
     inherited;
 end;
 
 
 
-procedure TX2GraphicContainer.Notification(AComponent: TComponent; Operation: TOperation);
+procedure TX2GraphicContainer.Clear();
 begin
-  if not Assigned(FLists) then
-    exit;
-
-  if Operation = opRemove then
-    FLists.Remove(AComponent)
-  else
-    // In design-time, if a TX2GraphicList is added and it doesn't yet have
-    // a container, assign ourselves to it for lazy programmers (such as me :))
-    if (Operation = opInsert) and (csDesigning in ComponentState) and
-       (AComponent is TX2GraphicList) and
-       (not Assigned(TX2GraphicList(AComponent).Container)) then
-      TX2GraphicList(AComponent).Container  := Self;
-
-  inherited;
+  while GraphicsList.Count > 0 do
+    TX2GraphicContainerItem(GraphicsList.Last).Free();
 end;
 
-procedure TX2GraphicContainer.Notify(Item: TCollectionItem;
-                                     Action: TCollectionNotification);
+
+procedure TX2GraphicContainer.GetChildren(Proc: TGetChildProc; Root: TComponent);
 var
-  iList:      Integer;
+  graphicIndex:   Integer;
+  graphic:        TX2GraphicContainerItem;
 
 begin
-  case Action of
-    cnAdded:
-      for iList := FLists.Count - 1 downto 0 do
-        TX2GraphicList(FLists[iList]).AddImage(Item.Index);
-    cnDeleting:
-      for iList := FLists.Count - 1 downto 0 do
-        TX2GraphicList(FLists[iList]).DeleteImage(Item.Index);
+  for graphicIndex := 0 to Pred(GraphicCount) do
+  begin
+    graphic := Graphics[graphicIndex];
+    Proc(graphic);
   end;
 end;
 
-procedure TX2GraphicContainer.Update(Item: TCollectionItem);
+procedure TX2GraphicContainer.SetChildOrder(Component: TComponent; Order: Integer);
+begin
+  if GraphicsList.IndexOf(Component) >= 0 then
+    (Component as TX2GraphicContainerItem).Index := Order;
+end;
+
+
+procedure TX2GraphicContainer.SetName(const NewName: TComponentName);
 var
-  iList:      Integer;
+  oldName: String;
+  graphicIndex: Integer;
 
 begin
-  if Assigned(Item) then
-    for iList := FLists.Count - 1 downto 0 do
-      TX2GraphicList(FLists[iList]).UpdateImage(Item.Index)
-  else
-    for iList := FLists.Count - 1 downto 0 do
-      TX2GraphicList(FLists[iList]).RebuildImages();
+  oldName := Self.Name;
+
+  inherited;
+
+  if Self.Name <> oldName then
+  begin
+    { Re-generate names for graphic components }
+    for graphicIndex := 0 to Pred(GraphicCount) do
+      Graphics[graphicIndex].Name := Graphics[graphicIndex].GenerateName();
+  end;
+end;
+
+
+procedure TX2GraphicContainer.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited;
+
+  case Operation of
+    opInsert:
+      { In design-time, if a TX2GraphicList is added and it doesn't yet have
+        a container, assign ourselves to it for lazy programmers (such as me :)) }
+      if (csDesigning in ComponentState) and
+         (AComponent is TX2GraphicList) and
+         (not Assigned(TX2GraphicList(AComponent).Container)) then
+        TX2GraphicList(AComponent).Container  := Self;
+
+    opRemove:
+      begin
+        if AComponent is TX2GraphicContainerItem then
+          RemoveGraphic(TX2GraphicContainerItem(AComponent))
+          
+        else if AComponent is TX2GraphicList then
+          Lists.Remove(AComponent);
+      end;
+  end;
+end;
+
+
+procedure TX2GraphicContainer.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+
+  { Previous versions used a Collection to hold the container items. As this
+    wasn't Visual Inheritance-friendly, container items are now TComponents.
+    This will convert the deprecated Graphics property. }
+  Filer.DefineProperty('Graphics', ConvertGraphics, nil, False);
+end;
+
+
+procedure TX2GraphicContainer.ConvertGraphics(Reader: TReader);
+var
+  graphics: TCollection;
+  graphicIndex: Integer;
+  graphicItem: TDeprecatedGraphicItem;
+
+begin
+  graphics := TCollection.Create(TDeprecatedGraphicItem);
+  try
+    if Reader.NextValue = vaCollection then
+    begin
+      FConversionRequired := True;
+      Clear;
+
+      Reader.ReadValue;
+      Reader.ReadCollection(graphics);
+
+      for graphicIndex := 0 to Pred(graphics.Count) do
+      begin
+        graphicItem := TDeprecatedGraphicItem(graphics.Items[graphicIndex]);
+
+        { Note: this create the item just fine, but won't add a line to the
+          form's definition; the designer can take care of that. }
+        with TX2GraphicContainerItem.Create(Self) do
+        begin
+          Picture := graphicItem.Picture;
+          PictureName := graphicItem.Name;
+          Container := Self;
+        end;
+      end;
+    end;
+  finally
+    FreeAndNil(graphics);
+  end;
+end;
+
+
+procedure TX2GraphicContainer.AddGraphic(const AGraphic: TX2GraphicContainerItem);
+var
+  graphicIndex:   Integer;
+  listIndex:      Integer;
+
+begin
+  graphicIndex := GraphicsList.Add(AGraphic);
+  AGraphic.InternalSetContainer(Self);
+  AGraphic.FreeNotification(Self);
+
+  for listIndex := Pred(Lists.Count) downto 0 do
+    TX2GraphicList(Lists[listIndex]).AddImage(graphicIndex);
+end;
+
+procedure TX2GraphicContainer.RemoveGraphic(const AGraphic: TX2GraphicContainerItem);
+var
+  graphicIndex:   Integer;
+  listIndex:      Integer;
+
+begin
+  graphicIndex := AGraphic.Index;
+
+  if graphicIndex > -1 then
+  begin
+    for listIndex := Pred(Lists.Count) downto 0 do
+      TX2GraphicList(Lists[listIndex]).DeleteImage(graphicIndex);
+
+    GraphicsList.Delete(graphicIndex);
+    AGraphic.InternalSetContainer(nil);
+  end;
+end;
+
+procedure TX2GraphicContainer.UpdateGraphic(const AGraphic: TX2GraphicContainerItem);
+var
+  graphicIndex: Integer;
+  listIndex:    Integer;
+
+begin
+  graphicIndex := AGraphic.Index;
+
+  if graphicIndex > -1 then
+  begin
+    for listIndex := Pred(Lists.Count) downto 0 do
+      TX2GraphicList(Lists[listIndex]).UpdateImage(graphicIndex);
+  end;
 end;
 
 
 procedure TX2GraphicContainer.RegisterList(const AList: TX2GraphicList);
 begin
-  if FLists.IndexOf(AList) = -1 then
-    FLists.Add(AList);
+  if Lists.IndexOf(AList) = -1 then
+  begin
+    Lists.Add(AList);
+    AList.FreeNotification(Self);
+  end;
 end;
 
 procedure TX2GraphicContainer.UnregisterList(const AList: TX2GraphicList);
 begin
-  FLists.Remove(AList);
+  if Lists.Remove(AList) > -1 then
+    AList.RemoveFreeNotification(Self);  
 end;
 
 
-procedure TX2GraphicContainer.SetGraphics(const Value: TX2GraphicCollection);
+
+function TX2GraphicContainer.GetGraphicCount(): Integer;
 begin
-  FGraphics.Assign(Value);
+  Result := GraphicsList.Count;
+end;
+
+function TX2GraphicContainer.GetGraphics(Index: Integer): TX2GraphicContainerItem;
+begin
+  Result := TX2GraphicContainerItem(GraphicsList[Index]);
+end;
+
+procedure TX2GraphicContainer.SetGraphics(Index: Integer; const Value: TX2GraphicContainerItem);
+begin
+  TX2GraphicContainerItem(GraphicsList[Index]).Assign(Value);
 end;
 
 
@@ -600,7 +850,7 @@ begin
   if not Assigned(FContainer) then
     exit;
 
-  if (AIndex < 0) or (AIndex >= FContainer.Graphics.Count) then
+  if (AIndex < 0) or (AIndex >= FContainer.GraphicCount) then
     exit;
 
   if (not Assigned(FContainer.Graphics[AIndex].Picture.Graphic)) or
@@ -669,8 +919,8 @@ begin
 end;
 
 
-procedure TX2GraphicList.CreateImage(const AIndex: Integer;
-                                     var AImage, AMask: TBitmap);
+procedure TX2GraphicList.BuildImage(const AIndex: Integer;
+                                    const AImage, AMask: TBitmap);
   function RGBTriple(const AColor: TColor): TRGBTriple;
   var
     cColor:       Cardinal;
@@ -707,13 +957,11 @@ var
 begin
   if not FConvert then
   begin
-    AImage                    := TBitmap.Create();
     AImage.Width              := Self.Width;
     AImage.Height             := Self.Height;
     AImage.Canvas.Brush.Color := clWhite;
     AImage.Canvas.FillRect(Rect(0, 0, AImage.Width, AImage.Height));
 
-    AMask   := TBitmap.Create();
     AMask.Assign(AImage);
     exit;
   end;
@@ -826,7 +1074,7 @@ begin
     bmpImage  := TBitmap.Create();
     bmpMask   := TBitmap.Create();
     try
-      CreateImage(AIndex, bmpImage, bmpMask);
+      BuildImage(AIndex, bmpImage, bmpMask);
       Assert(AIndex <= Self.Count, 'AAAH! Images out of sync! *panics*');
 
       if AIndex = Self.Count then
@@ -859,7 +1107,7 @@ begin
     bmpImage  := TBitmap.Create();
     bmpMask   := TBitmap.Create();
     try
-      CreateImage(AIndex, bmpImage, bmpMask);
+      BuildImage(AIndex, bmpImage, bmpMask);
       Replace(AIndex, bmpImage, bmpMask);
     finally
       FreeAndNil(bmpMask);
@@ -897,7 +1145,7 @@ begin
     if not Assigned(FContainer) then
       exit;
 
-    for iIndex  := 0 to FContainer.Graphics.Count - 1 do
+    for iIndex  := 0 to Pred(FContainer.GraphicCount) do
       AddImage(iIndex);
   finally
     EndUpdate();
@@ -998,7 +1246,30 @@ begin
   Dec(FUpdateCount);
 end;
 
+
+
+{ TDeprecatedGraphicItem }
+constructor TDeprecatedGraphicItem.Create(Collection: TCollection);
+begin
+  inherited;
+
+  FPicture  := TPicture.Create();
+end;
+
+destructor TDeprecatedGraphicItem.Destroy();
+begin
+  FreeAndNil(FPicture);
+
+  inherited;
+end;
+
+procedure TDeprecatedGraphicItem.SetPicture(const Value: TPicture);
+begin
+  FPicture.Assign(Value);
+end;
+
+
+initialization
+  RegisterClass(TX2GraphicContainerItem);
+
 end.
-
-
-

@@ -13,16 +13,9 @@ uses
   DesignIntf;
 
 type
-  TX2GraphicsProperty       = class(TClassProperty)
-  public
-    function AllEqual(): Boolean; override;
-    procedure Edit(); override;
-    function GetAttributes(): TPropertyAttributes; override;
-  end;
-
   TX2GraphicContainerEditor = class(TComponentEditor)
-  private
-    procedure FindGraphics(const Prop: IProperty);
+  protected
+    procedure Convert();
   public
     procedure Edit(); override;
     procedure ExecuteVerb(Index: Integer); override;
@@ -44,62 +37,75 @@ uses
   X2CLGraphicList,
   X2CLGraphicsEditor;
 
-
-{==================== TX2GraphicsProperty
-  Editor
-========================================}
-function TX2GraphicsProperty.AllEqual;
-begin
-  Result  := (PropCount = 1);
-end;
-
-procedure TX2GraphicsProperty.Edit;
-begin
-  TfrmGraphicsEditor.Execute(TComponent(GetComponent(0)));
-end;
-
-function TX2GraphicsProperty.GetAttributes;
-begin
-  Result  := [paDialog, paReadOnly];
-end;
+type
+  TProtectedX2GraphicContainer = class(TX2GraphicContainer);
 
 
 {============== TX2GraphicContainerEditor
   Editor
 ========================================}
-procedure TX2GraphicContainerEditor.FindGraphics;
+procedure TX2GraphicContainerEditor.Edit();
 begin
-  if SameText(Prop.GetName(), 'Graphics') then
-    Prop.Edit();
+  TfrmGraphicsEditor.Execute(Component, Self.Designer);
 end;
 
-procedure TX2GraphicContainerEditor.Edit;
-var
-  dsComponents:       TDesignerSelections;
-
+procedure TX2GraphicContainerEditor.ExecuteVerb(Index: Integer);
 begin
-  dsComponents  := TDesignerSelections.Create();
-  try
-    IDesignerSelections(dsComponents).Add(Component);
-    GetComponentProperties(dsComponents, tkProperties, Designer, FindGraphics);
-  finally
-    FreeAndNil(dsComponents);
+  case Index of
+    0: Edit();
+    1: Convert();
   end;
 end;
 
-procedure TX2GraphicContainerEditor.ExecuteVerb;
+function TX2GraphicContainerEditor.GetVerb(Index: Integer): String;
 begin
-  Edit();
+  case Index of
+    0: Result := 'Graphics Editor...';
+    1: Result := 'Convert items';
+  end;
 end;
 
-function TX2GraphicContainerEditor.GetVerb;
-begin
-  Result  := 'Graphics Editor...';
-end;
-
-function TX2GraphicContainerEditor.GetVerbCount;
+function TX2GraphicContainerEditor.GetVerbCount(): Integer;
 begin
   Result  := 1;
+
+  if TProtectedX2GraphicContainer(Component).ConversionRequired then
+    Inc(Result);
+end;
+
+
+procedure TX2GraphicContainerEditor.Convert();
+var
+  container: TX2GraphicContainer;
+  tempContainer: TX2GraphicContainer;
+  graphicIndex: Integer;
+  graphicItem: TX2GraphicContainerItem;
+
+begin
+  if not Assigned(Designer) then
+    exit;
+
+  container := TX2GraphicContainer(Component);
+  tempContainer := TX2GraphicContainer.Create(nil);
+  try
+    tempContainer.Assign(container);
+
+    container.Clear();
+
+    for graphicIndex := 0 to Pred(tempContainer.GraphicCount) do
+    begin
+      graphicItem := TX2GraphicContainerItem(Designer.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
+      if Assigned(graphicItem) then
+      begin
+        graphicItem.Assign(tempContainer.Graphics[graphicIndex]);
+        graphicItem.Container := container;
+      end;
+    end;
+
+    TProtectedX2GraphicContainer(container).ConversionRequired := False;
+  finally
+    FreeAndNil(tempContainer);
+  end;
 end;
 
 

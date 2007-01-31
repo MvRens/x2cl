@@ -25,7 +25,7 @@ uses
   X2CLGraphicList;
 
 type
-  TfrmGraphicsEditor = class(TForm)
+  TGraphicsEditorForm = class(TForm)
     actAdd:                                     TAction;
     actClear:                                   TAction;
     actDelete:                                  TAction;
@@ -68,11 +68,14 @@ type
     procedure actSaveExecute(Sender: TObject);
     procedure actClearExecute(Sender: TObject);
   private
-    FComponent:         TX2GraphicContainer;
-    FComponentDesigner: IDesigner;
+    FComponent:           TX2GraphicContainer;
+    FComponentDesigner:   IDesigner;
+    FUpdating:            Boolean;
 
     procedure InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
-    procedure Administrate();
+    
+    procedure ItemChanged(AUpdatePreview: Boolean = True);
+    procedure UpdateUI();
     procedure UpdatePreview();
 
     function Active(out AIndex: Integer; out AGraphic: TX2GraphicContainerItem): Boolean;
@@ -86,33 +89,32 @@ implementation
 uses
   Graphics,
   SysUtils;
-  
+
+
 var
-  GEditor:        TfrmGraphicsEditor;
+  EditorInstance:     TGraphicsEditorForm;
 
 
 {$R *.dfm}
 
 
-{===================== TfrmGraphicsEditor
-  Initialization
-========================================}
-class procedure TfrmGraphicsEditor.Execute(const AComponent: TComponent; const ADesigner: IDesigner);
+{ TGraphicsEditorForm }
+class procedure TGraphicsEditorForm.Execute(const AComponent: TComponent; const ADesigner: IDesigner);
 begin
-  if not Assigned(GEditor) then
-    GEditor := TfrmGraphicsEditor.Create(Application);
+  if not Assigned(EditorInstance) then
+    EditorInstance := TGraphicsEditorForm.Create(Application);
 
-  GEditor.InternalExecute(AComponent, ADesigner);
+  EditorInstance.InternalExecute(AComponent, ADesigner);
 end;
 
-procedure TfrmGraphicsEditor.InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
+procedure TGraphicsEditorForm.InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
 var
-  iGraphic:         Integer;
+  graphicIndex:   Integer;
 
 begin
   FComponent          := TX2GraphicContainer(AComponent);
   FComponent.FreeNotification(Self);
-  
+
   FComponentDesigner  := ADesigner;
   Caption             := Format('%s Graphics', [FComponent.Name]);
 
@@ -123,79 +125,91 @@ begin
     try
       Clear();
 
-      for iGraphic  := 0 to FComponent.GraphicCount - 1 do
-        AddObject(FComponent.Graphics[iGraphic].PictureName,
-                  FComponent.Graphics[iGraphic]);
+      for graphicIndex := 0 to FComponent.GraphicCount - 1 do
+        AddObject(FComponent.Graphics[graphicIndex].PictureName,
+                  FComponent.Graphics[graphicIndex]);
     finally
       EndUpdate();
     end;
 
     lstGraphics.ItemIndex := 0;
-    UpdatePreview();
   end;
 
-  Administrate();
+  UpdateUI();
+  UpdatePreview();
   Show();
 end;
 
-procedure TfrmGraphicsEditor.FormClose(Sender: TObject; var Action: TCloseAction);
+
+procedure TGraphicsEditorForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action  := caFree;
-  GEditor := nil;
+
+  if Self = EditorInstance then
+    EditorInstance := nil;
 
   if Assigned(FComponent) then
     FComponent.RemoveFreeNotification(Self);
 end;
 
 
-procedure TfrmGraphicsEditor.Administrate();
+procedure TGraphicsEditorForm.ItemChanged(AUpdatePreview: Boolean);
+begin
+  if Assigned(FComponentDesigner) then
+    FComponentDesigner.Modified();
+
+  UpdateUI();
+
+  if AUpdatePreview then
+    UpdatePreview();
+end;
+
+
+procedure TGraphicsEditorForm.UpdateUI();
 var
-  bEnabled:       Boolean;
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  enabled:      Boolean;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
-  bEnabled          := Active(iIndex, pGraphic);
-  actDelete.Enabled := bEnabled;
-  actOpen.Enabled   := bEnabled;
+  enabled           := Active(index, graphic);
+  actDelete.Enabled := enabled;
+  actOpen.Enabled   := enabled;
 
-  if bEnabled then
-    bEnabled          := Assigned(pGraphic.Picture.Graphic)
+  if enabled then
+    enabled         := Assigned(graphic.Picture.Graphic)
   else
-    bEnabled          := False;
-    
-  actSave.Enabled   := bEnabled;
-  actClear.Enabled  := bEnabled;
+    enabled         := False;
 
-  actUp.Enabled     := bEnabled and (iIndex > 0);
-  actDown.Enabled   := bEnabled and (iIndex < lstGraphics.Items.Count - 1);
+  actSave.Enabled   := enabled;
+  actClear.Enabled  := enabled;
+
+  actUp.Enabled     := enabled and (index > 0);
+  actDown.Enabled   := enabled and (index < Pred(lstGraphics.Items.Count));
 end;
 
-procedure TfrmGraphicsEditor.UpdatePreview();
+
+procedure TGraphicsEditorForm.UpdatePreview();
 var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
-  if Active(iIndex, pGraphic) then
-  begin
-    imgPreview.Picture.Assign(pGraphic.Picture);
-    txtName.Text  := pGraphic.PictureName;
-    Administrate();
-
-    if Assigned(FComponentDesigner) then
-      FComponentDesigner.SelectComponent(pGraphic);
-  end else
-    if Assigned(FComponentDesigner) then
-      FComponentDesigner.SelectComponent(FComponent);
+  FUpdating := True;
+  try
+    if Active(index, graphic) then
+    begin
+      imgPreview.Picture.Assign(graphic.Picture);
+      txtName.Text  := graphic.PictureName;
+    end;
+  finally
+    FUpdating := False;
+  end;
 end;
 
 
 
-{===================== TfrmGraphicsEditor
-  Graphic Management
-========================================}
-function TfrmGraphicsEditor.Active(out AIndex: Integer; out AGraphic: TX2GraphicContainerItem): Boolean;
+function TGraphicsEditorForm.Active(out AIndex: Integer; out AGraphic: TX2GraphicContainerItem): Boolean;
 begin
   Result    := False;
   AIndex    := lstGraphics.ItemIndex;
@@ -207,43 +221,50 @@ begin
 end;
 
 
-procedure TfrmGraphicsEditor.lstGraphicsClick(Sender: TObject);
+procedure TGraphicsEditorForm.lstGraphicsClick(Sender: TObject);
 begin
+  UpdateUI();
   UpdatePreview();
 end;
 
-procedure TfrmGraphicsEditor.txtNameChange(Sender: TObject);
+
+procedure TGraphicsEditorForm.txtNameChange(Sender: TObject);
 var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
-  if Active(iIndex, pGraphic) then
+  if FUpdating then
+    Exit;
+
+  if Active(index, graphic) then
   begin
-    pGraphic.PictureName      := txtName.Text;
-    lstGraphics.Items[iIndex] := pGraphic.PictureName;
+    graphic.PictureName       := txtName.Text;
+    lstGraphics.Items[index]  := graphic.PictureName;
+
+    ItemChanged(False);
   end;
 end;
 
 
-procedure TfrmGraphicsEditor.actAddExecute(Sender: TObject);
+procedure TGraphicsEditorForm.actAddExecute(Sender: TObject);
 var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
   if Assigned(FComponentDesigner) then
   begin
-    pGraphic            := TX2GraphicContainerItem(FComponentDesigner.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
+    graphic := TX2GraphicContainerItem(FComponentDesigner.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
 
-    if Assigned(pGraphic) then
+    if Assigned(graphic) then
     begin
-      pGraphic.Container  := FComponent;
-      iIndex              := lstGraphics.Items.AddObject(pGraphic.PictureName,
-                                                         pGraphic);
+      graphic.Container := FComponent;
+      index             := lstGraphics.Items.AddObject(graphic.PictureName,
+                                                       graphic);
 
-      lstGraphics.ItemIndex := iIndex;
-      UpdatePreview();
+      lstGraphics.ItemIndex := index;
+      ItemChanged();
 
       actOpen.Execute();
     end else
@@ -252,114 +273,120 @@ begin
     raise Exception.Create('Designer not found!');
 end;
 
-procedure TfrmGraphicsEditor.actDeleteExecute(Sender: TObject);
+
+procedure TGraphicsEditorForm.actDeleteExecute(Sender: TObject);
 var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
-  if Active(iIndex, pGraphic) then
+  if Active(index, graphic) then
   begin
     { First attempt to remove the component; this will raise an exception
       if it's not allowed, for example due to it being introduced in
       an ancestor. }
-    pGraphic.Free();
-    lstGraphics.Items.Delete(iIndex);
+    graphic.Free();
+    lstGraphics.Items.Delete(index);
 
-    if iIndex > lstGraphics.Items.Count - 1 then
-      iIndex  := lstGraphics.Items.Count - 1;
+    if index > Pred(lstGraphics.Items.Count) then
+      index  := Pred(lstGraphics.Items.Count);
 
-    lstGraphics.ItemIndex := iIndex;
-    UpdatePreview();
+    lstGraphics.ItemIndex := index;
+
+    ItemChanged();
   end;
 end;
 
-procedure TfrmGraphicsEditor.actUpExecute(Sender: TObject);
+
+procedure TGraphicsEditorForm.actUpExecute(Sender: TObject);
 var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
-  if Active(iIndex, pGraphic) then
-    if iIndex > 0 then
+  if Active(index, graphic) then
+    if index > 0 then
     begin
-      lstGraphics.Items.Move(iIndex, iIndex - 1);
-      pGraphic.Index        := iIndex - 1;
-      lstGraphics.ItemIndex := iIndex - 1;
-      Administrate();
-    end;
-end;
+      lstGraphics.Items.Move(index, Pred(index));
+      graphic.Index         := Pred(index);
+      lstGraphics.ItemIndex := Pred(index);
 
-procedure TfrmGraphicsEditor.actDownExecute(Sender: TObject);
-var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
-
-begin
-  if Active(iIndex, pGraphic) then
-    if iIndex < lstGraphics.Items.Count - 1 then
-    begin
-      lstGraphics.Items.Move(iIndex, iIndex + 1);
-      pGraphic.Index        := iIndex + 1;
-      lstGraphics.ItemIndex := iIndex + 1;
-      Administrate();
+      ItemChanged(False);
     end;
 end;
 
 
-procedure TfrmGraphicsEditor.actOpenExecute(Sender: TObject);
+procedure TGraphicsEditorForm.actDownExecute(Sender: TObject);
 var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
-  if Active(iIndex, pGraphic) then
+  if Active(index, graphic) then
+    if index < Pred(lstGraphics.Items.Count) then
+    begin
+      lstGraphics.Items.Move(index, index + 1);
+      graphic.Index         := Succ(index);
+      lstGraphics.ItemIndex := Succ(index);
+
+      ItemChanged(False);
+    end;
+end;
+
+
+procedure TGraphicsEditorForm.actOpenExecute(Sender: TObject);
+var
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
+
+begin
+  if Active(index, graphic) then
   begin
     dlgOpen.Filter  := GraphicFilter(TGraphic);
     if dlgOpen.Execute() then
     begin
-      pGraphic.Picture.LoadFromFile(dlgOpen.FileName);
-      if Length(pGraphic.PictureName) = 0 then
-        pGraphic.PictureName := ChangeFileExt(ExtractFileName(dlgOpen.FileName), '');
+      graphic.Picture.LoadFromFile(dlgOpen.FileName);
+      if Length(graphic.PictureName) = 0 then
+        graphic.PictureName := ChangeFileExt(ExtractFileName(dlgOpen.FileName), '');
 
-      UpdatePreview();
+      ItemChanged();
     end;
   end;
 end;
 
-procedure TfrmGraphicsEditor.actSaveExecute(Sender: TObject);
+procedure TGraphicsEditorForm.actSaveExecute(Sender: TObject);
 var
-  iIndex:         Integer;
-  pClass:         TGraphicClass;
-  pGraphic:       TX2GraphicContainerItem;
+  index:          Integer;
+  graphic:        TX2GraphicContainerItem;
+  graphicClass:   TGraphicClass;
 
 begin
-  if Active(iIndex, pGraphic) then
-    if Assigned(pGraphic.Picture.Graphic) then begin
-      pClass            := TGraphicClass(pGraphic.Picture.Graphic.ClassType);
-      dlgSave.Filter    := GraphicFilter(pClass);
-      dlgSave.FileName  := ChangeFileExt(pGraphic.PictureName, '.' + GraphicExtension(pClass));
-      
+  if Active(index, graphic) then
+    if Assigned(graphic.Picture.Graphic) then begin
+      graphicClass      := TGraphicClass(graphic.Picture.Graphic.ClassType);
+      dlgSave.Filter    := GraphicFilter(graphicClass);
+      dlgSave.FileName  := ChangeFileExt(graphic.PictureName, '.' + GraphicExtension(graphicClass));
+
       if dlgSave.Execute() then
-        pGraphic.Picture.SaveToFile(dlgSave.FileName);
+        graphic.Picture.SaveToFile(dlgSave.FileName);
     end;
 end;
 
-procedure TfrmGraphicsEditor.actClearExecute(Sender: TObject);
+procedure TGraphicsEditorForm.actClearExecute(Sender: TObject);
 var
-  iIndex:         Integer;
-  pGraphic:       TX2GraphicContainerItem;
+  index:        Integer;
+  graphic:      TX2GraphicContainerItem;
 
 begin
-  if Active(iIndex, pGraphic) then
+  if Active(index, graphic) then
   begin
-    pGraphic.Picture.Assign(nil);
-    UpdatePreview();
+    graphic.Picture.Assign(nil);
+    ItemChanged();
   end;
 end;
 
 
-procedure TfrmGraphicsEditor.Notification(AComponent: TComponent; Operation: TOperation);
+procedure TGraphicsEditorForm.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
 

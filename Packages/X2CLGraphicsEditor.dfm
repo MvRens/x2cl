@@ -1,4 +1,4 @@
-object frmGraphicsEditor: TfrmGraphicsEditor
+object GraphicsEditorForm: TGraphicsEditorForm
   Left = 325
   Top = 363
   Width = 534
@@ -20,13 +20,13 @@ object frmGraphicsEditor: TfrmGraphicsEditor
     Left = 189
     Top = 0
     Width = 4
-    Height = 422
+    Height = 424
   end
   object pnlImage: TPanel
     Left = 193
     Top = 0
     Width = 333
-    Height = 422
+    Height = 424
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
@@ -60,7 +60,7 @@ object frmGraphicsEditor: TfrmGraphicsEditor
       Left = 0
       Top = 26
       Width = 333
-      Height = 368
+      Height = 370
       Align = alClient
       BevelInner = bvNone
       BevelKind = bkTile
@@ -78,7 +78,7 @@ object frmGraphicsEditor: TfrmGraphicsEditor
     end
     object pnlProperties: TPanel
       Left = 0
-      Top = 394
+      Top = 396
       Width = 333
       Height = 28
       Align = alBottom
@@ -110,7 +110,7 @@ object frmGraphicsEditor: TfrmGraphicsEditor
     Left = 0
     Top = 0
     Width = 189
-    Height = 422
+    Height = 424
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
@@ -118,7 +118,7 @@ object frmGraphicsEditor: TfrmGraphicsEditor
       Left = 0
       Top = 26
       Width = 189
-      Height = 396
+      Height = 398
       Align = alClient
       ItemHeight = 13
       TabOrder = 1
@@ -164,8 +164,8 @@ object frmGraphicsEditor: TfrmGraphicsEditor
     end
   end
   object ilsIcons: TImageList
-    Left = 8
-    Top = 388
+    Left = 20
+    Top = 360
     Bitmap = {
       494C010107000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
@@ -572,8 +572,8 @@ object frmGraphicsEditor: TfrmGraphicsEditor
   end
   object alGraphics: TActionList
     Images = ilsIcons
-    Left = 36
-    Top = 388
+    Left = 104
+    Top = 360
     object actAdd: TAction
       Caption = '&New'
       Hint = 'New Graphic'
@@ -625,11 +625,11 @@ object frmGraphicsEditor: TfrmGraphicsEditor
     end
   end
   object dlgOpen: TOpenPictureDialog
-    Left = 8
-    Top = 360
+    Left = 20
+    Top = 304
   end
   object dlgSave: TSavePictureDialog
-    Left = 36
-    Top = 360
+    Left = 104
+    Top = 304
   end
 end

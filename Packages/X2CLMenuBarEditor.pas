@@ -112,6 +112,8 @@ begin
   // Delphi (BDS) 2006
   tbMenu.EdgeBorders  := [];
   tbMenu.DrawingStyle := dsGradient;
+  {$ELSE}
+  tbMenu.Flat         := True;
   {$ENDIF}
 end;
 

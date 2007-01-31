@@ -1,0 +1,44 @@
+package X2CLMB;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'X²CL MenuBar'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  designide,
+  vclactnband,
+  vclx;
+
+contains
+  X2CLunaMenuBarPainter in '..\..\Source\X2CLunaMenuBarPainter.pas',
+  X2CLGraphics in '..\..\Source\X2CLGraphics.pas',
+  X2CLMenuBarAnimators in '..\..\Source\X2CLMenuBarAnimators.pas',
+  X2CLMenuBar in '..\..\Source\X2CLMenuBar.pas',
+  X2CLmusikCubeMenuBarPainter in '..\..\Source\X2CLmusikCubeMenuBarPainter.pas';
+
+end.
+

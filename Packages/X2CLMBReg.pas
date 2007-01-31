@@ -10,6 +10,7 @@ unit X2CLMBReg;
 interface
   procedure Register;
 
+  
 implementation
 uses
   Classes,
@@ -19,7 +20,9 @@ uses
   X2CLunaMenuBarPainter,
   X2CLMBEditors;
 
+
 {.$R ..\Resources\MenuBar.dcr}
+
 
 procedure Register;
 begin

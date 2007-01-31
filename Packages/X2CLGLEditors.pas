@@ -41,12 +41,10 @@ type
   TProtectedX2GraphicContainer = class(TX2GraphicContainer);
 
 
-{============== TX2GraphicContainerEditor
-  Editor
-========================================}
+{ TX2GraphicContainerEditor }
 procedure TX2GraphicContainerEditor.Edit();
 begin
-  TfrmGraphicsEditor.Execute(Component, Self.Designer);
+  TGraphicsEditorForm.Execute(Component, Self.Designer);
 end;
 
 procedure TX2GraphicContainerEditor.ExecuteVerb(Index: Integer);
@@ -109,9 +107,7 @@ begin
 end;
 
 
-{=================== TX2GraphicListEditor
-  Editor
-========================================}
+{ TX2GraphicContainerEditor }
 procedure TX2GraphicListEditor.Edit;
 var
   ifEditor:       IComponentEditor;

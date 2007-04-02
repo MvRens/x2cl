@@ -26,21 +26,17 @@ uses
 
 type
   TX2MenuBarAnimationStyle    = (asNone, asSlide, asDissolve, asFade,
-                                 asSlideFade);
+                                 asSlideFade, asCustom);
 
   TX2MenuBarDirection         = (mbdUp, mbdDown);
+
 
 const
   DefaultAnimationStyle = asSlide;
   DefaultAnimationTime  = 250;
 
-type
-  {$IFNDEF VER180}
-  // #ToDo1 (MvR) 24-5-2006: check how D2006 defines these
-  TVerticalAlignment = (taTop, taBottom, taVerticalCenter);
-  {$ENDIF}
 
-  // #ToDo1 (MvR) 25-3-2006: various Select methods for key support
+type
   // #ToDo1 (MvR) 1-4-2006: scroll wheel support
   TX2CustomMenuBarAnimatorClass = class of TX2CustomMenuBarAnimator;
   TX2CustomMenuBarAnimator = class;
@@ -51,6 +47,7 @@ type
   TX2MenuBarGroup = class;
   TX2CustomMenuBar = class;
 
+
   IX2MenuBarDesigner = interface
     ['{F648CFD2-771D-4531-84D0-621FD7597E48}']
     procedure ItemAdded(AItem: TX2CustomMenuBarItem);
@@ -58,11 +55,13 @@ type
     procedure ItemDeleting(AItem: TX2CustomMenuBarItem);
   end;
 
+
   TX2MenuBarHitTest = record
     HitTestCode:    Integer;
     Item:           TX2CustomMenuBarItem;
   end;
 
+  
   TX2MenuBarDrawState             = (mdsHot, mdsSelected, mdsGroupHot, mdsGroupSelected);
   TX2MenuBarDrawStates            = set of TX2MenuBarDrawState;
 
@@ -70,13 +69,12 @@ type
                                      seBeforeFirstItem, seAfterLastItem,
                                      seBeforeItem, seAfterItem);
 
-  TX2MenuBarSelectAction          = (saBefore, saAfter, saBoth);
-
   TX2ComponentNotificationEvent   = procedure(Sender: TObject; AComponent: TComponent; Operation: TOperation) of object;
   TX2MenuBarExpandingEvent        = procedure(Sender: TObject; Group: TX2MenuBarGroup; var Allowed: Boolean) of object;
   TX2MenuBarExpandedEvent         = procedure(Sender: TObject; Group: TX2MenuBarGroup) of object;
   TX2MenuBarSelectedChangingEvent = procedure(Sender: TObject; Item, NewItem: TX2CustomMenUBarItem; var Allowed: Boolean) of object;
   TX2MenuBarSelectedChangedEvent  = procedure(Sender: TObject; Item: TX2CustomMenUBarItem) of object;
+  TX2MenuBarGetAnimatorClassEvent = procedure(Sender: TObject; var AnimatorClass: TX2CustomMenuBarAnimatorClass) of object;
 
   TX2MenuBarItemBoundsProc        = procedure(Sender: TObject;
                                               Item: TX2CustomMenuBarItem;
@@ -93,10 +91,12 @@ type
   TCollectionNotifyEvent          = procedure(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification) of object;
   TCollectionUpdateEvent          = procedure(Sender: TObject; Item: TCollectionItem) of object;
 
+  
   IX2MenuBarPainterObserver = interface
     ['{22DE60C9-49A1-4E7D-B547-901BEDCC0FB7}']
     procedure PainterUpdate(Sender: TX2CustomMenuBarPainter);
   end;
+
 
   {
     :$ Abstract animation class
@@ -107,7 +107,6 @@ type
   private
     FAnimationTime:     Cardinal;
     FExpanding:         Boolean;
-    FGroup:             TX2MenuBarGroup;
     FStartTime:         Cardinal;
     FItemsBuffer:       Graphics.TBitmap;
     FTerminated:        Boolean;
@@ -129,10 +128,11 @@ type
 
     property AnimationTime:   Cardinal                  read FAnimationTime   write FAnimationTime;
     property Expanding:       Boolean                   read FExpanding       write SetExpanding;
-    property Group:           TX2MenuBarGroup           read FGroup           write FGroup;
-    property Terminated:      Boolean                   read FTerminated;
     property Height:          Integer                   read GetHeight;
+    property StartTime:       Cardinal                  read FStartTime       write FStartTime;
+    property Terminated:      Boolean                   read FTerminated;
   end;
+
 
   {
     :$ Abstract painter class.
@@ -174,6 +174,40 @@ type
     procedure DetachObserver(AObserver: IX2MenuBarPainterObserver);
   end;
 
+
+  {
+    :$ Abstract action class.
+
+    :: Provides a base for menu bar actions which need to be performed
+    :: asynchronous and in sequence.
+  }
+  TX2CustomMenuBarAction = class(TObject)
+  private
+    FMenuBar:       TX2CustomMenuBar;
+    FTerminated:    Boolean;
+  protected
+    function GetTerminated(): Boolean; virtual;
+    procedure Terminate(); virtual;
+
+    property MenuBar:   TX2CustomMenuBar  read FMenuBar;
+  public
+    constructor Create(AMenuBar: TX2CustomMenuBar);
+
+    procedure Start(); virtual;
+    procedure Stop(); virtual;
+
+    procedure BeforePaint(); virtual;
+    procedure GetItemHeight(AItem: TX2CustomMenuBarItem; var AHeight: Integer; var AHandled: Boolean); virtual;
+    procedure DrawMenuItem(ACanvas: TCanvas; APainter: TX2CustomMenuBarPainter;
+                           AItem: TX2CustomMenuBarItem; const AMenuBounds,
+                           AItemBounds: TRect; AState: TX2MenuBarDrawStates;
+                           var AHandled: Boolean); virtual;
+    procedure AfterPaint(); virtual;
+
+    property Terminated:  Boolean read GetTerminated;
+  end;
+
+
   {
     :$ Action link for menu items and groups.
   }
@@ -195,6 +229,7 @@ type
     property Client:  TX2CustomMenuBarItem  read FClient;
   end;
 
+
   {
     :$ Provides component notifications for collection items.
   }
@@ -207,6 +242,7 @@ type
   published
     property OnNotification: TX2ComponentNotificationEvent  read FOnNotification  write FOnNotification;
   end;
+
 
   {
     :$ Base class for menu items and groups.
@@ -256,6 +292,7 @@ type
     property Visible:       Boolean               read FVisible     write SetVisible      default True;
   end;
 
+
   {
     :$ Base class for menu collections.
   }
@@ -271,6 +308,7 @@ type
     property OnUpdate:  TCollectionUpdateEvent  read FOnUpdate  write FOnUpdate;
   end;
 
+
   {
     :$ Contains a single menu item.
   }
@@ -284,6 +322,7 @@ type
 
     property Group:         TX2MenuBarGroup   read GetGroup;
   end;
+
 
   {
     :$ Manages a collection of menu items.
@@ -299,6 +338,7 @@ type
 
     property Items[Index: Integer]: TX2MenuBarItem read GetItem write SetItem; default;
   end;
+
 
   {
     :$ Contains a single menu group.
@@ -331,6 +371,7 @@ type
     property Items:     TX2MenuBarItems   read FItems     write SetItems;
   end;
 
+
   {
     :$ Manages a collection of menu groups.
   }
@@ -346,6 +387,7 @@ type
     property Items[Index: Integer]: TX2MenuBarGroup read GetItem write SetItem; default;
   end;
 
+
   {
     :$ Implements the menu bar.
 
@@ -358,33 +400,34 @@ type
     FAllowCollapseAll:      Boolean;
     FAnimationStyle:        TX2MenuBarAnimationStyle;
     FAnimationTime:         Cardinal;
-    FAnimator:              TX2CustomMenuBarAnimator;
     FAutoCollapse:          Boolean;
     FAutoSelectItem:        Boolean;
     FBorderStyle:           TBorderStyle;
-    FBuffer:                Graphics.TBitmap;
     FCursorGroup:           TCursor;
     FCursorItem:            TCursor;
-    FDesigner:              IX2MenuBarDesigner;
-    FExpandingGroups:       TStringList;
-    FGroups:                TX2MenuBarGroups;
     FHideScrollbar:         Boolean;
-    FHotItem:               TX2CustomMenuBarItem;
+    FGroups:                TX2MenuBarGroups;
     FImages:                TCustomImageList;
-    FLastMousePos:          TPoint;
     FOnCollapsed:           TX2MenuBarExpandedEvent;
     FOnCollapsing:          TX2MenuBarExpandingEvent;
     FOnExpanded:            TX2MenuBarExpandedEvent;
     FOnExpanding:           TX2MenuBarExpandingEvent;
+    FOnGetAnimatorClass:    TX2MenuBarGetAnimatorClassEvent;
     FOnSelectedChanged:     TX2MenuBarSelectedChangedEvent;
     FOnSelectedChanging:    TX2MenuBarSelectedChangingEvent;
     FPainter:               TX2CustomMenuBarPainter;
     FScrollbar:             Boolean;
-    FScrollOffset:          Integer;
+
+    FHotItem:               TX2CustomMenuBarItem;
     FSelectedItem:          TX2CustomMenuBarItem;
 
+    FActionQueue:           TObjectList;
+    FBuffer:                Graphics.TBitmap;
+    FDesigner:              IX2MenuBarDesigner;
+    FLastMousePos:          TPoint;
+    FScrollOffset:          Integer;
+
     procedure SetAllowCollapseAll(const Value: Boolean);
-    procedure SetAnimator(const Value: TX2CustomMenuBarAnimator);
     procedure SetAutoCollapse(const Value: Boolean);
     procedure SetAutoSelectItem(const Value: Boolean);
     procedure SetBorderStyle(const Value: TBorderStyle);
@@ -404,7 +447,6 @@ type
 
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-//    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
 
     procedure WMVScroll(var Msg: TWMVScroll); message WM_VSCROLL;
@@ -416,8 +458,11 @@ type
   protected
     procedure SetPainter(const Value: TX2CustomMenuBarPainter); virtual;
 
+
+    { Painting }
     procedure WMEraseBkgnd(var Msg: TWMEraseBkgnd); message WM_ERASEBKGND;
     procedure Paint(); override;
+
 
     function GetDrawState(AItem: TX2CustomMenuBarItem): TX2MenuBarDrawStates;
     procedure DrawMenu(ACanvas: TCanvas); virtual;
@@ -426,33 +471,57 @@ type
     procedure DrawNoPainter(ACanvas: TCanvas; const ABounds: TRect); virtual;
 
     function GetAnimatorClass(): TX2CustomMenuBarAnimatorClass; virtual;
+    function GetAnimateAction(AGroup: TX2MenuBarGroup; AExpanding: Boolean): TX2CustomMenuBarAction; virtual;
 
     function IterateItemBounds(ACallback: TX2MenuBarItemBoundsProc; AData: Pointer = nil): TX2CustomMenuBarItem;
     function AllowInteraction(): Boolean; virtual;
     function ItemEnabled(AItem: TX2CustomMenuBarItem): Boolean; virtual;
     function ItemVisible(AItem: TX2CustomMenuBarItem): Boolean; virtual;
 
+
+    { Action queue }
+    function GetCurrentAction(): TX2CustomMenuBarAction;
+    procedure PushAction(AAction: TX2CustomMenuBarAction);
+    procedure PopCurrentAction();
+
+
+    property ActionQueue:         TObjectList                     read FActionQueue;
+    property HotItem:             TX2CustomMenuBarItem            read FHotItem             write FHotItem;
+
     property AllowCollapseAll:    Boolean                         read FAllowCollapseAll    write SetAllowCollapseAll default True;
     property AnimationStyle:      TX2MenuBarAnimationStyle        read FAnimationStyle      write FAnimationStyle default DefaultAnimationStyle;
     property AnimationTime:       Cardinal                        read FAnimationTime       write FAnimationTime default DefaultAnimationTime;
-    property Animator:            TX2CustomMenuBarAnimator        read FAnimator            write SetAnimator;
     property AutoCollapse:        Boolean                         read FAutoCollapse        write SetAutoCollapse default False;
     property AutoSelectItem:      Boolean                         read FAutoSelectItem      write SetAutoSelectItem default False;
     property BorderStyle:         TBorderStyle                    read FBorderStyle         write SetBorderStyle default bsNone;
     property CursorGroup:         TCursor                         read FCursorGroup         write FCursorGroup default crDefault;
     property CursorItem:          TCursor                         read FCursorItem          write FCursorItem default crDefault;
     property HideScrollbar:       Boolean                         read FHideScrollbar       write SetHideScrollbar default True;
+    property Scrollbar:           Boolean                         read FScrollbar           write SetScrollbar default True;
+
     property OnCollapsed:         TX2MenuBarExpandedEvent         read FOnCollapsed         write FOnCollapsed;
     property OnCollapsing:        TX2MenuBarExpandingEvent        read FOnCollapsing        write FOnCollapsing;
     property OnExpanded:          TX2MenuBarExpandedEvent         read FOnExpanded          write FOnExpanded;
     property OnExpanding:         TX2MenuBarExpandingEvent        read FOnExpanding         write FOnExpanding;
+    property OnGetAnimatorClass:  TX2MenuBarGetAnimatorClassEvent read FOnGetAnimatorClass  write FOnGetAnimatorClass;
     property OnSelectedChanged:   TX2MenuBarSelectedChangedEvent  read FOnSelectedChanged   write FOnSelectedChanged;
     property OnSelectedChanging:  TX2MenuBarSelectedChangingEvent read FOnSelectedChanging  write FOnSelectedChanging;
-    property Scrollbar:           Boolean                         read FScrollbar           write SetScrollbar default True;
   protected
-    procedure DoAutoCollapse(AGroup: TX2MenuBarGroup); virtual;
-    function DoAutoSelectItem(AGroup: TX2MenuBarGroup; AAction: TX2MenuBarSelectAction): Boolean; virtual;
-    procedure DoExpand(AGroup: TX2MenuBarGroup; AExpanding: Boolean); virtual;
+    function DoAutoCollapse(AGroup: TX2MenuBarGroup): Boolean; virtual;
+    function DoAutoSelectItem(AGroup: TX2MenuBarGroup): Boolean; virtual;
+    function DoExpand(AGroup: TX2MenuBarGroup; AExpanding: Boolean): Boolean; virtual;
+    function DoSelectItem(AItem: TX2CustomMenuBarItem): Boolean; virtual;
+
+    function PerformAutoCollapse(AGroup: TX2MenuBarGroup): Boolean; virtual;
+    function PerformAutoSelectItem(AGroup: TX2MenuBarGroup): Boolean; virtual;
+    function PerformExpand(AGroup: TX2MenuBarGroup; AExpanding: Boolean): Boolean; virtual;
+    function PerformSelectItem(AItem: TX2CustomMenuBarItem): Boolean; virtual;
+
+    procedure DoCollapsed(AGroup: TX2MenuBarGroup); virtual;
+    procedure DoCollapsing(AGroup: TX2MenuBarGroup; var AAllowed: Boolean); virtual;
+    procedure DoExpanded(AGroup: TX2MenuBarGroup); virtual;
+    procedure DoExpanding(AGroup: TX2MenuBarGroup; var AAllowed: Boolean); virtual;
+
     procedure DoExpandedChanging(AGroup: TX2MenuBarGroup; AExpanding: Boolean); virtual;
     procedure DoExpandedChanged(AGroup: TX2MenuBarGroup); virtual;
     procedure DoSelectedChanging(ANewItem: TX2CustomMenuBarItem; var AAllowed: Boolean); virtual;
@@ -489,6 +558,7 @@ type
     property SelectedItem:  TX2CustomMenuBarItem    read FSelectedItem  write SetSelectedItem;
   end;
 
+  
   {
     :$ Exposes the menu bar's published properties.
   }
@@ -536,47 +606,6 @@ type
     property Scrollbar;
   end;
 
-  {
-    :$ Provides a wrapper for the DrawText API.
-  }
-  TDrawTextClipStyle  = (csNone, csEllipsis, csPathEllipsis);
-
-  procedure DrawText(ACanvas: TCanvas; const AText: String;
-                     const ABounds: TRect;
-                     AHorzAlignment: TAlignment = taLeftJustify;
-                     AVertAlignment: TVerticalAlignment = taVerticalCenter;
-                     AMultiLine: Boolean = False;
-                     AClipStyle: TDrawTextClipStyle = csNone);
-
-  {
-    :$ Returns a pointer to the first physical scanline.
-
-    :: In bottom-up bitmaps, the most common kind, the Scanline property
-    :: compensates for this by returning the last physical row for Scanline[0];
-    :: the first visual row. For most effects, the order in which the rows are
-    :: processed is not important; speed is. This function returns the first
-    :: physical scanline, which can be used as a single big array for the whole
-    :: bitmap.
-
-    :! Note that every scanline is padded until it is a multiple of 4 bytes
-    :! (32 bits). For true lineair access, ensure the bitmap has a PixelFormat
-    :! of pf32bit. 
-  }
-  function GetScanlinePointer(ABitmap: Graphics.TBitmap): Pointer;
-
-  {
-    :$ Wrapper for DrawFocusRect.
-
-    :: Ensures the canvas is set up correctly for a standard focus rectangle.
-  }
-  procedure DrawFocusRect(ACanvas: TCanvas; const ABounds: TRect);
-
-  {
-    :$ Draws one bitmap over another with the specified Alpha transparency.
-
-    :: Both bitmaps must be the same size.
-  }
-  procedure DrawBlended(ABackground, AForeground: Graphics.TBitmap; AAlpha: Byte);
 
 const
   { HitTest Codes }
@@ -586,15 +615,13 @@ const
   htItem        = 3;
   htScroller    = 4;
 
-type
-  PRGBAArray  = ^TRGBAArray;
-  TRGBAArray  = array[Word] of TRGBQuad;
-
 
 implementation
 uses
   SysUtils,
 
+  X2CLGraphics,
+  X2CLMenuBarActions,
   X2CLMenuBarAnimators;
 
 const
@@ -606,90 +633,7 @@ type
   TProtectedCollection  = class(TCollection);
 
 
-{ Convenience functions }
-procedure DrawText(ACanvas: TCanvas; const AText: String;
-                   const ABounds: TRect; AHorzAlignment: TAlignment;
-                   AVertAlignment: TVerticalAlignment;
-                   AMultiLine: Boolean; AClipStyle: TDrawTextClipStyle);
-const
-  HorzAlignmentFlags:   array[TAlignment] of Cardinal =
-                          (DT_LEFT, DT_RIGHT, DT_CENTER);
-  VertAlignmentFlags:   array[TVerticalAlignment] of Cardinal =
-                          (DT_TOP, DT_BOTTOM, DT_VCENTER);
-  MultiLineFlags:       array[Boolean] of Cardinal =
-                          (DT_SINGLELINE, 0);
-  ClipStyleFlags:       array[TDrawTextClipStyle] of Cardinal =
-                          (0, DT_END_ELLIPSIS, DT_PATH_ELLIPSIS);
-
-var
-  flags:    Cardinal;
-  bounds:   TRect;
-
-begin
- flags := HorzAlignmentFlags[AHorzAlignment] or
-           VertAlignmentFlags[AVertAlignment] or
-           MultiLineFlags[AMultiLine] or
-           ClipStyleFlags[AClipStyle];
-
-  if AMultiLine and (AClipStyle <> csNone) then
-    flags := flags or DT_EDITCONTROL;
-
-  bounds  := ABounds;
-  Windows.DrawText(ACanvas.Handle, PChar(AText), Length(AText), bounds, flags);
-end;
-
-function GetScanlinePointer(ABitmap: Graphics.TBitmap): Pointer;
-var
-  firstScanline:    Pointer;
-  lastScanline:     Pointer;
-
-begin
-  firstScanline := ABitmap.ScanLine[0];
-  lastScanline  := ABitmap.ScanLine[Pred(ABitmap.Height)];
-
-  if Cardinal(firstScanline) > Cardinal(lastScanline) then
-    Result  := lastScanline
-  else
-    Result  := firstScanline;
-end;
-
-procedure DrawFocusRect(ACanvas: TCanvas; const ABounds: TRect);
-begin
-  SetTextColor(ACanvas.Handle, ColorToRGB(clBlack));
-  Windows.DrawFocusRect(ACanvas.Handle, ABounds);
-end;
-
-procedure DrawBlended(ABackground, AForeground: Graphics.TBitmap; AAlpha: Byte);
-var
-  sourcePixels:     PRGBAArray;
-  destPixels:       PRGBAArray;
-  sourcePixel:      PRGBQuad;
-  pixelCount:       Integer;
-  pixelIndex:       Integer;
-  backAlpha:        Integer;
-  foreAlpha:        Integer;
-
-begin
-  backAlpha     := AAlpha;
-  foreAlpha     := 256 - AAlpha;
-  pixelCount    := AForeground.Width * AForeground.Height;
-  sourcePixels  := GetScanlinePointer(AForeground);
-  destPixels    := GetScanlinePointer(ABackground);
-
-  for pixelIndex := Pred(pixelCount) downto 0 do
-    with destPixels^[pixelIndex] do
-    begin
-      sourcePixel := @sourcePixels^[pixelIndex];
-      rgbRed      := ((rgbRed * backAlpha) +
-                      (sourcePixel^.rgbRed * foreAlpha)) shr 8;
-      rgbGreen    := ((rgbGreen * backAlpha) +
-                      (sourcePixel^.rgbGreen * foreAlpha)) shr 8;
-      rgbBlue     := ((rgbBlue * backAlpha) +
-                      (sourcePixel^.rgbBlue * foreAlpha)) shr 8;
-    end;
-end;
-
-
+  
 { TX2CustomMenuBarPainter }
 constructor TX2CustomMenuBarPainter.Create(AOwner: TComponent);
 begin
@@ -858,6 +802,61 @@ end;
 
 procedure TX2CustomMenuBarAnimator.Update();
 begin
+end;
+
+
+
+{ TX2CustomMenuBarAction }
+constructor TX2CustomMenuBarAction.Create(AMenuBar: TX2CustomMenuBar);
+begin
+  inherited Create;
+
+  FMenuBar  := AMenuBar;
+end;
+
+
+procedure TX2CustomMenuBarAction.Terminate();
+begin
+  FTerminated := True;
+end;
+
+
+procedure TX2CustomMenuBarAction.Start();
+begin
+end;
+
+
+procedure TX2CustomMenuBarAction.Stop();
+begin
+end;
+
+
+procedure TX2CustomMenuBarAction.BeforePaint();
+begin
+end;
+
+
+procedure TX2CustomMenuBarAction.GetItemHeight(AItem: TX2CustomMenuBarItem; var AHeight: Integer; var AHandled: Boolean);
+begin
+end;
+
+
+procedure TX2CustomMenuBarAction.DrawMenuItem(ACanvas: TCanvas; APainter: TX2CustomMenuBarPainter;
+                                              AItem: TX2CustomMenuBarItem; const AMenuBounds,
+                                              AItemBounds: TRect; AState: TX2MenuBarDrawStates;
+                                              var AHandled: Boolean);
+begin
+end;
+
+
+procedure TX2CustomMenuBarAction.AfterPaint();
+begin
+end;
+
+
+function TX2CustomMenuBarAction.GetTerminated(): Boolean;
+begin
+  Result := FTerminated;
 end;
 
 
@@ -1322,19 +1321,20 @@ constructor TX2CustomMenuBar.Create(AOwner: TComponent);
 begin
   inherited;
 
+  FActionQueue      := TObjectList.Create(True);
   FAllowCollapseAll := True;
   FAnimationStyle   := DefaultAnimationStyle;
   FAnimationTime    := DefaultAnimationTime;
   FBorderStyle      := bsNone;
   FCursorGroup      := crDefault;
   FCursorItem       := crDefault;
-  FExpandingGroups  := TStringList.Create();
   FGroups           := TX2MenuBarGroups.Create(Self);
   FGroups.OnNotify  := GroupsNotify;
   FGroups.OnUpdate  := GroupsUpdate;
   FHideScrollbar    := True;
   FScrollbar        := True;
 end;
+
 
 procedure TX2CustomMenuBar.CreateParams(var Params: TCreateParams);
 const
@@ -1357,6 +1357,7 @@ begin
   end;
 end;
 
+
 procedure TX2CustomMenuBar.CreateHandle();
 begin
   inherited;
@@ -1367,12 +1368,11 @@ end;
 
 destructor TX2CustomMenuBar.Destroy();
 begin
-  Animator  := nil;
   Painter   := nil;
 
-  FreeAndNil(FExpandingGroups);
   FreeAndNil(FGroups);
   FreeAndNil(FBuffer);
+  FreeAndNil(FActionQueue);
 
   inherited;
 end;
@@ -1385,12 +1385,12 @@ end;
 procedure TX2CustomMenuBar.Paint();
 var
   bufferRect:       TRect;
-  expand:           Boolean;
-  group:            TX2MenuBarGroup;
+  currentAction:    TX2CustomMenuBarAction;
 
 begin
   if Assigned(Painter) then
   begin
+    { Prepare buffer }
     if not Assigned(FBuffer) then
     begin
       FBuffer             := Graphics.TBitmap.Create();
@@ -1407,10 +1407,17 @@ begin
     bufferRect  := Rect(0, 0, FBuffer.Width, FBuffer.Height);
     FBuffer.Canvas.Font.Assign(Self.Font);
 
-    if Assigned(Animator) then
-      Animator.Update();
+
+    { Update action }
+    currentAction := GetCurrentAction();
+    if Assigned(currentAction) then
+      currentAction.BeforePaint();
+
 
     UpdateScrollbar();
+
+
+    { Draw menu }
     Painter.BeginPaint(Self);
     try
       Painter.DrawBackground(FBuffer.Canvas, bufferRect);
@@ -1421,30 +1428,27 @@ begin
 
     Self.Canvas.Draw(0, 0, FBuffer);
 
-    if Assigned(Animator) then
+
+    { Action queue }
+    if Assigned(currentAction) then
     begin
-      if Animator.Terminated then
-      begin
-        Animator.Group.InternalSetExpanded(Animator.Expanding);
-        Animator  := nil;
-      end
-      else
-        { Prevent 100% CPU usage }
-        Sleep(5);
+      currentAction.AfterPaint();
 
-      TestMousePos();
-      Invalidate();
-    end
-    else
-      { Process animation queue }
-      if FExpandingGroups.Count > 0 then
+      if currentAction.Terminated then
       begin
-        expand  := (FExpandingGroups[0] = #1);
-        group   := TX2MenuBarGroup(FExpandingGroups.Objects[0]);
-        FExpandingGroups.Delete(0);
+        currentAction.Stop();
+        PopCurrentAction();
 
-        DoExpand(group, expand);
+        currentAction := GetCurrentAction();
+        if Assigned(currentAction) then
+        begin
+          currentAction.Start();
+
+          { Make sure Paint is called again while there's an action queue }
+          Invalidate();
+        end;
       end;
+    end;
   end
   else
     DrawNoPainter(Self.Canvas, Self.ClientRect);
@@ -1480,10 +1484,10 @@ procedure TX2CustomMenuBar.DrawMenuItem(Sender: TObject;
                                         const MenuBounds, ItemBounds: TRect;
                                         Data: Pointer; var Abort: Boolean);
 var
-  canvas:       TCanvas;
-  drawState:    TX2MenuBarDrawStates;
-  group:        TX2MenuBarGroup;
-  groupBounds:  TRect;
+  canvas:           TCanvas;
+  currentAction:    TX2CustomMenuBarAction;
+  drawState:        TX2MenuBarDrawStates;
+  handled:          Boolean;
 
 begin
   if ItemBounds.Top > MenuBounds.Bottom then
@@ -1492,26 +1496,22 @@ begin
     exit;
   end;
 
-  canvas    := TCanvas(Data);
-  drawState := GetDrawState(Item);
+  canvas        := TCanvas(Data);
+  drawState     := GetDrawState(Item);
+  currentAction := GetCurrentAction();
+  handled       := False;
 
-  if Item is TX2MenuBarGroup then
+  if Assigned(currentAction) then
+    currentAction.DrawMenuItem(canvas, Painter, Item, MenuBounds, ItemBounds,
+                               drawState, handled);
+
+  if not handled then
   begin
-    group := TX2MenuBarGroup(Item);
-    Painter.DrawGroupHeader(canvas, group, ItemBounds,
-                            drawState);
-
-    if Assigned(Animator) and (Animator.Group = group) then
-    begin
-      groupBounds         := MenuBounds;
-      groupBounds.Top     := ItemBounds.Bottom +
-                             Painter.GetSpacing(seAfterGroupHeader) +
-                             Painter.GetSpacing(seBeforeFirstItem);
-      groupBounds.Bottom  := groupBounds.Top + Animator.Height;
-      Animator.Draw(canvas, groupBounds);
-    end;
-  end else if Item is TX2MenuBarItem then
-    Painter.DrawItem(canvas, TX2MenuBarItem(Item), ItemBounds, drawState);
+    if Item is TX2MenuBarGroup then
+      Painter.DrawGroupHeader(canvas, TX2MenuBarGroup(Item), ItemBounds, drawState)
+    else if Item is TX2MenuBarItem then
+      Painter.DrawItem(canvas, TX2MenuBarItem(Item), ItemBounds, drawState);
+  end;
 end;
 
 procedure TX2CustomMenuBar.DrawMenuItems(ACanvas: TCanvas; AGroup: TX2MenuBarGroup; const ABounds: TRect);
@@ -1563,7 +1563,7 @@ begin
     Brush.Style := bsClear;
     Rectangle(ABounds);
 
-    DrawText(ACanvas, SNoPainter, ABounds, taCenter);
+    X2CLGraphics.DrawText(ACanvas, SNoPainter, ABounds, taCenter);
   end;
 end;
 
@@ -1581,20 +1581,72 @@ begin
 end;
 
 
+function TX2CustomMenuBar.GetAnimateAction(AGroup: TX2MenuBarGroup; AExpanding: Boolean): TX2CustomMenuBarAction;
+var
+  animatorClass:    TX2CustomMenuBarAnimatorClass;
+  animator:         TX2CustomMenuBarAnimator;
+  itemsBuffer:      Graphics.TBitmap;
+  itemsBounds:      TRect;
+
+begin
+  Result := nil;
+  if not Assigned(Painter) then
+    Exit;
+
+  animatorClass := GetAnimatorClass();
+  if Assigned(animatorClass) and not (csDesigning in ComponentState) then
+  begin
+    Painter.BeginPaint(Self);
+    try
+      itemsBuffer := Graphics.TBitmap.Create();
+      try
+        itemsBounds             := Painter.ApplyMargins(Self.ClientRect);
+        itemsBuffer.PixelFormat := pf32bit;
+        itemsBuffer.Width       := itemsBounds.Right - itemsBounds.Left;
+        itemsBuffer.Height      := Painter.GetGroupHeight(AGroup);
+        itemsBounds             := Rect(0, 0, itemsBuffer.Width, itemsBuffer.Height);
+        itemsBuffer.Canvas.Font.Assign(Self.Font);
+
+        // #ToDo3 (MvR) 23-3-2006: this will probably cause problems if we ever
+        //                         want a bitmapped/customdrawn background.
+        //                         Maybe we can trick around a bit with the
+        //                         canvas offset? think about it later.
+        Painter.DrawBackground(itemsBuffer.Canvas, itemsBounds);
+        DrawMenuItems(itemsBuffer.Canvas, AGroup, itemsBounds);
+
+        animator                := animatorClass.Create(itemsBuffer);
+        animator.AnimationTime  := AnimationTime;
+        animator.Expanding      := AExpanding;
+
+        Result := TX2MenuBarAnimateAction.Create(Self, AGroup, animator);
+      finally
+        FreeAndNil(itemsBuffer);
+      end;
+    finally
+      Painter.EndPaint();
+      Invalidate();
+    end;
+  end;
+end;
+
+
 function TX2CustomMenuBar.IterateItemBounds(ACallback: TX2MenuBarItemBoundsProc;
                                             AData: Pointer): TX2CustomMenuBarItem;
 var
-  groupIndex:       Integer;
-  group:            TX2MenuBarGroup;
-  menuBounds:       TRect;
-  itemBounds:       TRect;
-  itemIndex:        Integer;
-  item:             TX2MenuBarItem;
   abort:            Boolean;
+  currentAction:    TX2CustomMenuBarAction;
+  group:            TX2MenuBarGroup;
+  groupIndex:       Integer;
+  handled:          Boolean;
+  item:             TX2MenuBarItem;
+  itemBounds:       TRect;
+  itemHeight:       Integer;
+  itemIndex:        Integer;
+  menuBounds:       TRect;
 
 begin
   Assert(Assigned(Painter), 'No Painter assigned');
-  
+
   Result      := nil;
   menuBounds  := Painter.ApplyMargins(Self.ClientRect);
   itemBounds  := menuBounds;
@@ -1619,14 +1671,22 @@ begin
       break;
     end;
 
+    
     itemBounds.Top      := itemBounds.Bottom +
                            Painter.GetSpacing(seAfterGroupHeader);
+    currentAction       := GetCurrentAction();
+    handled             := False;
 
-    if Assigned(Animator) and (Animator.Group = group) then
+    if Assigned(currentAction) then
     begin
-      { Animated group }
-      Inc(itemBounds.Top, Animator.Height);
-    end else if group.Expanded and (group.Items.Count > 0) then
+      itemHeight  := 0;
+
+      currentAction.GetItemHeight(group, itemHeight, handled);
+      if handled then
+        Inc(itemBounds.Top, itemHeight);
+    end;
+
+    if (not handled) and group.Expanded and (group.Items.Count > 0) then
     begin
       Inc(itemBounds.Top, Painter.GetSpacing(seBeforeFirstItem));
 
@@ -1699,9 +1759,9 @@ begin
 
     { Pretend to auto select item - required for proper functioning of
       the OnSelectedChanging event }
-    if AutoSelectItem then
-      if not DoAutoSelectItem(AGroup, saBefore) then
-        exit;
+//    if AutoSelectItem then
+//      if not DoAutoSelectItem(AGroup, saBefore) then
+//        exit;
 
     { Allow collapse all }
     if not (AExpanding or AllowCollapseAll) then
@@ -1714,17 +1774,22 @@ begin
       end;
   end;
 
-  { Auto collapse }
-  if AutoCollapse then
-    if AExpanding then
-      DoAutoCollapse(AGroup);
-
   if AGroup.Items.Count > 0 then
-    DoExpand(AGroup, AExpanding)
-  else
+  begin
+    { Auto collapse first }
+    if AutoCollapse and AExpanding then
+        DoAutoCollapse(AGroup);
+
+    PerformExpand(AGroup, AExpanding);
+  end else
   begin
     AGroup.InternalSetExpanded(AExpanding);
-    SelectedItem := AGroup
+    SelectedItem := AGroup;
+
+    { Auto collapse after - if selecting the group takes some time this ensures
+      that the animation starts afterwards. }
+    if AutoCollapse and AExpanding then
+        DoAutoCollapse(AGroup);
   end;
 end;
 
@@ -1733,8 +1798,8 @@ begin
   if AGroup.Expanded then
   begin
     { Auto select item }
-    if AutoSelectItem then
-      DoAutoSelectItem(AGroup, saAfter);
+//    if AutoSelectItem then
+//      DoAutoSelectItem(AGroup, saAfter);
 
     if Assigned(FOnExpanded) then
       FOnExpanded(Self, AGroup);
@@ -1757,9 +1822,38 @@ begin
 end;
 
 
+procedure TX2CustomMenuBar.DoCollapsed(AGroup: TX2MenuBarGroup);
+begin
+  if Assigned(FOnCollapsed) then
+    FOnCollapsed(Self, AGroup);
+end;
+
+
+procedure TX2CustomMenuBar.DoCollapsing(AGroup: TX2MenuBarGroup; var AAllowed: Boolean);
+begin
+  if Assigned(FOnCollapsing) then
+    FOnCollapsing(Self, AGroup, AAllowed);
+end;
+
+
+procedure TX2CustomMenuBar.DoExpanded(AGroup: TX2MenuBarGroup);
+begin
+  if Assigned(FOnExpanded) then
+    FOnExpanded(Self, AGroup);
+end;
+
+
+procedure TX2CustomMenuBar.DoExpanding(AGroup: TX2MenuBarGroup; var AAllowed: Boolean);
+begin
+  if Assigned(FOnExpanding) then
+    FOnExpanding(Self, AGroup, AAllowed);
+end;
+
+
+
 function TX2CustomMenuBar.AllowInteraction(): Boolean;
 begin
-  Result  := not Assigned(Animator);
+  Result  := (ActionQueue.Count = 0);
 end;
 
 function TX2CustomMenuBar.ItemEnabled(AItem: TX2CustomMenuBarItem): Boolean;
@@ -1773,102 +1867,143 @@ begin
 end;
 
 
-procedure TX2CustomMenuBar.DoExpand(AGroup: TX2MenuBarGroup;
-                                    AExpanding: Boolean);
-var
-  animatorClass:  TX2CustomMenuBarAnimatorClass;
-  itemsBuffer:    Graphics.TBitmap;
-  itemsBounds:    TRect;
 
+function TX2CustomMenuBar.GetCurrentAction(): TX2CustomMenuBarAction;
 begin
-  if not Assigned(Painter) then
-    exit;
-
-  if AGroup.Items.Count = 0 then
-  begin
-    AGroup.InternalSetExpanded(AExpanding);
-    Exit;
-  end;
-
-  if Assigned(Animator) then
-  begin
-    FExpandingGroups.AddObject(Chr(Ord(AExpanding)), AGroup);
-  end else
-  begin
-    animatorClass := GetAnimatorClass();
-    if Assigned(animatorClass) and not (csDesigning in ComponentState) then
-    begin
-      Painter.BeginPaint(Self);
-      try
-        itemsBuffer := Graphics.TBitmap.Create();
-        try
-          itemsBounds             := Painter.ApplyMargins(Self.ClientRect);
-          itemsBuffer.PixelFormat := pf32bit;
-          itemsBuffer.Width       := itemsBounds.Right - itemsBounds.Left;
-          itemsBuffer.Height      := Painter.GetGroupHeight(AGroup);
-          itemsBounds             := Rect(0, 0, itemsBuffer.Width, itemsBuffer.Height);
-          itemsBuffer.Canvas.Font.Assign(Self.Font);
-
-          // #ToDo3 (MvR) 23-3-2006: this will probably cause problems if we ever
-          //                         want a bitmapped/customdrawn background.
-          //                         Maybe we can trick around a bit with the
-          //                         canvas offset? think about it later.
-          Painter.DrawBackground(itemsBuffer.Canvas, itemsBounds);
-          DrawMenuItems(itemsBuffer.Canvas, AGroup, itemsBounds);
-
-          Animator                := animatorClass.Create(itemsBuffer);
-          Animator.AnimationTime  := AnimationTime;
-          Animator.Expanding      := AExpanding;
-          Animator.Group          := AGroup;
-        finally
-          FreeAndNil(itemsBuffer);
-        end;
-      finally
-        Painter.EndPaint();
-        Invalidate();
-      end;
-    end else
-      AGroup.InternalSetExpanded(AExpanding);
-  end;
+  Result := nil;
+  if ActionQueue.Count > 0 then
+    Result := TX2CustomMenuBarAction(ActionQueue[0]);
 end;
 
-procedure TX2CustomMenuBar.DoAutoCollapse(AGroup: TX2MenuBarGroup);
+
+procedure TX2CustomMenuBar.PushAction(AAction: TX2CustomMenuBarAction);
+begin
+  ActionQueue.Add(AAction);
+  Invalidate();
+end;
+
+
+procedure TX2CustomMenuBar.PopCurrentAction();
+begin
+  if ActionQueue.Count > 0 then
+    ActionQueue.Delete(0);
+end;
+
+
+function TX2CustomMenuBar.DoAutoCollapse(AGroup: TX2MenuBarGroup): Boolean;
 var
+  possibleGroup:      TX2MenuBarGroup;
   expandedGroup:      TX2MenuBarGroup;
   groupIndex:         Integer;
   group:              TX2MenuBarGroup;
+  collapseGroups:     TList;
+  collapseActions:    TX2MenuBarAnimateMultipleAction;
+  collapseAction:     TX2MenuBarAnimateAction;
 
 begin
+  Result        := True;
   expandedGroup := AGroup;
+
+  { If no group is specified, use the first appropriate group }
   if not Assigned(expandedGroup) then
   begin
+    possibleGroup := nil;
+
     for groupIndex := 0 to Pred(Groups.Count) do
-      if Groups[groupIndex].Expanded then
+    begin
+      if ItemVisible(Groups[groupIndex]) then
       begin
-        expandedGroup := Groups[groupIndex];
-        break;
+        if Groups[groupIndex].Expanded then
+        begin
+          expandedGroup := Groups[groupIndex];
+          break;
+        end else
+          if not Assigned(possibleGroup) then
+            possibleGroup := nil;
       end;
+    end;
 
     if not Assigned(expandedGroup) then
-      if Groups.Count > 0 then
+    begin
+      expandedGroup := possibleGroup;
+
+      if Assigned(expandedGroup) then
       begin
-        expandedGroup           := Groups[0];
-        expandedGroup.Expanded  := True;
-      end else
-        exit;
+        { Expand the first visible group. This will trigger DoAutoCollapse
+          again. }
+        Result := PerformExpand(expandedGroup, True);
+        Exit;
+      end;
+    end;
   end;
 
-  for groupIndex := 0 to Pred(Groups.Count) do
-  begin
-    group := Groups[groupIndex];
+  collapseGroups  := TList.Create();
+  try
+    { Determine which groups to collapse }
+    for groupIndex := 0 to Pred(Groups.Count) do
+    begin
+      group := Groups[groupIndex];
 
-    if (group <> expandedGroup) and (group.Expanded) then
-      DoExpand(group, False);
+      if (group <> expandedGroup) and (group.Expanded) then
+        collapseGroups.Add(group);
+    end;
+
+    if collapseGroups.Count > 0 then
+    begin
+      { If more than one, collapse simultaniously }
+      if collapseGroups.Count > 1 then
+      begin
+        { Check if all the groups are allowed to collapse first }
+        for groupIndex := 0 to Pred(collapseGroups.Count) do
+        begin
+          group := TX2MenuBarGroup(collapseGroups[groupIndex]);
+          DoCollapsing(group, Result);
+
+          if not Result then
+            Break;
+        end;
+
+
+        if Result then
+        begin
+          { Animate visible groups }
+          collapseActions := TX2MenuBarAnimateMultipleAction.Create(Self);
+
+          for groupIndex := 0 to Pred(collapseGroups.Count) do
+          begin
+            group           := TX2MenuBarGroup(collapseGroups[groupIndex]);
+
+            if ItemVisible(group) then
+            begin
+              collapseAction  := TX2MenuBarAnimateAction(GetAnimateAction(group, False));
+
+              if Assigned(collapseAction) then
+                collapseActions.Add(collapseAction);
+            end;
+          end;
+
+          if collapseActions.Count > 0 then
+            PushAction(collapseActions)
+          else
+            FreeAndNil(collapseActions);
+
+
+          { Add the collapse actions after the animation so OnCollapsed events
+            raise afterwards. }
+          for groupIndex := 0 to Pred(collapseGroups.Count) do
+            PushAction(TX2MenuBarExpandAction.Create(Self, TX2MenuBarGroup(collapseGroups[groupIndex]),
+                                                     False));
+        end;
+      end else
+        Result := PerformExpand(TX2MenuBarGroup(collapseGroups[0]), False);
+    end;
+  finally
+    FreeAndNil(collapseGroups);
   end;
 end;
 
-function TX2CustomMenuBar.DoAutoSelectItem(AGroup: TX2MenuBarGroup;
-                                           AAction: TX2MenuBarSelectAction): Boolean;
+
+function TX2CustomMenuBar.DoAutoSelectItem(AGroup: TX2MenuBarGroup): Boolean;
 var
   group:      TX2MenuBarGroup;
   groupIndex: Integer;
@@ -1876,8 +2011,8 @@ var
   itemIndex:  Integer;
 
 begin
-  Result  := True;
   group   := AGroup;
+  
   if not Assigned(group) then
   begin
     for groupIndex := 0 to Pred(Groups.Count) do
@@ -1912,15 +2047,94 @@ begin
         end;
     end;
 
-    if Assigned(newItem) and (newItem <> SelectedItem) then
-    begin
-      if AAction in [saBefore, saBoth] then
-        DoSelectedChanging(newItem, Result);
-
-      if Result and (AAction in [saAfter, saBoth]) then
-        SelectedItem := newItem;
-    end;
+//    if Assigned(newItem) and (newItem <> SelectedItem) then
+//    begin
+//      if AAction in [saBefore, saBoth] then
+//        DoSelectedChanging(newItem, Result);
+//
+//      if Result and (AAction in [saAfter, saBoth]) then
+//        SelectedItem := newItem;
+//    end;
   end;
+end;
+
+
+function TX2CustomMenuBar.DoExpand(AGroup: TX2MenuBarGroup; AExpanding: Boolean): Boolean;
+var
+  allowed: Boolean;
+  expandAction: TX2MenuBarAnimateAction;
+
+begin
+  Result  := False;
+  allowed := True;
+
+  if AExpanding then
+    DoExpanding(AGroup, allowed)
+  else
+    DoCollapsing(AGroup, allowed);
+
+  if not allowed then
+    Exit;
+
+  if not AExpanding then
+  begin
+    // #ToDo1 (MvR) 22-3-2007:
+  end else
+  begin
+    PerformAutoCollapse(AGroup);
+    PerformAutoSelectItem(AGroup);
+  end;
+
+  Result        := True;
+  expandAction  := TX2MenuBarAnimateAction(GetAnimateAction(AGroup, AExpanding));
+  if Assigned(expandAction) then
+    PushAction(expandAction);
+
+  PushAction(TX2MenuBarExpandAction.Create(Self, AGroup, AExpanding));
+end;
+
+
+function TX2CustomMenuBar.DoSelectItem(AItem: TX2CustomMenuBarItem): Boolean;
+begin
+  Result  := True;
+  DoSelectedChanging(AItem, Result);
+
+  if Result then
+    PushAction(
+end;
+
+
+function TX2CustomMenuBar.PerformAutoCollapse(AGroup: TX2MenuBarGroup): Boolean;
+begin
+  Result  := True;
+
+  if AutoCollapse then
+    Result  := DoAutoCollapse(AGroup);
+end;
+
+
+function TX2CustomMenuBar.PerformAutoSelectItem(AGroup: TX2MenuBarGroup): Boolean;
+begin
+  Result  := True;
+
+  if AutoSelectItem then
+    Result  := DoAutoSelectItem(AGroup);
+end;
+
+
+function TX2CustomMenuBar.PerformExpand(AGroup: TX2MenuBarGroup;
+                                        AExpanding: Boolean): Boolean;
+begin
+  Result  := True;
+
+  if AExpanding <> AGroup.Expanded then
+    Result  := DoExpand(AGroup, AExpanding);
+end;
+
+
+function TX2CustomMenuBar.PerformSelectItem(AItem: TX2CustomMenuBarItem): Boolean;
+begin
+  Result := DoSelectItem(AItem);
 end;
 
 
@@ -2226,31 +2440,21 @@ procedure TX2CustomMenuBar.MouseDown(Button: TMouseButton; Shift: TShiftState;
                                      X, Y: Integer);
 var
   hitTest:      TX2MenuBarHitTest;
-  group:        TX2MenuBarGroup;
 
 begin
   if Button = mbLeft then
+  begin
     if AllowInteraction then
     begin
       hitTest := Self.HitTest(X, Y);
-
-      if hitTest.HitTestCode = htGroup then
-      begin
-        group := TX2MenuBarGroup(hitTest.Item);
-        if ItemEnabled(group) then
-        begin
-          group.Expanded  := not group.Expanded;
-          hitTest.Item    := SelectedItem;
-          Invalidate();
-        end;
-      end;
-
       if Assigned(hitTest.Item) then
         SelectedItem  := hitTest.Item;
     end;
+  end;
 
   inherited;
 end;
+
 
 procedure TX2CustomMenuBar.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
@@ -2261,13 +2465,15 @@ begin
   TestMousePos();
 
   cursor  := crDefault;
-  if Assigned(FHotItem) then
-    if FHotItem is TX2MenuBarGroup then
+  if Assigned(HotItem) then
+  begin
+    if HotItem is TX2MenuBarGroup then
       cursor  := CursorGroup
-    else if FHotItem is TX2MenuBarItem then
+    else if HotItem is TX2MenuBarItem then
       cursor  := CursorItem;
+  end;
 
-  if (cursor <> crDefault) and ItemEnabled(FHotItem) then
+  if (cursor <> crDefault) and ItemEnabled(HotItem) then
   begin
     Windows.SetCursor(Screen.Cursors[cursor]);
     exit;
@@ -2275,12 +2481,6 @@ begin
 
   inherited;
 end;
-
-//procedure TX2CustomMenuBar.MouseUp(Button: TMouseButton; Shift: TShiftState;
-//                                   X, Y: Integer);
-//begin
-//  inherited;
-//end;
 
 procedure TX2CustomMenuBar.CMMouseLeave(var Msg: TMessage);
 begin
@@ -2362,6 +2562,7 @@ begin
   end;
 end;
 
+
 procedure TX2CustomMenuBar.TestMousePos();
 var
   hitTest:    TX2MenuBarHitTest;
@@ -2370,18 +2571,22 @@ begin
   hitTest := Self.HitTest(FLastMousePos.X, FLastMousePos.Y);
   if hitTest.Item <> FHotItem then
   begin
-    FHotItem  := hitTest.Item;
+    HotItem := hitTest.Item;
     Invalidate();
   end;
 end;
 
+
 function TX2CustomMenuBar.GetMenuHeight(): Integer;
 var
-  groupIndex:       Integer;
+  currentAction:    TX2CustomMenuBarAction;
   group:            TX2MenuBarGroup;
-  menuBounds:       TRect;
-  itemIndex:        Integer;
+  groupIndex:       Integer;
+  handled:          Boolean;
   item:             TX2MenuBarItem;
+  itemHeight:       Integer;
+  itemIndex:        Integer;
+  menuBounds:       TRect;
 
 begin
   if not Assigned(Painter) then
@@ -2404,11 +2609,17 @@ begin
                 Painter.GetGroupHeaderHeight(group) +
                 Painter.GetSpacing(seAfterGroupHeader));
 
-    if Assigned(Animator) and (Animator.Group = group) then
+    handled       := False;
+    currentAction := GetCurrentAction();
+    if Assigned(currentAction) then
     begin
-      { Animated group }
-      Inc(Result, Animator.Height);
-    end else if group.Expanded then
+      currentAction.GetItemHeight(group, itemHeight, handled);
+
+      if handled then
+        Inc(Result, itemHeight);
+    end;
+
+    if (not handled) and group.Expanded then
     begin
       Inc(Result, Painter.GetSpacing(seBeforeFirstItem));
 
@@ -2436,8 +2647,11 @@ var
 begin
   { Don't update the scrollbar while animating, prevents issues with the
     items buffer width if the scrollbar happens to show/hide during animation. }
+  // #ToDo1 (MvR) 13-3-2007: actionqueue
+  (*
   if Assigned(Animator) then
     exit;
+  *)
 
   FillChar(scrollInfo, SizeOf(TScrollInfo), #0);
   scrollInfo.cbSize := SizeOf(TScrollInfo);
@@ -2479,14 +2693,6 @@ begin
   end;
 end;
 
-procedure TX2CustomMenuBar.SetAnimator(const Value: TX2CustomMenuBarAnimator);
-begin
-  if Value <> FAnimator then
-  begin
-    FreeAndNil(FAnimator);
-    FAnimator := Value;
-  end;
-end;
 
 procedure TX2CustomMenuBar.SetAutoCollapse(const Value: Boolean);
 begin
@@ -2499,16 +2705,18 @@ begin
   end;
 end;
 
+
 procedure TX2CustomMenuBar.SetAutoSelectItem(const Value: Boolean);
 begin
   if Value <> FAutoSelectItem then
   begin
     FAutoSelectItem := Value;
 
-    if Value and (not Assigned(SelectedItem)) then
-      DoAutoSelectItem(nil, saBoth);
+//    if Value and (not Assigned(SelectedItem)) then
+//      DoAutoSelectItem(nil, saBoth);
   end;
 end;
+
 
 procedure TX2CustomMenuBar.SetBorderStyle(const Value: TBorderStyle);
 begin
@@ -2519,11 +2727,13 @@ begin
   end;
 end;
 
+
 procedure TX2CustomMenuBar.SetGroups(const Value: TX2MenuBarGroups);
 begin
   if Value <> FGroups then
     FGroups.Assign(Value);
 end;
+
 
 procedure TX2CustomMenuBar.SetHideScrollbar(const Value: Boolean);
 begin
@@ -2533,6 +2743,7 @@ begin
     RecreateWnd();
   end;
 end;
+
 
 procedure TX2CustomMenuBar.SetImages(const Value: TCustomImageList);
 begin
@@ -2550,6 +2761,7 @@ begin
   end;
 end;
 
+
 procedure TX2CustomMenuBar.SetPainter(const Value: TX2CustomMenuBarPainter);
 begin
   if FPainter <> Value then
@@ -2560,7 +2772,7 @@ begin
       FPainter.RemoveFreeNotification(Self);
     end;
 
-    Animator  := nil;
+    // #ToDo1 (MvR) 13-3-2007: check queue ?
     FPainter  := Value;
 
     if Assigned(FPainter) then
@@ -2573,6 +2785,7 @@ begin
   end;
 end;
 
+
 procedure TX2CustomMenuBar.SetScrollbar(const Value: Boolean);
 begin
   if Value <> FScrollbar then
@@ -2582,59 +2795,81 @@ begin
   end;
 end;
 
+
 procedure TX2CustomMenuBar.SetSelectedItem(const Value: TX2CustomMenuBarItem);
 var
   allowed:            Boolean;
   group:              TX2MenuBarGroup;
+  selectItem:         TX2CustomMenuBarItem;
 
 begin
   if Value <> FSelectedItem then
   begin
-    if Assigned(Value) then
+    allowed := (not Assigned(Value)) or ItemEnabled(Value);
+    if allowed then
+      DoSelectedChanging(Value, allowed);
+
+    if allowed then
     begin
-      allowed := ItemEnabled(Value);
-      if allowed then
+      selectItem  := Value;
+
+      if selectItem is TX2MenuBarGroup then
       begin
-        DoSelectedChanging(Value, allowed);
+        group := TX2MenuBarGroup(selectItem);
 
-        if allowed then
+        { Check if the group should be collapsed }
+        if group.Expanded and (not AutoCollapse) then
         begin
-          if Value is TX2MenuBarGroup then
-          begin
-            group := TX2MenuBarGroup(Value);
-
-            if group.Items.Count > 0 then
-            begin
-              // Item is a group, expand it (triggers autoselect too if appropriate)
-              group.Expanded := True;
-              Exit;
-            end else
-              DoAutoCollapse(group);
-          end;
-
-          FSelectedItem := Value;
-
-          if Value is TX2MenuBarItem then
-          begin
-            group := TX2MenuBarItem(Value).Group;
-            if Assigned(group) then
-            begin
-              group.SelectedItem  := Value.Index;
-
-              if not group.Expanded then
-                group.Expanded  := True;
-            end;
-          end;
-
-          if Assigned(FSelectedItem) and Assigned(FSelectedItem.Action) then
-            FSelectedItem.ActionLink.Execute(Self);
+          PerformExpand(group, False);
+        end else
+        begin
+          if group.Items.Count > 0 then
+            PerformExpand(group, True)
+          else
+            PerformSelectItem(group);
         end;
-      end;
-    end else
-      FSelectedItem := Value;
+      end else
+        PerformSelectItem(selectItem);
 
-    DoSelectedChanged();
-    Invalidate();
+
+      // #ToDo1 (MvR) 13-3-2007: check
+//      if Assigned(Value) then
+//      begin
+//        if Value is TX2MenuBarGroup then
+//        begin
+//          group := TX2MenuBarGroup(Value);
+//
+//          if group.Items.Count > 0 then
+//          begin
+//            // Item is a group, expand it (triggers autoselect too if appropriate)
+//            group.Expanded := True;
+//            Exit;
+//          end else
+//            DoAutoCollapse(group);
+//        end;
+//
+//          FSelectedItem := Value;
+//
+//          if Value is TX2MenuBarItem then
+//          begin
+//            group := TX2MenuBarItem(Value).Group;
+//            if Assigned(group) then
+//            begin
+//              group.SelectedItem  := Value.Index;
+//
+//              if not group.Expanded then
+//                group.Expanded  := True;
+//            end;
+//          end;
+//
+//          if Assigned(FSelectedItem) and Assigned(FSelectedItem.Action) then
+//            FSelectedItem.ActionLink.Execute(Self);
+//        end;
+//      end;
+//
+//      DoSelectedChanged();
+//      Invalidate();
+    end;
   end;
 end;
 

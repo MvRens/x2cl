@@ -81,7 +81,9 @@ type
 
 implementation
 uses
-  SysUtils;
+  SysUtils,
+
+  X2CLGraphics;
   
 
 { TX2MenuBarSlideAnimator }
@@ -346,7 +348,7 @@ begin
     destRect                := Rect(0, 0, backBuffer.Width, backBuffer.Height);
     backBuffer.Canvas.CopyRect(destRect, ACanvas, ABounds);
 
-    X2CLMenuBar.DrawBlended(backBuffer, ItemsBuffer, FAlpha);
+    X2CLGraphics.DrawBlended(backBuffer, ItemsBuffer, FAlpha);
 
     sourceRect              := Rect(0, 0, ItemsBuffer.Width, Self.Height);
     destRect                := ABounds;

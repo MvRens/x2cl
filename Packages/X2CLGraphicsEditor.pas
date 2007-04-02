@@ -73,6 +73,8 @@ type
     FUpdating:            Boolean;
 
     procedure InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
+
+    procedure LoadGraphic(AIndex: Integer; AGraphic: TX2GraphicContainerItem; const AFileName: string);
     
     procedure ItemChanged(AUpdatePreview: Boolean = True);
     procedure UpdateUI();
@@ -153,6 +155,17 @@ begin
 end;
 
 
+procedure TGraphicsEditorForm.LoadGraphic(AIndex: Integer; AGraphic: TX2GraphicContainerItem; const AFileName: string);
+begin
+  AGraphic.Picture.LoadFromFile(AFileName);
+  if Length(AGraphic.PictureName) = 0 then
+  begin
+    AGraphic.PictureName      := ChangeFileExt(ExtractFileName(AFileName), '');
+    lstGraphics.Items[AIndex] := AGraphic.PictureName;
+  end;
+end;
+
+
 procedure TGraphicsEditorForm.ItemChanged(AUpdatePreview: Boolean);
 begin
   if Assigned(FComponentDesigner) then
@@ -200,7 +213,12 @@ begin
     if Active(index, graphic) then
     begin
       imgPreview.Picture.Assign(graphic.Picture);
-      txtName.Text  := graphic.PictureName;
+      txtName.Text              := graphic.PictureName;
+      lstGraphics.Items[index]  := graphic.PictureName;
+    end else
+    begin
+      imgPreview.Picture.Assign(nil);
+      txtName.Text              := '';
     end;
   finally
     FUpdating := False;
@@ -251,24 +269,33 @@ procedure TGraphicsEditorForm.actAddExecute(Sender: TObject);
 var
   index:        Integer;
   graphic:      TX2GraphicContainerItem;
+  fileIndex:    Integer;
 
 begin
   if Assigned(FComponentDesigner) then
   begin
-    graphic := TX2GraphicContainerItem(FComponentDesigner.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
+    dlgOpen.Filter  := GraphicFilter(TGraphic);
+    dlgOpen.Options := dlgOpen.Options + [ofAllowMultiSelect];
 
-    if Assigned(graphic) then
+    if dlgOpen.Execute() then
     begin
-      graphic.Container := FComponent;
-      index             := lstGraphics.Items.AddObject(graphic.PictureName,
-                                                       graphic);
+      for fileIndex := 0 to Pred(dlgOpen.Files.Count) do
+      begin
+        graphic := TX2GraphicContainerItem(FComponentDesigner.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
 
-      lstGraphics.ItemIndex := index;
+        if Assigned(graphic) then
+        begin
+          graphic.Container     := FComponent;
+          index                 := lstGraphics.Items.AddObject('', graphic);
+          lstGraphics.ItemIndex := index;
+          
+          LoadGraphic(index, graphic, dlgOpen.Files[fileIndex]);
+        end else
+          raise Exception.Create('Failed to create TX2GraphicContainerItem!');
+      end;
+
       ItemChanged();
-
-      actOpen.Execute();
-    end else
-      raise Exception.Create('Failed to create TX2GraphicContainerItem!');
+    end;
   end else
     raise Exception.Create('Designer not found!');
 end;
@@ -343,12 +370,11 @@ begin
   if Active(index, graphic) then
   begin
     dlgOpen.Filter  := GraphicFilter(TGraphic);
+    dlgOpen.Options := dlgOpen.Options - [ofAllowMultiSelect];
+
     if dlgOpen.Execute() then
     begin
-      graphic.Picture.LoadFromFile(dlgOpen.FileName);
-      if Length(graphic.PictureName) = 0 then
-        graphic.PictureName := ChangeFileExt(ExtractFileName(dlgOpen.FileName), '');
-
+      LoadGraphic(index, graphic, dlgOpen.FileName);
       ItemChanged();
     end;
   end;

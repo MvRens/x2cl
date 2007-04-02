@@ -101,6 +101,7 @@ type
     procedure AddGraphic(const AGraphic: TX2GraphicContainerItem); virtual;
     procedure RemoveGraphic(const AGraphic: TX2GraphicContainerItem); virtual;
     procedure UpdateGraphic(const AGraphic: TX2GraphicContainerItem); virtual;
+    procedure MoveGraphic(const AGraphic: TX2GraphicContainerItem; ANewIndex: Integer); virtual;
 
     procedure RegisterList(const AList: TX2GraphicList);
     procedure UnregisterList(const AList: TX2GraphicList);
@@ -167,6 +168,7 @@ type
     procedure AddImage(const AIndex: Integer); virtual;
     procedure UpdateImage(const AIndex: Integer); virtual;
     procedure DeleteImage(const AIndex: Integer); virtual;
+    procedure MoveImage(const AOldIndex, ANewIndex: Integer); virtual;
 
     procedure RebuildImages(); virtual;
 
@@ -193,6 +195,7 @@ uses
   Forms,
   ImgList,
   SysUtils;
+
 
 type
   PClass          = ^TClass;
@@ -230,6 +233,7 @@ begin
   FPicture                := TPicture.Create();
   FPicture.PictureAdapter := Self;
 end;
+
 
 destructor TX2GraphicContainerItem.Destroy();
 begin
@@ -284,6 +288,7 @@ begin
     Result := inherited GetParentComponent();
 end;
 
+
 function TX2GraphicContainerItem.HasParent(): Boolean;
 begin
   if Assigned(Container) then
@@ -302,6 +307,7 @@ begin
     Container := TX2GraphicContainer(Reader.Parent);
 end;
 
+
 procedure TX2GraphicContainerItem.SetParentComponent(AParent: TComponent);
 begin
   if not (csLoading in ComponentState) and (AParent is TX2GraphicContainer) then
@@ -315,6 +321,7 @@ begin
   if Assigned(Container) then
     Result := Container.GraphicsList.IndexOf(Self);
 end;
+
 
 procedure TX2GraphicContainerItem.SetContainer(const Value: TX2GraphicContainer);
 begin
@@ -331,30 +338,13 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicContainerItem.SetIndex(const Value: Integer);
-var
-  count:      Integer;
-  curIndex:   Integer;
-  newIndex:   Integer;
-
 begin
-  curIndex := GetIndex();
-
-  if curIndex > -1 then
-  begin
-    count     := Container.GraphicsList.Count;
-    newIndex  := Value;
-
-    if newIndex < 0 then
-      newIndex := 0;
-
-    if newIndex >= count then
-      newIndex := Pred(count);
-
-    if newIndex <> curIndex then
-      Container.GraphicsList.Move(curIndex, newIndex);
-  end;
+  if Assigned(Container) then
+    Container.MoveGraphic(Self, Value);
 end;
+
 
 procedure TX2GraphicContainerItem.SetPicture(const Value: TPicture);
 begin
@@ -442,6 +432,7 @@ begin
   FLists    := TList.Create();
 end;
 
+
 destructor TX2GraphicContainer.Destroy();
 begin
   Clear();
@@ -468,6 +459,7 @@ begin
     end;
 end;
 
+
 function TX2GraphicContainer.GraphicByName(const AName: String): TX2GraphicContainerItem;
 var
   graphicIndex: Integer;
@@ -478,6 +470,7 @@ begin
   if graphicIndex > -1 then
     Result  := Graphics[graphicIndex];
 end;
+
 
 function TX2GraphicContainer.PictureByName(const AName: String): TPicture;
 var
@@ -535,6 +528,7 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicContainer.SetChildOrder(Component: TComponent; Order: Integer);
 begin
   if GraphicsList.IndexOf(Component) >= 0 then
@@ -578,7 +572,7 @@ begin
       begin
         if AComponent is TX2GraphicContainerItem then
           RemoveGraphic(TX2GraphicContainerItem(AComponent))
-          
+
         else if AComponent is TX2GraphicList then
           Lists.Remove(AComponent);
       end;
@@ -648,6 +642,7 @@ begin
     TX2GraphicList(Lists[listIndex]).AddImage(graphicIndex);
 end;
 
+
 procedure TX2GraphicContainer.RemoveGraphic(const AGraphic: TX2GraphicContainerItem);
 var
   graphicIndex:   Integer;
@@ -666,6 +661,7 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicContainer.UpdateGraphic(const AGraphic: TX2GraphicContainerItem);
 var
   graphicIndex: Integer;
@@ -682,6 +678,49 @@ begin
 end;
 
 
+procedure TX2GraphicContainer.MoveGraphic(const AGraphic: TX2GraphicContainerItem; ANewIndex: Integer);
+var
+  count:      Integer;
+  curIndex:   Integer;
+  newIndex:   Integer;
+  listIndex:  Integer;
+
+begin
+  if not Assigned(AGraphic.Container) then
+    Exit;
+
+  if AGraphic.Container <> Self then
+  begin
+    AGraphic.Container.MoveGraphic(AGraphic, ANewIndex);
+    Exit;
+  end;
+
+
+  curIndex := AGraphic.Index;
+
+  if curIndex > -1 then
+  begin
+    count     := GraphicsList.Count;
+    newIndex  := ANewIndex;
+
+    if newIndex < 0 then
+      newIndex := 0;
+
+    if newIndex >= count then
+      newIndex := Pred(count);
+
+    if newIndex <> curIndex then
+    begin
+      GraphicsList.Move(curIndex, newIndex);
+
+      for listIndex := Pred(Lists.Count) downto 0 do
+        TX2GraphicList(Lists[listIndex]).MoveImage(curIndex, newIndex);
+    end;
+  end;
+end;
+
+
+
 procedure TX2GraphicContainer.RegisterList(const AList: TX2GraphicList);
 begin
   if Lists.IndexOf(AList) = -1 then
@@ -691,10 +730,11 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicContainer.UnregisterList(const AList: TX2GraphicList);
 begin
   if Lists.Remove(AList) > -1 then
-    AList.RemoveFreeNotification(Self);  
+    AList.RemoveFreeNotification(Self);
 end;
 
 
@@ -703,6 +743,7 @@ function TX2GraphicContainer.GetGraphicCount(): Integer;
 begin
   Result := GraphicsList.Count;
 end;
+
 
 function TX2GraphicContainer.GetGraphics(Index: Integer): TX2GraphicContainerItem;
 begin
@@ -730,12 +771,14 @@ begin
   FStretchMode  := smCrop;
 end;
 
+
 procedure TX2GraphicList.Loaded();
 begin
   inherited;
 
   RebuildImages();
 end;
+
 
 procedure TX2GraphicList.Change();
 begin
@@ -912,6 +955,7 @@ begin
   Result  := True;
 end;
 
+
 procedure TX2GraphicList.DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
                                 Style: Cardinal; Enabled: Boolean = True);
 begin
@@ -1060,6 +1104,7 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicList.AddImage(const AIndex: Integer);
 var
   bmpImage:       TBitmap;
@@ -1090,6 +1135,7 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicList.UpdateImage(const AIndex: Integer);
 var
   bmpImage:       TBitmap;
@@ -1118,11 +1164,23 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicList.DeleteImage(const AIndex: Integer);
 begin
   BeginUpdate();
   try
     Delete(AIndex);
+  finally
+    EndUpdate();
+  end;
+end;
+
+
+procedure TX2GraphicList.MoveImage(const AOldIndex, ANewIndex: Integer);
+begin
+  BeginUpdate();
+  try
+    Move(AOldIndex, ANewIndex);
   finally
     EndUpdate();
   end;
@@ -1178,6 +1236,7 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicList.Notification(AComponent: TComponent;
                                       Operation: TOperation);
 begin
@@ -1193,6 +1252,7 @@ begin
   FBackground := Value;
   RebuildImages();
 end;
+
 
 procedure TX2GraphicList.SetContainer(const Value: TX2GraphicContainer);
 begin
@@ -1213,6 +1273,7 @@ begin
   RebuildImages();
 end;
 
+
 procedure TX2GraphicList.SetConvert(const Value: Boolean);
 begin
   if Value <> FConvert then
@@ -1222,11 +1283,13 @@ begin
   end;
 end;
 
+
 procedure TX2GraphicList.SetEnabled(const Value: Boolean);
 begin
   FEnabled := Value;
   RebuildImages();
 end;
+
 
 procedure TX2GraphicList.SetStretchMode(const Value: TX2GLStretchMode);
 begin
@@ -1239,6 +1302,7 @@ procedure TX2GraphicList.BeginUpdate();
 begin
   Inc(FUpdateCount);
 end;
+
 
 procedure TX2GraphicList.EndUpdate();
 begin
@@ -1256,6 +1320,7 @@ begin
   FPicture  := TPicture.Create();
 end;
 
+
 destructor TDeprecatedGraphicItem.Destroy();
 begin
   FreeAndNil(FPicture);
@@ -1263,10 +1328,12 @@ begin
   inherited;
 end;
 
+
 procedure TDeprecatedGraphicItem.SetPicture(const Value: TPicture);
 begin
   FPicture.Assign(Value);
 end;
+
 
 
 initialization

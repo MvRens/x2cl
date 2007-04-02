@@ -135,6 +135,7 @@ ProductName=
 ProductVersion=1.0.0.0
 Comments=
 [Excluded Packages]
+P:\Algemeen\components\X2CL\Lib\D7\X2CLGLD.bpl=X²CL GraphicList (Designtime)
 C:\Program Files\Borland\Indy\D7\dclIndy70.bpl=Internet Direct (Indy) for D7 Property and Component Editors
 [HistoryLists\hlUnitAliases]
 Count=1

@@ -11,8 +11,8 @@ uses
   StdCtrls,
   XPMan,
 
-  JvExMask,
-  JvSpin,
+//  JvExMask,
+//  JvSpin,
   PNGImage,
   X2CLGraphicList,
   X2CLMenuBar,
@@ -28,7 +28,6 @@ type
     rbmusikCube: TRadioButton;
     rbSliding: TRadioButton;
     lblAnimationTime: TLabel;
-    seAnimationTime: TJvSpinEdit;
     Panel1: TPanel;
     Panel2: TPanel;
     rbNoAnimation: TRadioButton;
@@ -53,6 +52,7 @@ type
     mbTest: TX2MenuBar;
     alMenu: TActionList;
     actTest: TAction;
+    actTest2: TAction;
     procedure mbTestSelectedChanging(Sender: TObject; Item,
       NewItem: TX2CustomMenuBarItem; var Allowed: Boolean);
     procedure mbTestSelectedChanged(Sender: TObject;
@@ -73,6 +73,7 @@ type
     procedure AnimationClick(Sender: TObject);
     procedure seAnimationTimeChange(Sender: TObject);
     procedure actTestExecute(Sender: TObject);
+    procedure actTest2Execute(Sender: TObject);
   private
     procedure Event(const AMsg: String);
   end;
@@ -81,7 +82,7 @@ implementation
 uses
   Dialogs,
   
-  X2UtHandCursor;
+  Windows;
 
 {$R *.dfm}
 
@@ -164,6 +165,8 @@ begin
   chkAllowCollapseAll.Checked := mbTest.AllowCollapseAll;
   chkScrollbar.Checked := mbTest.Scrollbar;
   chkHideScrollbar.Checked := mbTest.HideScrollbar;
+
+  rbUnameIT.Checked := True;
 end;
 
 procedure TfrmMain.mbTestCollapsed(Sender: TObject; Group: TX2MenuBarGroup);
@@ -228,7 +231,12 @@ end;
 
 procedure TfrmMain.seAnimationTimeChange(Sender: TObject);
 begin
-  mbTest.AnimationTime := seAnimationTime.AsInteger;
+//  mbTest.AnimationTime := seAnimationTime.AsInteger;
+end;
+
+procedure TfrmMain.actTest2Execute(Sender: TObject);
+begin
+  Sleep(200);
 end;
 
 end.

@@ -38,7 +38,8 @@ contains
   X2CLGraphics in '..\..\Source\X2CLGraphics.pas',
   X2CLMenuBarAnimators in '..\..\Source\X2CLMenuBarAnimators.pas',
   X2CLMenuBar in '..\..\Source\X2CLMenuBar.pas',
-  X2CLmusikCubeMenuBarPainter in '..\..\Source\X2CLmusikCubeMenuBarPainter.pas';
+  X2CLmusikCubeMenuBarPainter in '..\..\Source\X2CLmusikCubeMenuBarPainter.pas',
+  X2CLMenuBarActions in '..\..\Source\X2CLMenuBarActions.pas';
 
 end.
 

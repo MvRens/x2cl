@@ -26,6 +26,8 @@ type
     constructor Create(AMenuBar: TX2CustomMenuBar; AGroup: TX2MenuBarGroup;
                        AAnimator: TX2CustomMenuBarAnimator);
 
+    procedure Start(); override;
+
     procedure BeforePaint(); override;
     procedure GetItemHeight(AItem: TX2CustomMenuBarItem; var AHeight: Integer;
                             var AHandled: Boolean); override;
@@ -99,8 +101,7 @@ type
   private
     FItem:        TX2CustomMenuBarItem;
   public
-    constructor Create(AMenuBar: TX2CustomMenuBar; AGroup: TX2MenuBarGroup;
-                       AExpanding: Boolean);
+    constructor Create(AMenuBar: TX2CustomMenuBar; AItem: TX2CustomMenuBarItem);
 
     procedure Start(); override;
   end;
@@ -116,7 +117,7 @@ type
   TProtectedX2CustomMenuBar = class(TX2CustomMenuBar);
   TProtectedX2MenuBarGroup = class(TX2MenuBarGroup);
 
-  
+
 
 { TX2MenuBarAnimateAction }
 constructor TX2MenuBarAnimateAction.Create(AMenuBar: TX2CustomMenuBar; AGroup: TX2MenuBarGroup;
@@ -126,6 +127,14 @@ begin
 
   FAnimator := AAnimator;
   FGroup    := AGroup;
+end;
+
+
+procedure TX2MenuBarAnimateAction.Start();
+begin
+  inherited;
+
+  Animator.ResetStartTime();
 end;
 
 
@@ -330,9 +339,27 @@ procedure TX2MenuBarExpandAction.Start();
 begin
   inherited;
 
-  // #ToDo1 (MvR) 22-3-2007: via MenuBar t.b.v. OnExpandedChanged
-  TProtectedX2MenuBarGroup(FGroup).InternalSetExpanded(FExpanding);
+  TProtectedX2CustomMenuBar(MenuBar).InternalSetExpanded(FGroup, FExpanding);
   MenuBar.Invalidate();
+  Terminate();
+end;
+
+
+{ TX2MenuBarSelectAction }
+constructor TX2MenuBarSelectAction.Create(AMenuBar: TX2CustomMenuBar;
+                                          AItem: TX2CustomMenuBarItem);
+begin
+  inherited Create(AMenuBar);
+
+  FItem := AItem;
+end;
+
+
+procedure TX2MenuBarSelectAction.Start();
+begin
+  inherited;
+
+  TProtectedX2CustomMenuBar(MenuBar).InternalSetSelected(FItem);
   Terminate();
 end;
 

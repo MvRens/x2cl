@@ -25,6 +25,7 @@ type
   public
     constructor Create(AMenuBar: TX2CustomMenuBar; AGroup: TX2MenuBarGroup;
                        AAnimator: TX2CustomMenuBarAnimator);
+    destructor Destroy(); override;
 
     procedure Start(); override;
 
@@ -111,7 +112,7 @@ implementation
 uses
   SysUtils;
 
-  
+
 type
   TProtectedX2CustomMenuBarPainter = class(TX2CustomMenuBarPainter);
   TProtectedX2CustomMenuBar = class(TX2CustomMenuBar);
@@ -127,6 +128,14 @@ begin
 
   FAnimator := AAnimator;
   FGroup    := AGroup;
+end;
+
+
+destructor TX2MenuBarAnimateAction.Destroy();
+begin
+  FreeAndNil(FAnimator);
+
+  inherited;
 end;
 
 
@@ -340,7 +349,6 @@ begin
   inherited;
 
   TProtectedX2CustomMenuBar(MenuBar).InternalSetExpanded(FGroup, FExpanding);
-  MenuBar.Invalidate();
   Terminate();
 end;
 

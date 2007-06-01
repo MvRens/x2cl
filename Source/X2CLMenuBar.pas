@@ -21,10 +21,14 @@ uses
   Graphics,
   ImgList,
   Messages,
+  SysUtils,
   Types,
   Windows;
+  
 
 type
+  EInvalidItem                = class(Exception);
+
   TX2MenuBarAnimationStyle    = (asNone, asSlide, asDissolve, asFade,
                                  asSlideFade, asCustom);
 
@@ -181,7 +185,7 @@ type
     :$ Abstract action class.
 
     :: Provides a base for menu bar actions which need to be performed
-    :: asynchronous and in sequence.
+    :: asynchronous and/or in sequence.
   }
   TX2CustomMenuBarAction = class(TObject)
   private
@@ -457,6 +461,8 @@ type
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
 
     procedure WMVScroll(var Msg: TWMVScroll); message WM_VSCROLL;
+//    procedure WMMouseWheel(var Message: TWMMouseWheel); message WM_MOUSEWHEEL;
+//    procedure CMMouseWheel(var Message: TCMMouseWheel); message CM_MOUSEWHEEL;
 
     procedure TestMousePos(); virtual;
     function GetMenuHeight(): Integer; virtual;
@@ -593,6 +599,8 @@ type
     property HideScrollbar;
     property Images;
     property ParentFont;
+    property TabOrder;
+    property TabStop default True;
     property OnClick;
     property OnCollapsed;
     property OnCollapsing;
@@ -628,17 +636,18 @@ const
 
 implementation
 uses
-  SysUtils,
-
   X2CLGraphics,
   X2CLMenuBarActions,
   X2CLMenuBarAnimators;
+
 
 const
   SDefaultItemCaption   = 'Menu Item';
   SDefaultGroupCaption  = 'Group';
   SNoPainter            = 'Painter property not set';
+  SInvalidItem          = 'Item does not belong to this MenuBar';
 
+  
 type
   TProtectedCollection  = class(TCollection);
 
@@ -1392,6 +1401,7 @@ begin
   FGroups.OnUpdate  := GroupsUpdate;
   FHideScrollbar    := True;
   FScrollbar        := True;
+  TabStop           := True;
 end;
 
 
@@ -1506,6 +1516,23 @@ begin
       begin
         currentAction.Stop();
         PopCurrentAction();
+
+        { Start the next action in the queue, continue until we find an
+          action which doesn't terminate immediately. See PushAction. }
+        currentAction := GetCurrentAction();
+        while Assigned(currentAction) do
+        begin
+          currentAction.Start();
+
+          if currentAction.Terminated then
+          begin
+            currentAction.Stop();
+            PopCurrentAction();
+
+            currentAction := GetCurrentAction();
+          end else
+            Break;
+        end;
       end;
     end;
   end
@@ -1949,8 +1976,29 @@ end;
 
 
 procedure TX2CustomMenuBar.PushAction(AAction: TX2CustomMenuBarAction);
+var
+  action:   TX2CustomMenuBarAction;
+
 begin
-  ActionQueue.Add(AAction);
+  action  := AAction;
+
+  if ActionQueue.Count = 0 then
+  begin
+    { Start the action; if it's terminated immediately don't add it to the
+      queue. This enables actions like selecting an item without requiring
+      animation to fire straight away. }
+    action.Start();
+
+    if action.Terminated then
+    begin
+      action.Stop();
+      FreeAndNil(action);
+    end;
+  end;
+
+  if Assigned(action) then
+    ActionQueue.Add(action);
+
   Invalidate();
 end;
 
@@ -1967,16 +2015,31 @@ procedure TX2CustomMenuBar.InternalSetExpanded(AGroup: TX2MenuBarGroup;
 begin
   AGroup.InternalSetExpanded(AExpanded);
   DoExpandedChanged(AGroup);
+
+  Invalidate();
 end;
 
 
 procedure TX2CustomMenuBar.InternalSetSelected(AItem: TX2CustomMenuBarItem);
+var
+  group:    TX2MenuBarGroup;
+
 begin
   FSelectedItem := AItem;
   DoSelectedChanged();
 
-  if Assigned(SelectedItem) and Assigned(SelectedItem.Action) then
-    SelectedItem.ActionLink.Execute(Self);
+  if Assigned(AItem) then
+  begin
+    if (AItem is TX2MenuBarItem) then
+    begin
+      group := TX2MenuBarItem(AItem).Group;
+      if Assigned(group) then
+        group.SelectedItem  := AItem.Index;
+    end;
+
+    if Assigned(AItem) and Assigned(AItem.Action) then
+      AItem.ActionLink.Execute(Self);
+  end;
 end;
 
 
@@ -2902,39 +2965,67 @@ var
 begin
   if Value <> FSelectedItem then
   begin
+    if Assigned(Value) and (Value.MenuBar <> Self) then
+      raise EInvalidItem.Create(SInvalidItem);
+
+
     allowed := (not Assigned(Value)) or ItemEnabled(Value);
     if allowed then
       DoSelectedChanging(Value, allowed);
 
+      
     if allowed then
     begin
       selectItem  := Value;
 
-      if selectItem is TX2MenuBarGroup then
+      if Assigned(selectItem) then
       begin
-        group := TX2MenuBarGroup(selectItem);
+        if selectItem is TX2MenuBarGroup then
+        begin
+          group := TX2MenuBarGroup(selectItem);
 
-        { Check if the group should be collapsed }
-        if group.Expanded and (not AutoCollapse) then
-        begin
-          PerformExpand(group, False);
-        end else
-        begin
-          if group.Items.Count > 0 then
+          { Check if the group should be collapsed }
+          if group.Expanded and (not AutoCollapse) then
           begin
-            PerformExpand(group, True);
-            PerformAutoSelectItem(group);
+            PerformExpand(group, False);
           end else
           begin
-            if PerformAutoCollapse(group) then
-              PerformSelectItem(group);
+            if group.Items.Count > 0 then
+            begin
+              PerformExpand(group, True);
+              PerformAutoSelectItem(group);
+            end else
+            begin
+              if PerformAutoCollapse(group) then
+                PerformSelectItem(group);
+            end;
           end;
+        end else
+        begin
+          if (selectItem is TX2MenuBarItem) then
+          begin
+            group := TX2MenuBarItem(selectItem).Group;
+            if Assigned(group) and (not group.Expanded) then
+              PerformExpand(group, True);
+          end;
+
+          PerformSelectItem(selectItem);
         end;
       end else
         PerformSelectItem(selectItem);
     end;
   end;
 end;
+
+//procedure TX2CustomMenuBar.WMMouseWheel(var Message: TWMMouseWheel);
+//begin
+////  MessageBox(0, 'I gots a mousewheel', '', 0);
+//end;
+//
+//procedure TX2CustomMenuBar.CMMouseWheel(var Message: TCMMouseWheel);
+//begin
+////  MessageBox(0, 'I gots a mousewheel', '', 0);
+//end;
 
 end.
 

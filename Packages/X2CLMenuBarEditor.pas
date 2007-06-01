@@ -49,6 +49,7 @@ type
   private
     FMenuBar:             TX2CustomMenuBar;
     FDesignerAttached:    Boolean;
+    FMoving:              Boolean;
 
     procedure SetMenuBar(const Value: TX2CustomMenuBar);
 
@@ -81,7 +82,7 @@ type
 implementation
 uses
   Contnrs,
-  SysUtils;
+  SysUtils, Dialogs;
 
 
 var
@@ -289,8 +290,8 @@ begin
     { Make sure the group is inserted in the correct position by searching
       for it's sibling group. Note: do NOT use Items[x] in a loop; TTreeView
       emulates this by using GetFirst/GetNext. }
-    if AGroup.Index > 0 then
-      siblingGroup  := TX2MenuBarGroup(AGroup.Collection.Items[Pred(AGroup.Index)]);
+    if AGroup.Index < Pred(AGroup.Collection.Count) then
+      siblingGroup  := TX2MenuBarGroup(AGroup.Collection.Items[Succ(AGroup.Index)]);
 
     if Assigned(siblingGroup) then
     begin
@@ -305,9 +306,9 @@ begin
     end;
 
     if Assigned(siblingNode) then
-      groupNode := tvMenu.Items.Add(siblingNode, '')
+      groupNode  := tvMenu.Items.AddNode(nil, siblingNode, '', nil, naInsert)
     else
-      groupNode := tvMenu.Items.AddFirst(nil, '');
+      groupNode := tvMenu.Items.Add(nil, '');
 
     groupNode.Data  := AGroup;
     UpdateNode(groupNode);
@@ -337,8 +338,8 @@ begin
     siblingNode   := nil;
 
     { See AddGroup }
-    if AItem.Index > 0 then
-      siblingItem := TX2MenuBarItem(AItem.Collection.Items[Pred(AItem.Index)]);
+    if AItem.Index < Pred(AItem.Collection.Count) then
+      siblingItem := TX2MenuBarItem(AItem.Collection.Items[Succ(AItem.Index)]);
 
     if Assigned(siblingItem) then
     begin
@@ -353,9 +354,9 @@ begin
     end;
 
     if Assigned(siblingNode) then
-      itemNode  := tvMenu.Items.Add(siblingNode, '')
+      itemNode  := tvMenu.Items.AddNode(nil, siblingNode, '', nil, naInsert)
     else
-      itemNode  := tvMenu.Items.AddChildFirst(ANode, '');
+      itemNode  := tvMenu.Items.AddChild(ANode, '');
 
     itemNode.Data := AItem;
     UpdateNode(itemNode);
@@ -451,6 +452,9 @@ var
   treeNode:     TTreeNode;
 
 begin
+  if FMoving then
+    Exit;
+
   treeNode  := nil;
 
   if AItem is TX2MenuBarGroup then
@@ -477,6 +481,9 @@ var
   treeNode:     TTreeNode;
 
 begin
+  if FMoving then
+    Exit;
+
   tvMenu.Items.BeginUpdate();
   try
     treeNode  := tvMenu.Items.GetFirstNode();
@@ -496,6 +503,9 @@ var
   treeNode:     TTreeNode;
 
 begin
+  if FMoving then
+    Exit;
+
   treeNode  := GetItemNode(AItem);
   if Assigned(treeNode) then
     tvMenu.Items.Delete(treeNode);
@@ -533,53 +543,61 @@ var
 begin
   if not Assigned(MenuBar) then
     Exit;
-    
+
   selectedItem  := GetSelectedItem();
   if not Assigned(selectedItem) then
     Exit;
-    
+
   refresh := False;
   group   := nil;
 
   if selectedItem is TX2MenuBarItem then
     group := TX2MenuBarItem(selectedItem).Group;
 
-  if ADown then
-  begin
-    if selectedItem.Index < Pred(selectedItem.Collection.Count) then
+  FMoving := True;
+  try
+    if ADown then
     begin
-      selectedItem.Index  := Succ(selectedItem.Index);
-      refresh             := True;
-    end else if Assigned(group) then
-    begin
-      { Move down to another group }
-      if group.Index < Pred(MenuBar.Groups.Count) then
+      if selectedItem.Index < Pred(selectedItem.Collection.Count) then
       begin
-        selectedItem.Collection := MenuBar.Groups[Succ(group.Index)].Items;
-        refresh                 := True;
+        selectedItem.Index  := Succ(selectedItem.Index);
+        refresh             := True;
+      end else if Assigned(group) then
+      begin
+        { Move down to another group
+            The AddItem is triggered by moving between groups, no need
+            to add here. }
+        if group.Index < Pred(MenuBar.Groups.Count) then
+        begin
+          selectedItem.Collection := MenuBar.Groups[Succ(group.Index)].Items;
+          selectedItem.Index      := 0;
+          refresh                 := True;
+        end;
+      end;
+    end else
+    begin
+      if selectedItem.Index > 0 then
+      begin
+        selectedItem.Index  := Pred(selectedItem.Index);
+        refresh             := True;
+      end else if Assigned(group) then
+      begin
+        { Move up to another group }
+        if group.Index > 0 then
+        begin
+          selectedItem.Collection := MenuBar.Groups[Pred(group.Index)].Items;
+          refresh                 := True;
+        end;
       end;
     end;
-  end else
-  begin
-    if selectedItem.Index > 0 then
-    begin
-      selectedItem.Index  := Pred(selectedItem.Index);
-      refresh             := True;
-    end else if Assigned(group) then
-    begin
-      { Move up to another group }
-      if group.Index > 0 then
-      begin
-        selectedItem.Collection := MenuBar.Groups[Pred(group.Index)].Items;
-        refresh                 := True;
-      end;
-    end;
-  end;
+  finally
+    FMoving := False;
 
-  if refresh then
-  begin
-    ItemDeleting(selectedItem);
-    ItemAdded(selectedItem);
+    if refresh then
+    begin
+      ItemDeleting(selectedItem);
+      ItemAdded(selectedItem);
+    end;
   end;
 end;
 

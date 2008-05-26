@@ -419,6 +419,7 @@ type
     FHideScrollbar:         Boolean;
     FGroups:                TX2MenuBarGroups;
     FImages:                TCustomImageList;
+    FImagesChangeLink:      TChangeLink;
     FOnCollapsed:           TX2MenuBarExpandedEvent;
     FOnCollapsing:          TX2MenuBarExpandingEvent;
     FOnExpanded:            TX2MenuBarExpandedEvent;
@@ -455,6 +456,7 @@ type
     procedure GroupsNotify(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification);
     procedure GroupsUpdate(Sender: TObject; Item: TCollectionItem);
     procedure UpdateScrollbar();
+    procedure ImagesChange(Sender: TObject);
 
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -1400,8 +1402,11 @@ begin
   FGroups.OnNotify  := GroupsNotify;
   FGroups.OnUpdate  := GroupsUpdate;
   FHideScrollbar    := True;
+  FImagesChangeLink := TChangeLink.Create();
   FScrollbar        := True;
   TabStop           := True;
+
+  FImagesChangeLink.OnChange  := ImagesChange;
 end;
 
 
@@ -1437,11 +1442,13 @@ end;
 
 destructor TX2CustomMenuBar.Destroy();
 begin
+  Images    := nil;
   Painter   := nil;
 
   FreeAndNil(FGroups);
   FreeAndNil(FBuffer);
   FreeAndNil(FActionQueue);
+  FreeAndNil(FImagesChangeLink);
 
   inherited;
 end;
@@ -1451,6 +1458,7 @@ procedure TX2CustomMenuBar.WMEraseBkgnd(var Msg: TWMEraseBkgnd);
 begin
   Msg.Result  := 0;
 end;
+
 
 procedure TX2CustomMenuBar.Paint();
 var
@@ -2844,6 +2852,12 @@ begin
 end;
 
 
+procedure TX2CustomMenuBar.ImagesChange(Sender: TObject);
+begin
+  Invalidate();
+end;
+
+
 procedure TX2CustomMenuBar.SetAllowCollapseAll(const Value: Boolean);
 begin
   if Value <> FAllowCollapseAll then
@@ -2910,12 +2924,18 @@ begin
   if Value <> FImages then
   begin
     if Assigned(FImages) then
+    begin
+      FImages.UnRegisterChanges(FImagesChangeLink);
       FImages.RemoveFreeNotification(Self);
+    end;
 
     FImages := Value;
 
     if Assigned(FImages) then
+    begin
       FImages.FreeNotification(Self);
+      FImages.RegisterChanges(FImagesChangeLink);
+    end;
 
     Invalidate();
   end;

@@ -96,6 +96,8 @@ type
     FGroupHeight:         Integer;
     FItemHeight:          Integer;
     FMargin:              Integer;
+    FImageOffsetY:        Integer;
+    FImageOffsetX:        Integer;
     
     procedure SetAfterGroupHeader(const Value: Integer);
     procedure SetAfterItem(const Value: Integer);
@@ -106,6 +108,8 @@ type
     procedure SetGroupHeight(const Value: Integer);
     procedure SetItemHeight(const Value: Integer);
     procedure SetMargin(const Value: Integer);
+    procedure SetImageOffsetX(const Value: Integer);
+    procedure SetImageOffsetY(const Value: Integer);
   public
     constructor Create();
 
@@ -120,6 +124,8 @@ type
     property GroupHeight:       Integer read FGroupHeight       write SetGroupHeight        default 22;
     property ItemHeight:        Integer read FItemHeight        write SetItemHeight         default 21;
     property Margin:            Integer read FMargin            write SetMargin             default 10;
+    property ImageOffsetX:      Integer read FImageOffsetX      write SetImageOffsetX       default 0;
+    property ImageOffsetY:      Integer read FImageOffsetY      write SetImageOffsetY       default 0;
   end;
 
   TX2MenuBarunaPainter = class(TX2CustomMenuBarPainter)
@@ -387,6 +393,26 @@ begin
 end;
 
 
+procedure TX2MenuBarunaMetrics.SetImageOffsetX(const Value: Integer);
+begin
+  if Value <> FImageOffsetX then
+  begin
+    FImageOffsetX := Value;
+    Changed();
+  end;
+end;
+
+
+procedure TX2MenuBarunaMetrics.SetImageOffsetY(const Value: Integer);
+begin
+  if Value <> FImageOffsetY then
+  begin
+    FImageOffsetY := Value;
+    Changed();
+  end;
+end;
+
+
 { TX2MenuBarunaPainter }
 constructor TX2MenuBarunaPainter.Create(AOwner: TComponent);
 begin
@@ -576,6 +602,10 @@ begin
     begin
       imagePos.X  := textRect.Left;
       imagePos.Y  := ABounds.Top + ((ABounds.Bottom - ABounds.Top - imageList.Height) div 2);
+
+      Inc(imagePos.X, Metrics.ImageOffsetX);
+      Inc(imagePos.Y, Metrics.ImageOffsetY);
+
       imageList.Draw(ACanvas, imagePos.X, imagePos.Y, AGroup.ImageIndex);
     end;
 
@@ -584,6 +614,7 @@ begin
 
   { Text }
   ACanvas.Font.Style  := [fsBold];
+  SetBkMode(ACanvas.Handle, TRANSPARENT);
   DrawText(ACanvas, AGroup.Caption, textRect, taLeftJustify, taVerticalCenter,
            False, csEllipsis);
 end;
@@ -637,14 +668,13 @@ begin
   Inc(textBounds.Left, 4);
   Dec(textBounds.Right, 4);
 
-  SetBkMode(ACanvas.Handle, TRANSPARENT);
-
   if not AItem.Visible then
     { Design-time }
     ACanvas.Font.Style  := [fsItalic]
   else
     ACanvas.Font.Style  := [];
 
+  SetBkMode(ACanvas.Handle, TRANSPARENT);
   DrawText(ACanvas, AItem.Caption, textBounds, taRightJustify, taVerticalCenter,
            False, csEllipsis);
 end;

@@ -83,6 +83,24 @@ type
   procedure DrawBlended(ABackground, AForeground: Graphics.TBitmap; AAlpha: Byte);
 
 
+  {
+    :$ Draws a rectangle with a vertical gradient.
+  }
+  procedure GradientFillRect(ACanvas: TCanvas; ARect: TRect; AStartColor, AEndColor: TColor);
+
+  
+  {
+    :$ Darkens a color with the specified value
+  }
+  function DarkenColor(const AColor: TColor; const AValue: Byte): TColor;
+
+
+  {
+    :$ Lightens a color with the specified value
+  }
+  function LightenColor(const AColor: TColor; const AValue: Byte): TColor;
+
+  
 implementation
 
   
@@ -231,4 +249,118 @@ begin
     end;
 end;
 
+
+procedure GradientFillRect(ACanvas: TCanvas; ARect: TRect; AStartColor, AEndColor: TColor);
+
+  function FixValue(AValue: Single): Single; 
+  begin
+    Result := AValue;
+
+    if Result < 0 then
+      Result := 0;
+
+    if Result > 255 then
+      Result := 255;
+  end;
+
+
+var
+  startColor: Cardinal;
+  endColor:   Cardinal;
+  stepCount:  Integer;
+  redValue:   Single;
+  greenValue: Single;
+  blueValue:  Single;
+  redStep:    Single;
+  greenStep:  Single;
+  blueStep:   Single;
+  line:       Integer;
+
+begin
+  startColor  := ColorToRGB(AStartColor);
+  endColor    := ColorToRGB(AEndColor);
+
+  if startColor = endColor then
+  begin
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := startColor;
+    ACanvas.FillRect(ARect);
+  end else
+  begin
+    redValue    := GetRValue(startColor);
+    greenValue  := GetGValue(startColor);
+    blueValue   := GetBValue(startColor);
+
+    stepCount   := ARect.Bottom - ARect.Top;
+    redStep     := (GetRValue(endColor) - redValue) / stepCount;
+    greenStep   := (GetGValue(endColor) - greenValue) / stepCount;
+    blueStep    := (GetBValue(endColor) - blueValue) / stepCount;
+
+    ACanvas.Pen.Style := psSolid;
+
+    for line := ARect.Top to ARect.Bottom do
+    begin
+      ACanvas.Pen.Color := RGB(Trunc(redValue), Trunc(greenValue), Trunc(blueValue));
+      ACanvas.MoveTo(ARect.Left, line);
+      ACanvas.LineTo(ARect.Right, line);
+
+      redValue    := FixValue(redValue + redStep);
+      greenValue  := FixValue(greenValue + greenStep);
+      blueValue   := FixValue(blueValue + blueStep);
+    end;
+  end;
+end;
+
+
+function DarkenColor(const AColor: TColor; const AValue: Byte): TColor;
+var
+  cColor:     Cardinal;
+  iRed:       Integer;
+  iGreen:     Integer;
+  iBlue:      Integer;
+
+begin
+  cColor  := ColorToRGB(AColor);
+  iRed    := (cColor and $FF0000) shr 16;;
+  iGreen  := (cColor and $00FF00) shr 8;
+  iBlue   := cColor and $0000FF;
+
+  Dec(iRed, AValue);
+  Dec(iGreen, AValue);
+  Dec(iBlue, AValue);
+
+  if iRed   < 0 then iRed   := 0;
+  if iGreen < 0 then iGreen := 0;
+  if iBlue  < 0 then iBlue  := 0;
+
+  Result  := (iRed shl 16) + (iGreen shl 8) + iBlue;
+end;
+
+
+function LightenColor(const AColor: TColor; const AValue: Byte): TColor;
+var
+  cColor:     Cardinal;
+  iRed:       Integer;
+  iGreen:     Integer;
+  iBlue:      Integer;
+
+begin
+  cColor  := ColorToRGB(AColor);
+  iRed    := (cColor and $FF0000) shr 16;;
+  iGreen  := (cColor and $00FF00) shr 8;
+  iBlue   := cColor and $0000FF;
+
+  Inc(iRed, AValue);
+  Inc(iGreen, AValue);
+  Inc(iBlue, AValue);
+
+  if iRed   > 255 then iRed   := 255;
+  if iGreen > 255 then iGreen := 255;
+  if iBlue  > 255 then iBlue  := 255;
+
+  Result  := (iRed shl 16) + (iGreen shl 8) + iBlue;
+end;
+
 end.
+
+

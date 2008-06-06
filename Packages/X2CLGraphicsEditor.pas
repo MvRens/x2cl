@@ -67,6 +67,11 @@ type
     procedure actOpenExecute(Sender: TObject);
     procedure actSaveExecute(Sender: TObject);
     procedure actClearExecute(Sender: TObject);
+    procedure lstGraphicsData(Control: TWinControl; Index: Integer;
+      var Data: String);
+    function lstGraphicsDataFind(Control: TWinControl;
+      FindString: String): Integer;
+    procedure lstGraphicsKeyPress(Sender: TObject; var Key: Char);
   private
     FComponent:           TX2GraphicContainer;
     FComponentDesigner:   IDesigner;
@@ -74,7 +79,7 @@ type
 
     procedure InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
 
-    procedure LoadGraphic(AIndex: Integer; AGraphic: TX2GraphicContainerItem; const AFileName: string);
+    procedure LoadGraphic(AGraphic: TX2GraphicContainerItem; const AFileName: string);
     
     procedure ItemChanged(AUpdatePreview: Boolean = True);
     procedure UpdateUI();
@@ -90,7 +95,8 @@ type
 implementation
 uses
   Graphics,
-  SysUtils;
+  SysUtils,
+  Windows;
 
 
 var
@@ -110,9 +116,6 @@ begin
 end;
 
 procedure TGraphicsEditorForm.InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
-var
-  graphicIndex:   Integer;
-
 begin
   FComponent          := TX2GraphicContainer(AComponent);
   FComponent.FreeNotification(Self);
@@ -120,22 +123,8 @@ begin
   FComponentDesigner  := ADesigner;
   Caption             := Format('%s Graphics', [FComponent.Name]);
 
-  // Fill graphics list
-  with lstGraphics.Items do
-  begin
-    BeginUpdate();
-    try
-      Clear();
-
-      for graphicIndex := 0 to FComponent.GraphicCount - 1 do
-        AddObject(FComponent.Graphics[graphicIndex].PictureName,
-                  FComponent.Graphics[graphicIndex]);
-    finally
-      EndUpdate();
-    end;
-
-    lstGraphics.ItemIndex := 0;
-  end;
+  lstGraphics.Count := FComponent.GraphicCount;
+  lstGraphics.ItemIndex := 0;
 
   UpdateUI();
   UpdatePreview();
@@ -155,13 +144,13 @@ begin
 end;
 
 
-procedure TGraphicsEditorForm.LoadGraphic(AIndex: Integer; AGraphic: TX2GraphicContainerItem; const AFileName: string);
+procedure TGraphicsEditorForm.LoadGraphic(AGraphic: TX2GraphicContainerItem; const AFileName: string);
 begin
   AGraphic.Picture.LoadFromFile(AFileName);
   if Length(AGraphic.PictureName) = 0 then
   begin
-    AGraphic.PictureName      := ChangeFileExt(ExtractFileName(AFileName), '');
-    lstGraphics.Items[AIndex] := AGraphic.PictureName;
+    AGraphic.PictureName  := ChangeFileExt(ExtractFileName(AFileName), '');
+    lstGraphics.Invalidate;
   end;
 end;
 
@@ -169,12 +158,12 @@ end;
 procedure TGraphicsEditorForm.ItemChanged(AUpdatePreview: Boolean);
 begin
   if Assigned(FComponentDesigner) then
-    FComponentDesigner.Modified();
+    FComponentDesigner.Modified;
 
   UpdateUI();
 
   if AUpdatePreview then
-    UpdatePreview();
+    UpdatePreview;
 end;
 
 
@@ -198,7 +187,7 @@ begin
   actClear.Enabled  := enabled;
 
   actUp.Enabled     := enabled and (index > 0);
-  actDown.Enabled   := enabled and (index < Pred(lstGraphics.Items.Count));
+  actDown.Enabled   := enabled and (index < Pred(FComponent.GraphicCount));
 end;
 
 
@@ -213,8 +202,8 @@ begin
     if Active(index, graphic) then
     begin
       imgPreview.Picture.Assign(graphic.Picture);
-      txtName.Text              := graphic.PictureName;
-      lstGraphics.Items[index]  := graphic.PictureName;
+      txtName.Text  := graphic.PictureName;
+      lstGraphics.Invalidate;
     end else
     begin
       imgPreview.Picture.Assign(nil);
@@ -234,7 +223,7 @@ begin
   if AIndex = -1 then
     exit;
 
-  AGraphic  := TX2GraphicContainerItem(lstGraphics.Items.Objects[AIndex]);
+  AGraphic  := FComponent.Graphics[AIndex];
   Result    := Assigned(AGraphic);
 end;
 
@@ -257,8 +246,8 @@ begin
 
   if Active(index, graphic) then
   begin
-    graphic.PictureName       := txtName.Text;
-    lstGraphics.Items[index]  := graphic.PictureName;
+    graphic.PictureName := txtName.Text;
+    lstGraphics.Invalidate;
 
     ItemChanged(False);
   end;
@@ -267,7 +256,6 @@ end;
 
 procedure TGraphicsEditorForm.actAddExecute(Sender: TObject);
 var
-  index:        Integer;
   graphic:      TX2GraphicContainerItem;
   fileIndex:    Integer;
 
@@ -285,11 +273,10 @@ begin
 
         if Assigned(graphic) then
         begin
-          graphic.Container     := FComponent;
-          index                 := lstGraphics.Items.AddObject('', graphic);
-          lstGraphics.ItemIndex := index;
+          graphic.Container := FComponent;
+          lstGraphics.Count := FComponent.GraphicCount;
           
-          LoadGraphic(index, graphic, dlgOpen.Files[fileIndex]);
+          LoadGraphic(graphic, dlgOpen.Files[fileIndex]);
         end else
           raise Exception.Create('Failed to create TX2GraphicContainerItem!');
       end;
@@ -313,10 +300,10 @@ begin
       if it's not allowed, for example due to it being introduced in
       an ancestor. }
     graphic.Free();
-    lstGraphics.Items.Delete(index);
+    lstGraphics.Count := FComponent.GraphicCount;
 
-    if index > Pred(lstGraphics.Items.Count) then
-      index  := Pred(lstGraphics.Items.Count);
+    if index > Pred(FComponent.GraphicCount) then
+      index  := Pred(FComponent.GraphicCount);
 
     lstGraphics.ItemIndex := index;
 
@@ -334,9 +321,9 @@ begin
   if Active(index, graphic) then
     if index > 0 then
     begin
-      lstGraphics.Items.Move(index, Pred(index));
       graphic.Index         := Pred(index);
       lstGraphics.ItemIndex := Pred(index);
+      lstGraphics.Invalidate;
 
       ItemChanged(False);
     end;
@@ -350,11 +337,11 @@ var
 
 begin
   if Active(index, graphic) then
-    if index < Pred(lstGraphics.Items.Count) then
+    if index < Pred(FComponent.GraphicCount) then
     begin
-      lstGraphics.Items.Move(index, index + 1);
       graphic.Index         := Succ(index);
       lstGraphics.ItemIndex := Succ(index);
+      lstGraphics.Invalidate;
 
       ItemChanged(False);
     end;
@@ -374,7 +361,7 @@ begin
 
     if dlgOpen.Execute() then
     begin
-      LoadGraphic(index, graphic, dlgOpen.FileName);
+      LoadGraphic(graphic, dlgOpen.FileName);
       ItemChanged();
     end;
   end;
@@ -421,6 +408,36 @@ begin
     FComponent := nil;
     Close();
   end;
+end;
+
+
+procedure TGraphicsEditorForm.lstGraphicsData(Control: TWinControl; Index: Integer; var Data: String);
+begin
+  Data  := Format('%d - %s', [Index, FComponent.Graphics[Index].PictureName]);
+end;
+
+
+function TGraphicsEditorForm.lstGraphicsDataFind(Control: TWinControl; FindString: String): Integer;
+var
+  graphicIndex: Integer;
+
+begin
+  Result := -1;
+
+  for graphicIndex := 0 to Pred(FComponent.GraphicCount) do
+    if SameText(Copy(FComponent.Graphics[graphicIndex].PictureName, 1, Length(FindString)), FindString) then
+    begin
+      Result := graphicIndex;
+      Break;
+    end;
+end;
+
+
+procedure TGraphicsEditorForm.lstGraphicsKeyPress(Sender: TObject; var Key: Char);
+begin
+  { Because the listbox is virtual, Return causes the ItemIndex to reset to 0 }
+  if Ord(Key) = VK_RETURN then
+    Key := #0;
 end;
 
 end.

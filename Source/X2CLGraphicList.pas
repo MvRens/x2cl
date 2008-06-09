@@ -24,6 +24,7 @@ uses
 {$IFDEF VER150}
 {$WARN UNSAFE_CODE OFF}
 {$WARN UNSAFE_CAST OFF}
+{$WARN UNSAFE_TYPE OFF}
 {$ENDIF}
 
 
@@ -31,6 +32,13 @@ type
   // Forward declarations
   TX2GraphicList      = class;
   TX2GraphicContainer = class;
+
+
+  TX2GLCustomDrawImageProc = function(ACanvas: TCanvas;
+                                      AGraphicList: TX2GraphicList;
+                                      AIndex: Integer;
+                                      AX, AY: Integer;
+                                      AEnabled: Boolean): Boolean;
 
   {
     :$ Holds a single graphic.
@@ -190,11 +198,20 @@ type
     property StretchMode:   TX2GLStretchMode      read FStretchMode write SetStretchMode  default smCrop;
   end;
 
+
+  procedure X2GLRegisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+  procedure X2GLUnregisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+
+
 implementation
 uses
   Forms,
   ImgList,
   SysUtils;
+
+
+var
+  CustomDrawImageProcs: TList;
 
 
 type
@@ -221,6 +238,47 @@ type
     property Picture:       TPicture  read FPicture write SetPicture;
   end;
 
+
+
+procedure X2GLRegisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+var
+  procPointer: Pointer absolute ACustomDrawImageProc;
+
+begin
+  if CustomDrawImageProcs.IndexOf(procPointer) = -1 then
+    CustomDrawImageProcs.Add(procPointer);
+end;
+
+
+procedure X2GLUnregisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+var
+  procPointer: Pointer absolute ACustomDrawImageProc;
+
+begin
+  CustomDrawImageProcs.Remove(procPointer);
+end;
+
+
+function CustomDrawImage(ACanvas: TCanvas; AGraphicList: TX2GraphicList;
+                         AIndex: Integer; AX, AY: Integer; AEnabled: Boolean): Boolean;
+var
+  customProcIndex:  Integer;
+  customProc:       TX2GLCustomDrawImageProc;
+
+begin
+  Result := False;
+
+  for customProcIndex := Pred(CustomDrawImageProcs.Count) downto 0 do
+  begin
+    customProc  := TX2GLCustomDrawImageProc(CustomDrawImageProcs[customProcIndex]);
+
+    if customProc(ACanvas, AGraphicList, AIndex, AX, AY, AEnabled) then
+    begin
+      Result := True;
+      Break;
+    end;
+  end;
+end;
 
 
 {================ TX2GraphicContainerItem
@@ -900,55 +958,59 @@ begin
      (FContainer.Graphics[AIndex].Picture.Graphic.Empty) then
     exit;
 
-  if AEnabled then
-    // Enabled, simply draw the graphic
-    InternalDrawGraphic(ACanvas, AX, AY)
-  else
+  { First see if any custom draw handlers want to draw the image }
+  if not CustomDrawImage(ACanvas, Self, AIndex, AX, AY, AEnabled) then
   begin
-    // Disabled, need to draw the image using 50% transparency. There's only
-    // one problem; not all TGraphic's support that, and neither is there a
-    // generic way of determining a pixel's transparency. So instead, we
-    // blend the background with a copy of the background with the graphic
-    // painted on it...
-    bmpBackground := TBitmap.Create();
-    bmpBlend      := TBitmap.Create();
-    try
-      // Get background from canvas
-      with bmpBackground do
-      begin
-        Width       := Self.Width;
-        Height      := Self.Height;
-        PixelFormat := pf24bit;
-        Canvas.CopyRect(Rect(0, 0, Width, Height), ACanvas,
-                        Rect(AX, AY, AX + Width, AY + Height));
+    if AEnabled then
+      { Enabled, simply draw the graphic }
+      InternalDrawGraphic(ACanvas, AX, AY)
+    else
+    begin
+      { Disabled, need to draw the image using 50% transparency. There's only
+        one problem; not all TGraphic's support that, and neither is there a
+        generic way of determining a pixel's transparency. So instead, we
+        blend the background with a copy of the background with the graphic
+        painted on it... }
+      bmpBackground := TBitmap.Create();
+      bmpBlend      := TBitmap.Create();
+      try
+        { Get background from canvas }
+        with bmpBackground do
+        begin
+          Width       := Self.Width;
+          Height      := Self.Height;
+          PixelFormat := pf24bit;
+          Canvas.CopyRect(Rect(0, 0, Width, Height), ACanvas,
+                          Rect(AX, AY, AX + Width, AY + Height));
+        end;
+
+        bmpBlend.Assign(bmpBackground);
+        InternalDrawGraphic(bmpBlend.Canvas, 0, 0);
+
+        { Blend graphic with background at 50% }
+        for iY  := 0 to bmpBackground.Height - 1 do
+        begin
+          pBackground := bmpBackground.ScanLine[iY];
+          pBlend      := bmpBlend.ScanLine[iY];
+
+          for iX  := 0 to bmpBackground.Width - 1 do
+            with pBlend^[iX] do
+            begin
+              rgbtBlue    := ((pBackground^[iX].rgbtBlue shl 7) +
+                              (rgbtBlue shl 7)) shr 8;
+              rgbtGreen   := ((pBackground^[iX].rgbtGreen shl 7) +
+                              (rgbtGreen shl 7)) shr 8;
+              rgbtRed     := ((pBackground^[iX].rgbtRed shl 7) +
+                              (rgbtRed shl 7)) shr 8;
+            end;
+        end;
+
+        { Copy blended graphic back }
+        ACanvas.Draw(AX, AY, bmpBlend);
+      finally
+        FreeAndNil(bmpBlend);
+        FreeAndNil(bmpBackground);
       end;
-
-      bmpBlend.Assign(bmpBackground);
-      InternalDrawGraphic(bmpBlend.Canvas, 0, 0);
-
-      // Blend graphic with background at 50%
-      for iY  := 0 to bmpBackground.Height - 1 do
-      begin
-        pBackground := bmpBackground.ScanLine[iY];
-        pBlend      := bmpBlend.ScanLine[iY];
-
-        for iX  := 0 to bmpBackground.Width - 1 do
-          with pBlend^[iX] do
-          begin
-            rgbtBlue    := ((pBackground^[iX].rgbtBlue shl 7) +
-                            (rgbtBlue shl 7)) shr 8;
-            rgbtGreen   := ((pBackground^[iX].rgbtGreen shl 7) +
-                            (rgbtGreen shl 7)) shr 8;
-            rgbtRed     := ((pBackground^[iX].rgbtRed shl 7) +
-                            (rgbtRed shl 7)) shr 8;
-          end;
-      end;
-
-      // Copy blended graphic back
-      ACanvas.Draw(AX, AY, bmpBlend);
-    finally
-      FreeAndNil(bmpBlend);
-      FreeAndNil(bmpBackground);
     end;
   end;
 
@@ -1338,5 +1400,9 @@ end;
 
 initialization
   RegisterClass(TX2GraphicContainerItem);
+  CustomDrawImageProcs  := TList.Create;
+
+finalization
+  FreeAndNil(CustomDrawImageProcs);
 
 end.

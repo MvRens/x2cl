@@ -12,6 +12,7 @@ object frmMain: TfrmMain
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnClick = FormClick
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -369,6 +370,7 @@ object frmMain: TfrmMain
           end>
       end>
     Images = glMenu
+    TabOrder = 14
     OnCollapsed = mbTestCollapsed
     OnCollapsing = mbTestCollapsing
     OnExpanded = mbTestExpanded

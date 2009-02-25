@@ -395,7 +395,7 @@ type
     procedure SetSelectedItem(const Value: TX2CustomMenuBarItem);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
-    procedure CreateHandle(); override;
+    procedure Loaded(); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure PainterUpdate(Sender: TX2CustomMenuBarPainter);
     procedure GroupsNotify(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification);
@@ -1357,7 +1357,7 @@ begin
   end;
 end;
 
-procedure TX2CustomMenuBar.CreateHandle();
+procedure TX2CustomMenuBar.Loaded();
 begin
   inherited;
 

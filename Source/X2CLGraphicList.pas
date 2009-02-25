@@ -7,6 +7,7 @@
   :: the problems I thought we would face. His original (Dutch) article can
   :: be found at:
   ::   http://www.erikstok.net/delphi/artikelen/xpicons.html
+  ::
   :: Last changed:    $Date$
   :: Revision:        $Rev$
   :: Author:          $Author$
@@ -24,6 +25,13 @@ uses
 {$IFDEF VER150}
 {$WARN UNSAFE_CODE OFF}
 {$WARN UNSAFE_CAST OFF}
+{$WARN UNSAFE_TYPE OFF}
+{$ENDIF}
+
+{$IFDEF VER180}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_CAST OFF}
+{$WARN UNSAFE_TYPE OFF}
 {$ENDIF}
 
 
@@ -31,6 +39,13 @@ type
   // Forward declarations
   TX2GraphicList      = class;
   TX2GraphicContainer = class;
+
+
+  TX2GLCustomDrawImageProc = function(ACanvas: TCanvas;
+                                      AGraphicList: TX2GraphicList;
+                                      AIndex: Integer;
+                                      AX, AY: Integer;
+                                      AEnabled: Boolean): Boolean;
 
   {
     :$ Holds a single graphic.
@@ -41,28 +56,30 @@ type
     FPicture:           TPicture;
     FPictureName:       String;
 
-    function GetIndex(): Integer;
+    function GetIndex: Integer;
     procedure SetContainer(const Value: TX2GraphicContainer);
     procedure SetIndex(const Value: Integer);
     procedure SetPicture(const Value: TPicture);
     procedure SetPictureName(const Value: String);
   protected
-    procedure Changed(); virtual;
+    procedure Changed; virtual;
     procedure InternalSetContainer(const AContainer: TX2GraphicContainer); virtual;
 
-    function GenerateName(): String;
+    function GenerateName: String;
 
-    procedure NotifierChanged();
+    procedure NotifierChanged;
     procedure IChangeNotifier.Changed = NotifierChanged;
 
     procedure ReadState(Reader: TReader); override;
     procedure SetParentComponent(AParent: TComponent); override;
+
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy(); override;
+    destructor Destroy; override;
 
-    function GetParentComponent(): TComponent; override;
-    function HasParent(): Boolean; override;
+    function GetParentComponent: TComponent; override;
+    function HasParent: Boolean; override;
 
     procedure AssignTo(Dest: TPersistent); override;
   public
@@ -85,7 +102,7 @@ type
     FGraphics:          TList;
     FLists:               TList;
 
-    function GetGraphicCount(): Integer;
+    function GetGraphicCount: Integer;
     function GetGraphics(Index: Integer): TX2GraphicContainerItem;
     procedure SetGraphics(Index: Integer; const Value: TX2GraphicContainerItem);
   protected
@@ -112,9 +129,9 @@ type
     property Lists: TList read FLists;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy(); override;
+    destructor Destroy; override;
 
-    procedure Clear();
+    procedure Clear;
 
     function IndexByName(const AName: String): Integer;
     function GraphicByName(const AName: String): TX2GraphicContainerItem;
@@ -170,18 +187,21 @@ type
     procedure DeleteImage(const AIndex: Integer); virtual;
     procedure MoveImage(const AOldIndex, ANewIndex: Integer); virtual;
 
-    procedure RebuildImages(); virtual;
+    function CanConvert: Boolean;
 
-    procedure BeginUpdate();
-    procedure EndUpdate();
+    procedure UpdateImageCount; virtual;
+    procedure RebuildImages; virtual;
+
+    procedure BeginUpdate;
+    procedure EndUpdate;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy(); override;
+    destructor Destroy; override;
 
     procedure AssignTo(Dest: TPersistent); override;
 
-    procedure Loaded(); override;
-    procedure Change(); override;
+    procedure Loaded; override;
+    procedure Change; override;
   published
     property Background:    TColor                read FBackground  write SetBackground   default clBtnFace;
     property Container:     TX2GraphicContainer   read FContainer   write SetContainer;
@@ -190,11 +210,21 @@ type
     property StretchMode:   TX2GLStretchMode      read FStretchMode write SetStretchMode  default smCrop;
   end;
 
+
+  procedure X2GLRegisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+  procedure X2GLUnregisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+
+
 implementation
 uses
+  CommCtrl,
   Forms,
   ImgList,
   SysUtils;
+
+
+var
+  CustomDrawImageProcs: TList;
 
 
 type
@@ -215,12 +245,53 @@ type
     procedure SetPicture(const Value: TPicture);
   public
     constructor Create(Collection: TCollection); override;
-    destructor Destroy(); override;
+    destructor Destroy; override;
   published
     property Name:          String    read FName    write FName;
     property Picture:       TPicture  read FPicture write SetPicture;
   end;
 
+
+
+procedure X2GLRegisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+var
+  procPointer: Pointer absolute ACustomDrawImageProc;
+
+begin
+  if CustomDrawImageProcs.IndexOf(procPointer) = -1 then
+    CustomDrawImageProcs.Add(procPointer);
+end;
+
+
+procedure X2GLUnregisterCustomDrawImageProc(ACustomDrawImageProc: TX2GLCustomDrawImageProc);
+var
+  procPointer: Pointer absolute ACustomDrawImageProc;
+
+begin
+  CustomDrawImageProcs.Remove(procPointer);
+end;
+
+
+function CustomDrawImage(ACanvas: TCanvas; AGraphicList: TX2GraphicList;
+                         AIndex: Integer; AX, AY: Integer; AEnabled: Boolean): Boolean;
+var
+  customProcIndex:  Integer;
+  customProc:       TX2GLCustomDrawImageProc;
+
+begin
+  Result := False;
+
+  for customProcIndex := Pred(CustomDrawImageProcs.Count) downto 0 do
+  begin
+    customProc  := TX2GLCustomDrawImageProc(CustomDrawImageProcs[customProcIndex]);
+
+    if customProc(ACanvas, AGraphicList, AIndex, AX, AY, AEnabled) then
+    begin
+      Result := True;
+      Break;
+    end;
+  end;
+end;
 
 
 {================ TX2GraphicContainerItem
@@ -230,12 +301,12 @@ constructor TX2GraphicContainerItem.Create(AOwner: TComponent);
 begin
   inherited;
 
-  FPicture                := TPicture.Create();
+  FPicture                := TPicture.Create;
   FPicture.PictureAdapter := Self;
 end;
 
 
-destructor TX2GraphicContainerItem.Destroy();
+destructor TX2GraphicContainerItem.Destroy;
 begin
   if Assigned(Container) then
     Container.RemoveGraphic(Self);
@@ -259,20 +330,38 @@ begin
 end;
 
 
-procedure TX2GraphicContainerItem.NotifierChanged();
+procedure TX2GraphicContainerItem.NotifierChanged;
 begin
-  Changed();
+  Changed;
+end;
+
+
+procedure TX2GraphicContainerItem.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  if (Operation = opRemove) and (AComponent = FContainer) then
+    FContainer := nil;
+
+  inherited;
 end;
 
 
 procedure TX2GraphicContainerItem.InternalSetContainer(const AContainer: TX2GraphicContainer);
 begin
-  FContainer := AContainer;
+  if AContainer <> FContainer then
+  begin
+    if Assigned(FContainer) then
+      FContainer.RemoveFreeNotification(Self);
+
+    FContainer := AContainer;
+
+    if Assigned(FContainer) then
+      FContainer.FreeNotification(Self);
+  end;
 end;
 
 
 
-procedure TX2GraphicContainerItem.Changed();
+procedure TX2GraphicContainerItem.Changed;
 begin
   if Assigned(Container) then
     Container.UpdateGraphic(Self);
@@ -280,21 +369,21 @@ end;
 
 
 
-function TX2GraphicContainerItem.GetParentComponent(): TComponent;
+function TX2GraphicContainerItem.GetParentComponent: TComponent;
 begin
   if Assigned(Container) then
     Result := Container
   else
-    Result := inherited GetParentComponent();
+    Result := inherited GetParentComponent;
 end;
 
 
-function TX2GraphicContainerItem.HasParent(): Boolean;
+function TX2GraphicContainerItem.HasParent: Boolean;
 begin
   if Assigned(Container) then
     Result := True
   else
-    Result := inherited HasParent();
+    Result := inherited HasParent;
 end;
 
 
@@ -303,19 +392,20 @@ procedure TX2GraphicContainerItem.ReadState(Reader: TReader);
 begin
   inherited;
 
-  if Reader.Parent is TX2GraphicContainer then
+  if Assigned(Reader.Parent) and (Reader.Parent is TX2GraphicContainer) then
     Container := TX2GraphicContainer(Reader.Parent);
 end;
 
 
 procedure TX2GraphicContainerItem.SetParentComponent(AParent: TComponent);
 begin
-  if not (csLoading in ComponentState) and (AParent is TX2GraphicContainer) then
+  if (not (csLoading in ComponentState)) and
+     Assigned(AParent) and (AParent is TX2GraphicContainer) then
     Container := TX2GraphicContainer(AParent);
 end;
 
 
-function TX2GraphicContainerItem.GetIndex(): Integer;
+function TX2GraphicContainerItem.GetIndex: Integer;
 begin
   Result := -1;
   if Assigned(Container) then
@@ -329,12 +419,12 @@ begin
   begin
     if Assigned(Container) then
       Container.RemoveGraphic(Self);
-
+  
     if Assigned(Value) then
       Value.AddGraphic(Self);
-
+  
     if not (csLoading in ComponentState) then
-      Name := GenerateName();
+      Name := GenerateName;
   end;
 end;
 
@@ -358,12 +448,12 @@ begin
     FPictureName := Value;
 
     if not (csLoading in ComponentState) then
-      Name := GenerateName();
+      Name := GenerateName;
   end;
 end;
 
 
-function TX2GraphicContainerItem.GenerateName(): String;
+function TX2GraphicContainerItem.GenerateName: String;
   function ValidComponentName(const AComponent: TComponent; const AName: String): Boolean;
   var
     checkOwner:   TComponent;
@@ -428,14 +518,14 @@ constructor TX2GraphicContainer.Create(AOwner: TComponent);
 begin
   inherited;
 
-  FGraphics := TList.Create();
-  FLists    := TList.Create();
+  FGraphics := TList.Create;
+  FLists    := TList.Create;
 end;
 
 
-destructor TX2GraphicContainer.Destroy();
+destructor TX2GraphicContainer.Destroy;
 begin
-  Clear();
+  Clear;
   
   FreeAndNil(FGraphics);
   FreeAndNil(FLists);
@@ -493,8 +583,8 @@ begin
   if Dest is TX2GraphicContainer then
   begin
     destContainer := TX2GraphicContainer(Dest);
-    destContainer.Clear();
-
+    destContainer.Clear;
+  
     for graphicIndex := 0 to Pred(Self.GraphicCount) do
       with TX2GraphicContainerItem.Create(destContainer) do
       begin
@@ -508,10 +598,10 @@ end;
 
 
 
-procedure TX2GraphicContainer.Clear();
+procedure TX2GraphicContainer.Clear;
 begin
   while GraphicsList.Count > 0 do
-    TX2GraphicContainerItem(GraphicsList.Last).Free();
+    TX2GraphicContainerItem(GraphicsList.Last).Free;
 end;
 
 
@@ -550,7 +640,7 @@ begin
   begin
     { Re-generate names for graphic components }
     for graphicIndex := 0 to Pred(GraphicCount) do
-      Graphics[graphicIndex].Name := Graphics[graphicIndex].GenerateName();
+      Graphics[graphicIndex].Name := Graphics[graphicIndex].GenerateName;
   end;
 end;
 
@@ -567,12 +657,12 @@ begin
          (AComponent is TX2GraphicList) and
          (not Assigned(TX2GraphicList(AComponent).Container)) then
         TX2GraphicList(AComponent).Container  := Self;
-
+  
     opRemove:
       begin
         if AComponent is TX2GraphicContainerItem then
           RemoveGraphic(TX2GraphicContainerItem(AComponent))
-
+  
         else if AComponent is TX2GraphicList then
           Lists.Remove(AComponent);
       end;
@@ -604,14 +694,14 @@ begin
     begin
       FConversionRequired := True;
       Clear;
-
+  
       Reader.ReadValue;
       Reader.ReadCollection(graphics);
-
+  
       for graphicIndex := 0 to Pred(graphics.Count) do
       begin
         graphicItem := TDeprecatedGraphicItem(graphics.Items[graphicIndex]);
-
+  
         { Note: this create the item just fine, but won't add a line to the
           form's definition; the designer can take care of that. }
         with TX2GraphicContainerItem.Create(Self) do
@@ -637,7 +727,7 @@ begin
   graphicIndex := GraphicsList.Add(AGraphic);
   AGraphic.InternalSetContainer(Self);
   AGraphic.FreeNotification(Self);
-
+  
   for listIndex := Pred(Lists.Count) downto 0 do
     TX2GraphicList(Lists[listIndex]).AddImage(graphicIndex);
 end;
@@ -650,12 +740,12 @@ var
 
 begin
   graphicIndex := AGraphic.Index;
-
+  
   if graphicIndex > -1 then
   begin
     for listIndex := Pred(Lists.Count) downto 0 do
       TX2GraphicList(Lists[listIndex]).DeleteImage(graphicIndex);
-
+  
     GraphicsList.Delete(graphicIndex);
     AGraphic.InternalSetContainer(nil);
   end;
@@ -669,7 +759,7 @@ var
 
 begin
   graphicIndex := AGraphic.Index;
-
+  
   if graphicIndex > -1 then
   begin
     for listIndex := Pred(Lists.Count) downto 0 do
@@ -688,31 +778,31 @@ var
 begin
   if not Assigned(AGraphic.Container) then
     Exit;
-
+  
   if AGraphic.Container <> Self then
   begin
     AGraphic.Container.MoveGraphic(AGraphic, ANewIndex);
     Exit;
   end;
-
-
+  
+  
   curIndex := AGraphic.Index;
-
+  
   if curIndex > -1 then
   begin
     count     := GraphicsList.Count;
     newIndex  := ANewIndex;
-
+  
     if newIndex < 0 then
       newIndex := 0;
-
+  
     if newIndex >= count then
       newIndex := Pred(count);
-
+  
     if newIndex <> curIndex then
     begin
       GraphicsList.Move(curIndex, newIndex);
-
+  
       for listIndex := Pred(Lists.Count) downto 0 do
         TX2GraphicList(Lists[listIndex]).MoveImage(curIndex, newIndex);
     end;
@@ -739,7 +829,7 @@ end;
 
 
 
-function TX2GraphicContainer.GetGraphicCount(): Integer;
+function TX2GraphicContainer.GetGraphicCount: Integer;
 begin
   Result := GraphicsList.Count;
 end;
@@ -772,24 +862,24 @@ begin
 end;
 
 
-procedure TX2GraphicList.Loaded();
+procedure TX2GraphicList.Loaded;
 begin
   inherited;
 
-  RebuildImages();
+  RebuildImages;
 end;
 
 
-procedure TX2GraphicList.Change();
+procedure TX2GraphicList.Change;
 begin
   inherited;
 
   if FUpdateCount = 0 then
-    RebuildImages();
+    RebuildImages;
 end;
 
 
-destructor TX2GraphicList.Destroy();
+destructor TX2GraphicList.Destroy;
 begin
   SetContainer(nil);
 
@@ -851,7 +941,7 @@ function TX2GraphicList.DrawGraphic(const AIndex: Integer;
         case FStretchMode of
           smCrop:
             begin
-              bmpTemp := TBitmap.Create();
+              bmpTemp := TBitmap.Create;
               try
                 with bmpTemp do
                 begin
@@ -896,59 +986,64 @@ begin
   if (AIndex < 0) or (AIndex >= FContainer.GraphicCount) then
     exit;
 
-  if (not Assigned(FContainer.Graphics[AIndex].Picture.Graphic)) or
+  if (not Assigned(FContainer.Graphics[AIndex].Picture)) or
+     (not Assigned(FContainer.Graphics[AIndex].Picture.Graphic)) or
      (FContainer.Graphics[AIndex].Picture.Graphic.Empty) then
     exit;
 
-  if AEnabled then
-    // Enabled, simply draw the graphic
-    InternalDrawGraphic(ACanvas, AX, AY)
-  else
+  { First see if any custom draw handlers want to draw the image }
+  if not CustomDrawImage(ACanvas, Self, AIndex, AX, AY, AEnabled) then
   begin
-    // Disabled, need to draw the image using 50% transparency. There's only
-    // one problem; not all TGraphic's support that, and neither is there a
-    // generic way of determining a pixel's transparency. So instead, we
-    // blend the background with a copy of the background with the graphic
-    // painted on it...
-    bmpBackground := TBitmap.Create();
-    bmpBlend      := TBitmap.Create();
-    try
-      // Get background from canvas
-      with bmpBackground do
-      begin
-        Width       := Self.Width;
-        Height      := Self.Height;
-        PixelFormat := pf24bit;
-        Canvas.CopyRect(Rect(0, 0, Width, Height), ACanvas,
-                        Rect(AX, AY, AX + Width, AY + Height));
+    if AEnabled then
+      { Enabled, simply draw the graphic }
+      InternalDrawGraphic(ACanvas, AX, AY)
+    else
+    begin
+      { Disabled, need to draw the image using 50% transparency. There's only
+        one problem; not all TGraphic's support that, and neither is there a
+        generic way of determining a pixel's transparency. So instead, we
+        blend the background with a copy of the background with the graphic
+        painted on it... }
+      bmpBackground := TBitmap.Create;
+      bmpBlend      := TBitmap.Create;
+      try
+        { Get background from canvas }
+        with bmpBackground do
+        begin
+          Width       := Self.Width;
+          Height      := Self.Height;
+          PixelFormat := pf24bit;
+          Canvas.CopyRect(Rect(0, 0, Width, Height), ACanvas,
+                          Rect(AX, AY, AX + Width, AY + Height));
+        end;
+  
+        bmpBlend.Assign(bmpBackground);
+        InternalDrawGraphic(bmpBlend.Canvas, 0, 0);
+  
+        { Blend graphic with background at 50% }
+        for iY  := 0 to bmpBackground.Height - 1 do
+        begin
+          pBackground := bmpBackground.ScanLine[iY];
+          pBlend      := bmpBlend.ScanLine[iY];
+  
+          for iX  := 0 to bmpBackground.Width - 1 do
+            with pBlend^[iX] do
+            begin
+              rgbtBlue    := ((pBackground^[iX].rgbtBlue shl 7) +
+                              (rgbtBlue shl 7)) shr 8;
+              rgbtGreen   := ((pBackground^[iX].rgbtGreen shl 7) +
+                              (rgbtGreen shl 7)) shr 8;
+              rgbtRed     := ((pBackground^[iX].rgbtRed shl 7) +
+                              (rgbtRed shl 7)) shr 8;
+            end;
+        end;
+  
+        { Copy blended graphic back }
+        ACanvas.Draw(AX, AY, bmpBlend);
+      finally
+        FreeAndNil(bmpBlend);
+        FreeAndNil(bmpBackground);
       end;
-
-      bmpBlend.Assign(bmpBackground);
-      InternalDrawGraphic(bmpBlend.Canvas, 0, 0);
-
-      // Blend graphic with background at 50%
-      for iY  := 0 to bmpBackground.Height - 1 do
-      begin
-        pBackground := bmpBackground.ScanLine[iY];
-        pBlend      := bmpBlend.ScanLine[iY];
-
-        for iX  := 0 to bmpBackground.Width - 1 do
-          with pBlend^[iX] do
-          begin
-            rgbtBlue    := ((pBackground^[iX].rgbtBlue shl 7) +
-                            (rgbtBlue shl 7)) shr 8;
-            rgbtGreen   := ((pBackground^[iX].rgbtGreen shl 7) +
-                            (rgbtGreen shl 7)) shr 8;
-            rgbtRed     := ((pBackground^[iX].rgbtRed shl 7) +
-                            (rgbtRed shl 7)) shr 8;
-          end;
-      end;
-
-      // Copy blended graphic back
-      ACanvas.Draw(AX, AY, bmpBlend);
-    finally
-      FreeAndNil(bmpBlend);
-      FreeAndNil(bmpBackground);
     end;
   end;
 
@@ -999,17 +1094,6 @@ var
   pMask:      PByteArray;
 
 begin
-  if not FConvert then
-  begin
-    AImage.Width              := Self.Width;
-    AImage.Height             := Self.Height;
-    AImage.Canvas.Brush.Color := clWhite;
-    AImage.Canvas.FillRect(Rect(0, 0, AImage.Width, AImage.Height));
-
-    AMask.Assign(AImage);
-    exit;
-  end;
-
   // Technique used here: draw the image twice, once on the background color,
   // once on black. Loop through the two images, check if a pixel is the
   // background color on one image and black on the other; if so then it's
@@ -1024,7 +1108,7 @@ begin
     Width               := Self.Width;
     Height              := Self.Height;
     PixelFormat         := pf24bit;
-
+  
     with Canvas do
     begin
       Brush.Color       := FBackground;
@@ -1032,33 +1116,33 @@ begin
       bOk               := DrawGraphic(AIndex, Canvas, 0, 0, FEnabled);
     end;
   end;
-
+  
   with AMask do
   begin
     Width               := Self.Width;
     Height              := Self.Height;
     PixelFormat         := pf1bit;
-
+  
     with Canvas do
     begin
       Brush.Color       := clBlack;
       FillRect(Rect(0, 0, Width, Height));
     end;
   end;
-
+  
   // No point in looping through the
   // images if they're blank anyways...
   if not bOk then
     exit;
-
-  bmpCompare  := TBitmap.Create();
+  
+  bmpCompare  := TBitmap.Create;
   try
     with bmpCompare do
     begin
       Width               := Self.Width;
       Height              := Self.Height;
       PixelFormat         := pf24bit;
-
+  
       with Canvas do
       begin
         Brush.Color       := clBlack;
@@ -1066,10 +1150,10 @@ begin
         DrawGraphic(AIndex, Canvas, 0, 0, FEnabled);
       end;
     end;
-
+  
     cImage  := RGBTriple(FBackground);
     cMask   := RGBTriple(clBlack);
-
+  
     for iY  := 0 to AImage.Height - 1 do
     begin
       pImage    := AImage.ScanLine[iY];
@@ -1077,12 +1161,12 @@ begin
       pMask     := AMask.ScanLine[iY];
       iPosition := 0;
       iBit      := 128;
-
+  
       for iX  := 0 to AImage.Width - 1 do
       begin
         if iBit = 128 then
           pMask^[iPosition] := 0;
-
+  
         if SameColor(pImage^[iX], cImage) and
            SameColor(pCompare^[iX], cMask) then
         begin
@@ -1090,7 +1174,7 @@ begin
           FillChar(pImage^[iX], SizeOf(TRGBTriple), $00);
           pMask^[iPosition] := pMask^[iPosition] or iBit;
         end;
-
+  
         iBit  := iBit shr 1;
         if iBit < 1 then
         begin
@@ -1114,25 +1198,29 @@ begin
   if csLoading in ComponentState then
     exit;
 
-  BeginUpdate();
-  try
-    bmpImage  := TBitmap.Create();
-    bmpMask   := TBitmap.Create();
+  if CanConvert then
+  begin
+    BeginUpdate;
     try
-      BuildImage(AIndex, bmpImage, bmpMask);
-      Assert(AIndex <= Self.Count, 'AAAH! Images out of sync! *panics*');
+      bmpImage  := TBitmap.Create;
+      bmpMask   := TBitmap.Create;
+      try
+        BuildImage(AIndex, bmpImage, bmpMask);
+        Assert(AIndex <= Self.Count, 'AAAH! Images out of sync! *panics*');
 
-      if AIndex = Self.Count then
-        Add(bmpImage, bmpMask)
-      else
-        Insert(AIndex, bmpImage, bmpMask);
+        if AIndex = Self.Count then
+          Add(bmpImage, bmpMask)
+        else
+          Insert(AIndex, bmpImage, bmpMask);
+      finally
+        FreeAndNil(bmpMask);
+        FreeAndNil(bmpImage);
+      end;
     finally
-      FreeAndNil(bmpMask);
-      FreeAndNil(bmpImage);
+      EndUpdate;
     end;
-  finally
-    EndUpdate();
-  end;
+  end else
+    UpdateImageCount;
 end;
 
 
@@ -1144,14 +1232,17 @@ var
 begin
   if csLoading in ComponentState then
     exit;
-
+  
+  if not CanConvert then
+    Exit;
+  
   if (AIndex < 0) or (AIndex >= Count) then
     exit;
-
-  BeginUpdate();
+  
+  BeginUpdate;
   try
-    bmpImage  := TBitmap.Create();
-    bmpMask   := TBitmap.Create();
+    bmpImage  := TBitmap.Create;
+    bmpMask   := TBitmap.Create;
     try
       BuildImage(AIndex, bmpImage, bmpMask);
       Replace(AIndex, bmpImage, bmpMask);
@@ -1160,54 +1251,76 @@ begin
       FreeAndNil(bmpImage);
     end;
   finally
-    EndUpdate();
+    EndUpdate;
   end;
 end;
 
 
 procedure TX2GraphicList.DeleteImage(const AIndex: Integer);
 begin
-  BeginUpdate();
+  BeginUpdate;
   try
     Delete(AIndex);
   finally
-    EndUpdate();
+    EndUpdate;
   end;
 end;
 
 
 procedure TX2GraphicList.MoveImage(const AOldIndex, ANewIndex: Integer);
 begin
-  BeginUpdate();
+  BeginUpdate;
   try
     Move(AOldIndex, ANewIndex);
   finally
-    EndUpdate();
+    EndUpdate;
   end;
 end;
 
 
-procedure TX2GraphicList.RebuildImages();
+procedure TX2GraphicList.UpdateImageCount;
+begin
+  if not Assigned(Container) then
+    Clear
+  else
+    ImageList_SetImageCount(Self.Handle, Container.GraphicCount);
+end;
+
+
+procedure TX2GraphicList.RebuildImages;
 var
   iIndex:       Integer;
 
 begin
   if (csLoading in ComponentState) or
      (Width = 0) or (Height = 0) then
-    exit;
+    Exit;
 
-  BeginUpdate();
+  BeginUpdate;
   try
-    Clear();
-
     if not Assigned(FContainer) then
-      exit;
+    begin
+      Clear;
+    end else
+    begin
+      UpdateImageCount;
 
-    for iIndex  := 0 to Pred(FContainer.GraphicCount) do
-      AddImage(iIndex);
+      if CanConvert then
+      begin
+        for iIndex  := 0 to Pred(FContainer.GraphicCount) do
+          UpdateImage(iIndex);
+      end;
+    end;
   finally
-    EndUpdate();
+    EndUpdate;
+    inherited Change;
   end;
+end;
+
+
+function TX2GraphicList.CanConvert: Boolean;
+begin
+  Result := FConvert or (csDesigning in ComponentState);
 end;
 
 
@@ -1250,7 +1363,7 @@ end;
 procedure TX2GraphicList.SetBackground(const Value: TColor);
 begin
   FBackground := Value;
-  RebuildImages();
+  RebuildImages;
 end;
 
 
@@ -1261,16 +1374,16 @@ begin
     FContainer.UnregisterList(Self);
     FContainer.RemoveFreeNotification(Self);
   end;
-
+  
   FContainer := Value;
-
+  
   if Assigned(FContainer) then
   begin
     FContainer.FreeNotification(Self);
     FContainer.RegisterList(Self);
   end;
-
-  RebuildImages();
+  
+  RebuildImages;
 end;
 
 
@@ -1279,7 +1392,7 @@ begin
   if Value <> FConvert then
   begin
     FConvert  := Value;
-    RebuildImages();
+    RebuildImages;
   end;
 end;
 
@@ -1287,24 +1400,24 @@ end;
 procedure TX2GraphicList.SetEnabled(const Value: Boolean);
 begin
   FEnabled := Value;
-  RebuildImages();
+  RebuildImages;
 end;
 
 
 procedure TX2GraphicList.SetStretchMode(const Value: TX2GLStretchMode);
 begin
   FStretchMode := Value;
-  RebuildImages();
+  RebuildImages;
 end;
 
 
-procedure TX2GraphicList.BeginUpdate();
+procedure TX2GraphicList.BeginUpdate;
 begin
   Inc(FUpdateCount);
 end;
 
 
-procedure TX2GraphicList.EndUpdate();
+procedure TX2GraphicList.EndUpdate;
 begin
   Assert(FUpdateCount > 0, 'EndUpdate without matching BeginUpdate!');
   Dec(FUpdateCount);
@@ -1317,11 +1430,11 @@ constructor TDeprecatedGraphicItem.Create(Collection: TCollection);
 begin
   inherited;
 
-  FPicture  := TPicture.Create();
+  FPicture  := TPicture.Create;
 end;
 
 
-destructor TDeprecatedGraphicItem.Destroy();
+destructor TDeprecatedGraphicItem.Destroy;
 begin
   FreeAndNil(FPicture);
 
@@ -1335,8 +1448,11 @@ begin
 end;
 
 
-
 initialization
   RegisterClass(TX2GraphicContainerItem);
+  CustomDrawImageProcs  := TList.Create;
+
+finalization
+  FreeAndNil(CustomDrawImageProcs);
 
 end.

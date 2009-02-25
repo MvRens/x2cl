@@ -73,6 +73,7 @@ type
     procedure AnimationClick(Sender: TObject);
     procedure seAnimationTimeChange(Sender: TObject);
     procedure actTestExecute(Sender: TObject);
+    procedure FormClick(Sender: TObject);
   private
     procedure Event(const AMsg: String);
   end;
@@ -229,6 +230,14 @@ end;
 procedure TfrmMain.seAnimationTimeChange(Sender: TObject);
 begin
   mbTest.AnimationTime := seAnimationTime.AsInteger;
+end;
+
+procedure TfrmMain.FormClick(Sender: TObject);
+begin
+  if Assigned(ActiveControl) then
+    Self.Caption := ActiveControl.Name
+  else
+    Self.Caption := '';
 end;
 
 end.

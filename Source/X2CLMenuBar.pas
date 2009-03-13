@@ -319,13 +319,13 @@ type
     procedure InternalSetExpanded(const Value: Boolean);
     procedure ItemsNotify(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification);
     procedure ItemsUpdate(Sender: TObject; Item: TCollectionItem);
-
-    property SelectedItem:    Integer read GetSelectedItem  write FSelectedItem;
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy(); override;
 
     procedure Assign(Source: TPersistent); override;
+
+    property SelectedItem:    Integer read GetSelectedItem  write FSelectedItem;
   published
     property Expanded:  Boolean           read FExpanded  write SetExpanded;
     property Items:     TX2MenuBarItems   read FItems     write SetItems;

@@ -119,10 +119,14 @@ object GraphicsEditorForm: TGraphicsEditorForm
       Top = 26
       Width = 189
       Height = 398
+      Style = lbVirtual
       Align = alClient
       ItemHeight = 13
       TabOrder = 1
       OnClick = lstGraphicsClick
+      OnData = lstGraphicsData
+      OnDataFind = lstGraphicsDataFind
+      OnKeyPress = lstGraphicsKeyPress
     end
     object tbGraphics: TToolBar
       Left = 0

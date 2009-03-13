@@ -14,6 +14,7 @@ interface
 uses
   Classes,
   Graphics,
+  ImgList,
   Windows,
 
   X2CLMenuBar;
@@ -27,6 +28,7 @@ type
   public
     property OnChange:    TNotifyEvent  read FOnChange  write FOnChange;
   end;
+
 
   TX2MenuBarunaColor = class(TX2MenuBarunaProperty)
   private
@@ -63,6 +65,7 @@ type
     property Selected:  TColor read FSelected write SetSelected stored IsSelectedStored;
   end;
 
+
   TX2MenuBarunaGroupColors = class(TX2MenuBarunaProperty)
   private
     FFill:    TX2MenuBarunaColor;
@@ -85,6 +88,7 @@ type
     property Text:      TX2MenuBarunaColor  read FText    write SetText;
   end;
 
+
   TX2MenuBarunaMetrics = class(TX2MenuBarunaProperty)
   private
     FAfterGroupHeader:    Integer;
@@ -96,6 +100,8 @@ type
     FGroupHeight:         Integer;
     FItemHeight:          Integer;
     FMargin:              Integer;
+    FImageOffsetY:        Integer;
+    FImageOffsetX:        Integer;
     
     procedure SetAfterGroupHeader(const Value: Integer);
     procedure SetAfterItem(const Value: Integer);
@@ -106,6 +112,8 @@ type
     procedure SetGroupHeight(const Value: Integer);
     procedure SetItemHeight(const Value: Integer);
     procedure SetMargin(const Value: Integer);
+    procedure SetImageOffsetX(const Value: Integer);
+    procedure SetImageOffsetY(const Value: Integer);
   public
     constructor Create();
 
@@ -120,7 +128,10 @@ type
     property GroupHeight:       Integer read FGroupHeight       write SetGroupHeight        default 22;
     property ItemHeight:        Integer read FItemHeight        write SetItemHeight         default 21;
     property Margin:            Integer read FMargin            write SetMargin             default 10;
+    property ImageOffsetX:      Integer read FImageOffsetX      write SetImageOffsetX       default 0;
+    property ImageOffsetY:      Integer read FImageOffsetY      write SetImageOffsetY       default 0;
   end;
+
 
   TX2MenuBarunaPainter = class(TX2CustomMenuBarPainter)
   private
@@ -132,6 +143,9 @@ type
     FMetrics:         TX2MenuBarunaMetrics;
     FShadowColor:     TColor;
     FShadowOffset:    Integer;
+    FGroupGradient:   Integer;
+    FArrowImages:     TCustomImageList;
+    FArrowImageIndex: TImageIndex;
 
     procedure SetBlurShadow(const Value: Boolean);
     procedure SetGroupColors(const Value: TX2MenuBarunaGroupColors);
@@ -139,7 +153,14 @@ type
     procedure SetMetrics(const Value: TX2MenuBarunaMetrics);
     procedure SetShadowColor(const Value: TColor);
     procedure SetShadowOffset(const Value: Integer);
+    procedure SetGroupGradient(const Value: Integer);
+    procedure SetArrowImageIndex(const Value: TImageIndex);
+    procedure SetArrowImages(const Value: TCustomImageList);
   protected
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+
+    function HasArrowImage(): Boolean;
+
     function ApplyMargins(const ABounds: TRect): TRect; override;
     function GetSpacing(AElement: TX2MenuBarSpacingElement): Integer; override;
     function GetGroupHeaderHeight(AGroup: TX2MenuBarGroup): Integer; override;
@@ -148,6 +169,7 @@ type
     procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect); override;
     procedure DrawGroupHeader(ACanvas: TCanvas; AGroup: TX2MenuBarGroup; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
     procedure DrawItem(ACanvas: TCanvas; AItem: TX2MenuBarItem; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
+    procedure DrawArrow(ACanvas: TCanvas; ABounds: TRect);
 
     procedure ColorChange(Sender: TObject);
   public
@@ -156,23 +178,29 @@ type
 
     procedure ResetColors();
   published
-    property ArrowColor:      TColor                    read FArrowColor    write FArrowColor     default clBlue;
-    property BlurShadow:      Boolean                   read FBlurShadow    write SetBlurShadow   default True;
-    property Color:           TColor                    read FColor         write FColor          default clWindow;
-    property GroupColors:     TX2MenuBarunaGroupColors  read FGroupColors   write SetGroupColors;
-    property ItemColors:      TX2MenuBarunaColor        read FItemColors    write SetItemColors;
-    property Metrics:         TX2MenuBarunaMetrics      read FMetrics       write SetMetrics;
-    property ShadowColor:     TColor                    read FShadowColor   write SetShadowColor  default clBtnShadow;
-    property ShadowOffset:    Integer                   read FShadowOffset  write SetShadowOffset default 2;
+    property ArrowImageIndex:     TImageIndex               read FArrowImageIndex     write SetArrowImageIndex      default -1;
+    property ArrowImages:         TCustomImageList          read FArrowImages         write SetArrowImages;
+    property ArrowColor:          TColor                    read FArrowColor          write FArrowColor             default clBlue;
+    property BlurShadow:          Boolean                   read FBlurShadow          write SetBlurShadow           default True;
+    property Color:               TColor                    read FColor               write FColor                  default clWindow;
+    property GroupColors:         TX2MenuBarunaGroupColors  read FGroupColors         write SetGroupColors;
+    property ItemColors:          TX2MenuBarunaColor        read FItemColors          write SetItemColors;
+    property Metrics:             TX2MenuBarunaMetrics      read FMetrics             write SetMetrics;
+    property ShadowColor:         TColor                    read FShadowColor         write SetShadowColor          default clBtnShadow;
+    property ShadowOffset:        Integer                   read FShadowOffset        write SetShadowOffset         default 2;
+    property GroupGradient:       Integer                   read FGroupGradient       write SetGroupGradient        default 0;
   end;
 
 implementation
 uses
-  ImgList,
   SysUtils,
 
   X2CLGraphics;
 
+
+const
+  ArrowMargin = 2;
+  ArrowWidth  = 8;
 
 
 procedure Blur(ASource: Graphics.TBitmap);
@@ -387,16 +415,37 @@ begin
 end;
 
 
+procedure TX2MenuBarunaMetrics.SetImageOffsetX(const Value: Integer);
+begin
+  if Value <> FImageOffsetX then
+  begin
+    FImageOffsetX := Value;
+    Changed();
+  end;
+end;
+
+
+procedure TX2MenuBarunaMetrics.SetImageOffsetY(const Value: Integer);
+begin
+  if Value <> FImageOffsetY then
+  begin
+    FImageOffsetY := Value;
+    Changed();
+  end;
+end;
+
+
 { TX2MenuBarunaPainter }
 constructor TX2MenuBarunaPainter.Create(AOwner: TComponent);
 begin
   inherited;
 
-  FBlurShadow   := True;
-  FGroupColors  := TX2MenuBarunaGroupColors.Create();
-  FItemColors   := TX2MenuBarunaColor.Create();
-  FMetrics      := TX2MenuBarunaMetrics.Create();
-  FShadowOffset := 2;
+  FArrowImageIndex  := -1;
+  FBlurShadow       := True;
+  FGroupColors      := TX2MenuBarunaGroupColors.Create();
+  FItemColors       := TX2MenuBarunaColor.Create();
+  FMetrics          := TX2MenuBarunaMetrics.Create();
+  FShadowOffset     := 2;
 
   FGroupColors.OnChange := ColorChange;
   FItemColors.OnChange  := ColorChange;
@@ -407,6 +456,7 @@ end;
 
 destructor TX2MenuBarunaPainter.Destroy();
 begin
+  SetArrowImages(nil);
   FreeAndNil(FMetrics);
   FreeAndNil(FItemColors);
   FreeAndNil(FGroupColors);
@@ -526,6 +576,9 @@ var
   shadowBitmap:     Graphics.TBitmap;
   shadowBounds:     TRect;
   textRect:         TRect;
+  clipRegion:       HRGN;
+  startColor:       TColor;
+  endColor:         TColor;
 
 begin
   if not ((mdsSelected in AState) or (mdsGroupSelected in AState)) then
@@ -558,12 +611,32 @@ begin
   end;
 
   { Rounded rectangle }
-  ACanvas.Brush.Color := GetColor(GroupColors.Fill);
+  startColor  := GetColor(GroupColors.Fill);
+  endColor    := startColor;
+
+  if GroupGradient > 0 then
+    endColor  := LightenColor(startColor, GroupGradient)
+
+  else if GroupGradient < 0 then
+    endColor  := DarkenColor(startColor, -GroupGradient);
+
+
+  clipRegion  := CreateRoundRectRgn(ABounds.Left, ABounds.Top, ABounds.Right, ABounds.Bottom, 5, 5);
+  SelectClipRgn(ACanvas.Handle, clipRegion);
+
+  GradientFillRect(ACanvas, ABounds, startColor, endColor);
+
+  SelectClipRgn(ACanvas.Handle, 0);
+  DeleteObject(clipRegion);
+
+  ACanvas.Brush.Style := bsClear;
   ACanvas.Pen.Color   := GetColor(GroupColors.Border);
+  ACanvas.Pen.Style   := psSolid;
+  ACanvas.RoundRect(ABounds.Left, ABounds.Top, ABounds.Right, ABounds.Bottom, 5, 5);
+
+  ACanvas.Brush.Style := bsSolid;
   ACanvas.Font.Color  := GetColor(GroupColors.Text);
 
-  ACanvas.RoundRect(ABounds.Left, ABounds.Top, ABounds.Right, ABounds.Bottom, 5, 5);
-  
   textRect  := ABounds;
   Inc(textRect.Left, 4);
   Dec(textRect.Right, 4);
@@ -576,6 +649,10 @@ begin
     begin
       imagePos.X  := textRect.Left;
       imagePos.Y  := ABounds.Top + ((ABounds.Bottom - ABounds.Top - imageList.Height) div 2);
+
+      Inc(imagePos.X, Metrics.ImageOffsetX);
+      Inc(imagePos.Y, Metrics.ImageOffsetY);
+
       imageList.Draw(ACanvas, imagePos.X, imagePos.Y, AGroup.ImageIndex);
     end;
 
@@ -584,6 +661,7 @@ begin
 
   { Text }
   ACanvas.Font.Style  := [fsBold];
+  SetBkMode(ACanvas.Handle, TRANSPARENT);
   DrawText(ACanvas, AGroup.Caption, textRect, taLeftJustify, taVerticalCenter,
            False, csEllipsis);
 end;
@@ -604,21 +682,58 @@ procedure TX2MenuBarunaPainter.DrawItem(ACanvas: TCanvas; AItem: TX2MenuBarItem;
       Result    := AColor.Disabled;
   end;
 
+
 var
   focusBounds:      TRect;
   textBounds:       TRect;
-  arrowPoints:      array[0..2] of TPoint;
 
 begin
   focusBounds := ABounds;
-  Dec(focusBounds.Right, Metrics.Margin);
+
+  if HasArrowImage() then
+    Dec(focusBounds.Right, ArrowImages.Width + ArrowMargin)
+  else
+    Dec(focusBounds.Right, ArrowWidth + ArrowMargin);
 
   if (mdsSelected in AState) then
   begin
-    { Focus rectangle }
+    { Focus rectangle and arrow }
     DrawFocusRect(ACanvas, focusBounds);
+    DrawArrow(ACanvas, ABounds);
+  end;
 
-    { Arrow }
+  { Text }
+  ACanvas.Font.Color  := GetColor(ItemColors);
+  textBounds  := focusBounds;
+  Inc(textBounds.Left, 4);
+  Dec(textBounds.Right, 4);
+
+  if not AItem.Visible then
+    { Design-time }
+    ACanvas.Font.Style  := [fsItalic]
+  else
+    ACanvas.Font.Style  := [];
+
+  SetBkMode(ACanvas.Handle, TRANSPARENT);
+  DrawText(ACanvas, AItem.Caption, textBounds, taRightJustify, taVerticalCenter,
+           False, csEllipsis);
+end;
+
+
+procedure TX2MenuBarunaPainter.DrawArrow(ACanvas: TCanvas; ABounds: TRect);
+var
+  arrowX:       Integer;
+  arrowY:       Integer;
+  arrowPoints:  array[0..2] of TPoint;
+
+begin
+  if HasArrowImage() then
+  begin
+    arrowX := ABounds.Right - ArrowImages.Width;
+    arrowY := ABounds.Top + ((ABounds.Bottom - ABounds.Top - ArrowImages.Height) div 2);
+    ArrowImages.Draw(ACanvas, arrowX, arrowY, ArrowImageIndex);
+  end else
+  begin
     ACanvas.Brush.Color := ArrowColor;
     ACanvas.Pen.Color   := ArrowColor;
 
@@ -630,29 +745,27 @@ begin
     arrowPoints[2].Y    := arrowPoints[0].Y + 7;
     ACanvas.Polygon(arrowPoints);
   end;
-
-  { Text }
-  ACanvas.Font.Color  := GetColor(ItemColors);
-  textBounds  := focusBounds;
-  Inc(textBounds.Left, 4);
-  Dec(textBounds.Right, 4);
-
-  SetBkMode(ACanvas.Handle, TRANSPARENT);
-
-  if not AItem.Visible then
-    { Design-time }
-    ACanvas.Font.Style  := [fsItalic]
-  else
-    ACanvas.Font.Style  := [];
-
-  DrawText(ACanvas, AItem.Caption, textBounds, taRightJustify, taVerticalCenter,
-           False, csEllipsis);
 end;
 
 
 procedure TX2MenuBarunaPainter.ColorChange(Sender: TObject);
 begin
   NotifyObservers();
+end;
+
+
+function TX2MenuBarunaPainter.HasArrowImage(): Boolean;
+begin
+  Result := Assigned(ArrowImages) and (ArrowImageIndex > -1);
+end;
+
+
+procedure TX2MenuBarunaPainter.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  if (Operation = opRemove) and (AComponent = FArrowImages) then
+    SetArrowImages(nil);
+
+  inherited;
 end;
 
 
@@ -697,6 +810,43 @@ begin
   if Value <> FShadowOffset then
   begin
     FShadowOffset := Value;
+    NotifyObservers();
+  end;
+end;
+
+
+procedure TX2MenuBarunaPainter.SetGroupGradient(const Value: Integer);
+begin
+  if Value <> FGroupGradient then
+  begin
+    FGroupGradient := Value;
+    NotifyObservers();
+  end;
+end;
+
+
+procedure TX2MenuBarunaPainter.SetArrowImageIndex(const Value: TImageIndex);
+begin
+  if Value <> FArrowImageIndex then
+  begin
+    FArrowImageIndex := Value;
+    NotifyObservers();
+  end;
+end;
+
+
+procedure TX2MenuBarunaPainter.SetArrowImages(const Value: TCustomImageList);
+begin
+  if Value <> FArrowImages then
+  begin
+    if Assigned(FArrowImages) then
+      FArrowImages.RemoveFreeNotification(Self);
+
+    FArrowImages := Value;
+
+    if Assigned(FArrowImages) then
+      FArrowImages.FreeNotification(Self);
+
     NotifyObservers();
   end;
 end;

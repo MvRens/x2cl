@@ -216,7 +216,7 @@ begin
       iconBuffer.Assign(backBuffer);
       AImageList.Draw(iconBuffer.Canvas, 0, 0, AImageIndex);
 
-      X2CLMenuBar.DrawBlended(backBuffer, iconBuffer, AAlpha);
+      X2CLGraphics.DrawBlended(backBuffer, iconBuffer, AAlpha);
     finally
       FreeAndNil(iconBuffer);
     end;

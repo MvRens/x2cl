@@ -10,6 +10,7 @@ unit X2CLMBEditors;
 interface
 uses
   DesignEditors;
+  
 
 type
   TX2MenuBarComponentEditor = class(TComponentEditor)
@@ -20,10 +21,12 @@ type
     function GetVerbCount(): Integer; override;
   end;
 
+
 implementation
 uses
   X2CLMenuBar,
   X2CLMenuBarEditor;
+
 
 
 { TX2MenuBarComponentEditor }
@@ -33,15 +36,18 @@ begin
     TfrmMenuBarEditor.Execute(TX2CustomMenuBar(Component), Designer);
 end;
 
+
 procedure TX2MenuBarComponentEditor.ExecuteVerb(Index: Integer);
 begin
   Edit();
 end;
 
+
 function TX2MenuBarComponentEditor.GetVerb(Index: Integer): string;
 begin
   Result  := 'Edit...';
 end;
+
 
 function TX2MenuBarComponentEditor.GetVerbCount(): Integer;
 begin

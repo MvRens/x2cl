@@ -89,9 +89,6 @@ var
   GEditors:     TObjectBucketList;
 
 
-type
-  TProtectedX2CustomMenuBar = class(TX2CustomMenuBar);
-
 
 {$R *.dfm}
 
@@ -517,8 +514,8 @@ begin
   if FDesignerAttached or (not Assigned(MenuBar)) then
     exit;
 
-  TProtectedX2CustomMenuBar(MenuBar).Designer := Self;
-  FDesignerAttached                           := True;
+  MenuBar.Designer  := Self;
+  FDesignerAttached := True;
 end;
 
 
@@ -529,7 +526,7 @@ begin
 
   FDesignerAttached := False;
   if Assigned(MenuBar) then
-    TProtectedX2CustomMenuBar(MenuBar).Designer := nil;
+    MenuBar.Designer := nil;
 end;
 
 

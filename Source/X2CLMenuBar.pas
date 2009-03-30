@@ -468,8 +468,6 @@ type
 
     procedure TestMousePos(); virtual;
     function GetMenuHeight(): Integer; virtual;
-
-    property Designer:    IX2MenuBarDesigner  read FDesigner  write FDesigner;
   protected
     procedure SetPainter(const Value: TX2CustomMenuBarPainter); virtual;
 
@@ -574,6 +572,8 @@ type
     property Images:        TCustomImageList        read FImages        write SetImages;
     property Painter:       TX2CustomMenuBarPainter read FPainter       write SetPainter;
     property SelectedItem:  TX2CustomMenuBarItem    read FSelectedItem  write SetSelectedItem;
+
+    property Designer:      IX2MenuBarDesigner      read FDesigner      write FDesigner;
   end;
 
   

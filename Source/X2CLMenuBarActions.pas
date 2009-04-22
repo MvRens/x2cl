@@ -25,18 +25,18 @@ type
   public
     constructor Create(AMenuBar: TX2CustomMenuBar; AGroup: TX2MenuBarGroup;
                        AAnimator: TX2CustomMenuBarAnimator);
-    destructor Destroy(); override;
+    destructor Destroy; override;
 
-    procedure Start(); override;
+    procedure Start; override;
 
-    procedure BeforePaint(); override;
+    procedure BeforePaint; override;
     procedure GetItemHeight(AItem: TX2CustomMenuBarItem; var AHeight: Integer;
                             var AHandled: Boolean); override;
     procedure DrawMenuItem(ACanvas: TCanvas; APainter: TX2CustomMenuBarPainter;
                            AItem: TX2CustomMenuBarItem; const AMenuBounds: TRect;
                            const AItemBounds: TRect; AState: TX2MenuBarDrawStates;
                            var AHandled: Boolean); override;
-    procedure AfterPaint(); override;
+    procedure AfterPaint; override;
   end;
 
 
@@ -49,26 +49,26 @@ type
   private
     FAnimateActions:    TObjectList;
 
-    function GetCount(): Integer;
+    function GetCount: Integer;
   protected
     function GetAnimateAction(AIndex: Integer): TX2MenuBarAnimateAction;
-    function GetTerminated(): Boolean; override;
+    function GetTerminated: Boolean; override;
 
     property AnimateActions:    TObjectList read FAnimateActions;
   public
     constructor Create(AMenuBar: TX2CustomMenuBar);
-    destructor Destroy(); override;
+    destructor Destroy; override;
 
     procedure Add(AAction: TX2MenuBarAnimateAction);
 
-    procedure BeforePaint(); override;
+    procedure BeforePaint; override;
     procedure GetItemHeight(AItem: TX2CustomMenuBarItem; var AHeight: Integer;
                             var AHandled: Boolean); override;
     procedure DrawMenuItem(ACanvas: TCanvas; APainter: TX2CustomMenuBarPainter;
                            AItem: TX2CustomMenuBarItem; const AMenuBounds: TRect;
                            const AItemBounds: TRect; AState: TX2MenuBarDrawStates;
                            var AHandled: Boolean); override;
-    procedure AfterPaint(); override;
+    procedure AfterPaint; override;
 
     property Count:   Integer read GetCount;
   end;
@@ -88,7 +88,7 @@ type
     constructor Create(AMenuBar: TX2CustomMenuBar; AGroup: TX2MenuBarGroup;
                        AExpanding: Boolean);
 
-    procedure Start(); override;
+    procedure Start; override;
   end;
 
 
@@ -104,7 +104,7 @@ type
   public
     constructor Create(AMenuBar: TX2CustomMenuBar; AItem: TX2CustomMenuBarItem);
 
-    procedure Start(); override;
+    procedure Start; override;
   end;
 
 
@@ -131,7 +131,7 @@ begin
 end;
 
 
-destructor TX2MenuBarAnimateAction.Destroy();
+destructor TX2MenuBarAnimateAction.Destroy;
 begin
   FreeAndNil(FAnimator);
 
@@ -139,21 +139,21 @@ begin
 end;
 
 
-procedure TX2MenuBarAnimateAction.Start();
+procedure TX2MenuBarAnimateAction.Start;
 begin
   inherited;
 
-  Animator.ResetStartTime();
+  Animator.ResetStartTime;
 end;
 
 
-procedure TX2MenuBarAnimateAction.BeforePaint();
+procedure TX2MenuBarAnimateAction.BeforePaint;
 begin
   inherited;
 
-   Animator.Update();
+   Animator.Update;
    if Animator.Terminated then
-    Terminate();
+    Terminate;
 end;
 
 
@@ -196,7 +196,7 @@ begin
 end;
 
 
-procedure TX2MenuBarAnimateAction.AfterPaint();
+procedure TX2MenuBarAnimateAction.AfterPaint;
 begin
   inherited;
 
@@ -205,8 +205,8 @@ begin
     { Prevent 100% CPU usage }
     Sleep(5);
 
-    TProtectedX2CustomMenuBar(MenuBar).TestMousePos();
-    MenuBar.Invalidate();
+    TProtectedX2CustomMenuBar(MenuBar).TestMousePos;
+    MenuBar.Invalidate;
   end;
 end;
 
@@ -220,7 +220,7 @@ begin
 end;
 
 
-destructor TX2MenuBarAnimateMultipleAction.Destroy();
+destructor TX2MenuBarAnimateMultipleAction.Destroy;
 begin
   FreeAndNil(FAnimateActions);
 
@@ -234,7 +234,7 @@ begin
 end;
 
 
-procedure TX2MenuBarAnimateMultipleAction.BeforePaint();
+procedure TX2MenuBarAnimateMultipleAction.BeforePaint;
 var
   actionIndex:      Integer;
 
@@ -242,7 +242,7 @@ begin
   inherited;
 
   for actionIndex := 0 to Pred(AnimateActions.Count) do
-    GetAnimateAction(actionIndex).BeforePaint();
+    GetAnimateAction(actionIndex).BeforePaint;
 end;
 
 
@@ -289,7 +289,7 @@ begin
 end;
 
 
-procedure TX2MenuBarAnimateMultipleAction.AfterPaint();
+procedure TX2MenuBarAnimateMultipleAction.AfterPaint;
 var
   actionIndex:      Integer;
 
@@ -297,7 +297,7 @@ begin
   inherited;
 
   for actionIndex := 0 to Pred(AnimateActions.Count) do
-    GetAnimateAction(actionIndex).AfterPaint();
+    GetAnimateAction(actionIndex).AfterPaint;
 end;
 
 
@@ -307,18 +307,18 @@ begin
 end;
 
 
-function TX2MenuBarAnimateMultipleAction.GetCount(): Integer;
+function TX2MenuBarAnimateMultipleAction.GetCount: Integer;
 begin
   Result := FAnimateActions.Count;
 end;
 
 
-function TX2MenuBarAnimateMultipleAction.GetTerminated(): Boolean;
+function TX2MenuBarAnimateMultipleAction.GetTerminated: Boolean;
 var
   actionIndex:      Integer;
 
 begin
-  Result := inherited GetTerminated();
+  Result := inherited GetTerminated;
 
   if not Result then
   begin
@@ -344,12 +344,12 @@ begin
 end;
 
 
-procedure TX2MenuBarExpandAction.Start();
+procedure TX2MenuBarExpandAction.Start;
 begin
   inherited;
 
   TProtectedX2CustomMenuBar(MenuBar).InternalSetExpanded(FGroup, FExpanding);
-  Terminate();
+  Terminate;
 end;
 
 
@@ -363,13 +363,12 @@ begin
 end;
 
 
-procedure TX2MenuBarSelectAction.Start();
+procedure TX2MenuBarSelectAction.Start;
 begin
   inherited;
 
   TProtectedX2CustomMenuBar(MenuBar).InternalSetSelected(FItem);
-  Terminate();
+  Terminate;
 end;
 
 end.
-

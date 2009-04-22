@@ -1,3 +1,215 @@
+{$A8,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
+{$MINSTACKSIZE $00004000}
+{$MAXSTACKSIZE $00100000}
+{$IMAGEBASE $00400000}
+{$APPTYPE GUI}
+{$WARN SYMBOL_DEPRECATED ON}
+{$WARN SYMBOL_LIBRARY ON}
+{$WARN SYMBOL_PLATFORM ON}
+{$WARN UNIT_LIBRARY ON}
+{$WARN UNIT_PLATFORM ON}
+{$WARN UNIT_DEPRECATED ON}
+{$WARN HRESULT_COMPAT ON}
+{$WARN HIDING_MEMBER ON}
+{$WARN HIDDEN_VIRTUAL ON}
+{$WARN GARBAGE ON}
+{$WARN BOUNDS_ERROR ON}
+{$WARN ZERO_NIL_COMPAT ON}
+{$WARN STRING_CONST_TRUNCED ON}
+{$WARN FOR_LOOP_VAR_VARPAR ON}
+{$WARN TYPED_CONST_VARPAR ON}
+{$WARN ASG_TO_TYPED_CONST ON}
+{$WARN CASE_LABEL_RANGE ON}
+{$WARN FOR_VARIABLE ON}
+{$WARN CONSTRUCTING_ABSTRACT ON}
+{$WARN COMPARISON_FALSE ON}
+{$WARN COMPARISON_TRUE ON}
+{$WARN COMPARING_SIGNED_UNSIGNED ON}
+{$WARN COMBINING_SIGNED_UNSIGNED ON}
+{$WARN UNSUPPORTED_CONSTRUCT ON}
+{$WARN FILE_OPEN ON}
+{$WARN FILE_OPEN_UNITSRC ON}
+{$WARN BAD_GLOBAL_SYMBOL ON}
+{$WARN DUPLICATE_CTOR_DTOR ON}
+{$WARN INVALID_DIRECTIVE ON}
+{$WARN PACKAGE_NO_LINK ON}
+{$WARN PACKAGED_THREADVAR ON}
+{$WARN IMPLICIT_IMPORT ON}
+{$WARN HPPEMIT_IGNORED ON}
+{$WARN NO_RETVAL ON}
+{$WARN USE_BEFORE_DEF ON}
+{$WARN FOR_LOOP_VAR_UNDEF ON}
+{$WARN UNIT_NAME_MISMATCH ON}
+{$WARN NO_CFG_FILE_FOUND ON}
+{$WARN MESSAGE_DIRECTIVE ON}
+{$WARN IMPLICIT_VARIANTS ON}
+{$WARN UNICODE_TO_LOCALE ON}
+{$WARN LOCALE_TO_UNICODE ON}
+{$WARN IMAGEBASE_MULTIPLE ON}
+{$WARN SUSPICIOUS_TYPECAST ON}
+{$WARN PRIVATE_PROPACCESSOR ON}
+{$WARN UNSAFE_TYPE OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_CAST OFF}
+{$A8,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
+{$MINSTACKSIZE $00004000}
+{$MAXSTACKSIZE $00100000}
+{$IMAGEBASE $00400000}
+{$APPTYPE GUI}
+{$WARN SYMBOL_DEPRECATED ON}
+{$WARN SYMBOL_LIBRARY ON}
+{$WARN SYMBOL_PLATFORM ON}
+{$WARN UNIT_LIBRARY ON}
+{$WARN UNIT_PLATFORM ON}
+{$WARN UNIT_DEPRECATED ON}
+{$WARN HRESULT_COMPAT ON}
+{$WARN HIDING_MEMBER ON}
+{$WARN HIDDEN_VIRTUAL ON}
+{$WARN GARBAGE ON}
+{$WARN BOUNDS_ERROR ON}
+{$WARN ZERO_NIL_COMPAT ON}
+{$WARN STRING_CONST_TRUNCED ON}
+{$WARN FOR_LOOP_VAR_VARPAR ON}
+{$WARN TYPED_CONST_VARPAR ON}
+{$WARN ASG_TO_TYPED_CONST ON}
+{$WARN CASE_LABEL_RANGE ON}
+{$WARN FOR_VARIABLE ON}
+{$WARN CONSTRUCTING_ABSTRACT ON}
+{$WARN COMPARISON_FALSE ON}
+{$WARN COMPARISON_TRUE ON}
+{$WARN COMPARING_SIGNED_UNSIGNED ON}
+{$WARN COMBINING_SIGNED_UNSIGNED ON}
+{$WARN UNSUPPORTED_CONSTRUCT ON}
+{$WARN FILE_OPEN ON}
+{$WARN FILE_OPEN_UNITSRC ON}
+{$WARN BAD_GLOBAL_SYMBOL ON}
+{$WARN DUPLICATE_CTOR_DTOR ON}
+{$WARN INVALID_DIRECTIVE ON}
+{$WARN PACKAGE_NO_LINK ON}
+{$WARN PACKAGED_THREADVAR ON}
+{$WARN IMPLICIT_IMPORT ON}
+{$WARN HPPEMIT_IGNORED ON}
+{$WARN NO_RETVAL ON}
+{$WARN USE_BEFORE_DEF ON}
+{$WARN FOR_LOOP_VAR_UNDEF ON}
+{$WARN UNIT_NAME_MISMATCH ON}
+{$WARN NO_CFG_FILE_FOUND ON}
+{$WARN MESSAGE_DIRECTIVE ON}
+{$WARN IMPLICIT_VARIANTS ON}
+{$WARN UNICODE_TO_LOCALE ON}
+{$WARN LOCALE_TO_UNICODE ON}
+{$WARN IMAGEBASE_MULTIPLE ON}
+{$WARN SUSPICIOUS_TYPECAST ON}
+{$WARN PRIVATE_PROPACCESSOR ON}
+{$WARN UNSAFE_TYPE OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_CAST OFF}
+{$A8,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
+{$MINSTACKSIZE $00004000}
+{$MAXSTACKSIZE $00100000}
+{$IMAGEBASE $00400000}
+{$APPTYPE GUI}
+{$WARN SYMBOL_DEPRECATED ON}
+{$WARN SYMBOL_LIBRARY ON}
+{$WARN SYMBOL_PLATFORM ON}
+{$WARN UNIT_LIBRARY ON}
+{$WARN UNIT_PLATFORM ON}
+{$WARN UNIT_DEPRECATED ON}
+{$WARN HRESULT_COMPAT ON}
+{$WARN HIDING_MEMBER ON}
+{$WARN HIDDEN_VIRTUAL ON}
+{$WARN GARBAGE ON}
+{$WARN BOUNDS_ERROR ON}
+{$WARN ZERO_NIL_COMPAT ON}
+{$WARN STRING_CONST_TRUNCED ON}
+{$WARN FOR_LOOP_VAR_VARPAR ON}
+{$WARN TYPED_CONST_VARPAR ON}
+{$WARN ASG_TO_TYPED_CONST ON}
+{$WARN CASE_LABEL_RANGE ON}
+{$WARN FOR_VARIABLE ON}
+{$WARN CONSTRUCTING_ABSTRACT ON}
+{$WARN COMPARISON_FALSE ON}
+{$WARN COMPARISON_TRUE ON}
+{$WARN COMPARING_SIGNED_UNSIGNED ON}
+{$WARN COMBINING_SIGNED_UNSIGNED ON}
+{$WARN UNSUPPORTED_CONSTRUCT ON}
+{$WARN FILE_OPEN ON}
+{$WARN FILE_OPEN_UNITSRC ON}
+{$WARN BAD_GLOBAL_SYMBOL ON}
+{$WARN DUPLICATE_CTOR_DTOR ON}
+{$WARN INVALID_DIRECTIVE ON}
+{$WARN PACKAGE_NO_LINK ON}
+{$WARN PACKAGED_THREADVAR ON}
+{$WARN IMPLICIT_IMPORT ON}
+{$WARN HPPEMIT_IGNORED ON}
+{$WARN NO_RETVAL ON}
+{$WARN USE_BEFORE_DEF ON}
+{$WARN FOR_LOOP_VAR_UNDEF ON}
+{$WARN UNIT_NAME_MISMATCH ON}
+{$WARN NO_CFG_FILE_FOUND ON}
+{$WARN MESSAGE_DIRECTIVE ON}
+{$WARN IMPLICIT_VARIANTS ON}
+{$WARN UNICODE_TO_LOCALE ON}
+{$WARN LOCALE_TO_UNICODE ON}
+{$WARN IMAGEBASE_MULTIPLE ON}
+{$WARN SUSPICIOUS_TYPECAST ON}
+{$WARN PRIVATE_PROPACCESSOR ON}
+{$WARN UNSAFE_TYPE OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_CAST OFF}
+{$A8,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
+{$MINSTACKSIZE $00004000}
+{$MAXSTACKSIZE $00100000}
+{$IMAGEBASE $00400000}
+{$APPTYPE GUI}
+{$WARN SYMBOL_DEPRECATED ON}
+{$WARN SYMBOL_LIBRARY ON}
+{$WARN SYMBOL_PLATFORM ON}
+{$WARN UNIT_LIBRARY ON}
+{$WARN UNIT_PLATFORM ON}
+{$WARN UNIT_DEPRECATED ON}
+{$WARN HRESULT_COMPAT ON}
+{$WARN HIDING_MEMBER ON}
+{$WARN HIDDEN_VIRTUAL ON}
+{$WARN GARBAGE ON}
+{$WARN BOUNDS_ERROR ON}
+{$WARN ZERO_NIL_COMPAT ON}
+{$WARN STRING_CONST_TRUNCED ON}
+{$WARN FOR_LOOP_VAR_VARPAR ON}
+{$WARN TYPED_CONST_VARPAR ON}
+{$WARN ASG_TO_TYPED_CONST ON}
+{$WARN CASE_LABEL_RANGE ON}
+{$WARN FOR_VARIABLE ON}
+{$WARN CONSTRUCTING_ABSTRACT ON}
+{$WARN COMPARISON_FALSE ON}
+{$WARN COMPARISON_TRUE ON}
+{$WARN COMPARING_SIGNED_UNSIGNED ON}
+{$WARN COMBINING_SIGNED_UNSIGNED ON}
+{$WARN UNSUPPORTED_CONSTRUCT ON}
+{$WARN FILE_OPEN ON}
+{$WARN FILE_OPEN_UNITSRC ON}
+{$WARN BAD_GLOBAL_SYMBOL ON}
+{$WARN DUPLICATE_CTOR_DTOR ON}
+{$WARN INVALID_DIRECTIVE ON}
+{$WARN PACKAGE_NO_LINK ON}
+{$WARN PACKAGED_THREADVAR ON}
+{$WARN IMPLICIT_IMPORT ON}
+{$WARN HPPEMIT_IGNORED ON}
+{$WARN NO_RETVAL ON}
+{$WARN USE_BEFORE_DEF ON}
+{$WARN FOR_LOOP_VAR_UNDEF ON}
+{$WARN UNIT_NAME_MISMATCH ON}
+{$WARN NO_CFG_FILE_FOUND ON}
+{$WARN MESSAGE_DIRECTIVE ON}
+{$WARN IMPLICIT_VARIANTS ON}
+{$WARN UNICODE_TO_LOCALE ON}
+{$WARN LOCALE_TO_UNICODE ON}
+{$WARN IMAGEBASE_MULTIPLE ON}
+{$WARN SUSPICIOUS_TYPECAST ON}
+{$WARN PRIVATE_PROPACCESSOR ON}
+{$WARN UNSAFE_TYPE OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_CAST OFF}
 {
   :: Implements a Uname-IT-style painter for the X2MenuBar.
   ::
@@ -24,7 +236,7 @@ type
   private
     FOnChange: TNotifyEvent;
   protected
-    procedure Changed();
+    procedure Changed;
   public
     property OnChange:    TNotifyEvent  read FOnChange  write FOnChange;
   end;
@@ -41,10 +253,10 @@ type
     FNormal:            TColor;
     FSelected:          TColor;
 
-    function IsDisabledStored(): Boolean;
-    function IsHotStored(): Boolean;
-    function IsNormalStored(): Boolean;
-    function IsSelectedStored(): Boolean;
+    function IsDisabledStored: Boolean;
+    function IsHotStored: Boolean;
+    function IsNormalStored: Boolean;
+    function IsSelectedStored: Boolean;
     procedure SetDisabled(const Value: TColor);
     procedure SetHot(const Value: TColor);
     procedure SetNormal(const Value: TColor);
@@ -78,7 +290,7 @@ type
   protected
     procedure ColorChange(Sender: TObject);
   public
-    constructor Create();
+    constructor Create;
     destructor Destroy; override;
 
     procedure Assign(Source: TPersistent); override;
@@ -115,7 +327,7 @@ type
     procedure SetImageOffsetX(const Value: Integer);
     procedure SetImageOffsetY(const Value: Integer);
   public
-    constructor Create();
+    constructor Create;
 
     procedure Assign(Source: TPersistent); override;
   published
@@ -133,19 +345,26 @@ type
   end;
 
 
+  THorzAlignment  = (haLeft, haCenter, haRight);
+  TVertAlignment  = (vaTop, vaCenter, vaBottom);
+
+
   TX2MenuBarunaPainter = class(TX2CustomMenuBarPainter)
   private
-    FArrowColor:      TColor;
-    FBlurShadow:      Boolean;
-    FColor:           TColor;
-    FGroupColors:     TX2MenuBarunaGroupColors;
-    FItemColors:      TX2MenuBarunaColor;
-    FMetrics:         TX2MenuBarunaMetrics;
-    FShadowColor:     TColor;
-    FShadowOffset:    Integer;
-    FGroupGradient:   Integer;
-    FArrowImages:     TCustomImageList;
-    FArrowImageIndex: TImageIndex;
+    FArrowColor:                TColor;
+    FBlurShadow:                Boolean;
+    FColor:                     TColor;
+    FGroupColors:               TX2MenuBarunaGroupColors;
+    FItemColors:                TX2MenuBarunaColor;
+    FMetrics:                   TX2MenuBarunaMetrics;
+    FShadowColor:               TColor;
+    FShadowOffset:              Integer;
+    FGroupGradient:             Integer;
+    FArrowImages:               TCustomImageList;
+    FArrowImageIndex:           TImageIndex;
+    FBackground:                TPicture;
+    FBackgroundHorzAlignment:   THorzAlignment;
+    FBackgroundVertAlignment:   TVertAlignment;
 
     procedure SetBlurShadow(const Value: Boolean);
     procedure SetGroupColors(const Value: TX2MenuBarunaGroupColors);
@@ -156,17 +375,22 @@ type
     procedure SetGroupGradient(const Value: Integer);
     procedure SetArrowImageIndex(const Value: TImageIndex);
     procedure SetArrowImages(const Value: TCustomImageList);
+    procedure SetBackground(const Value: TPicture);
+    procedure SetBackgroundHorzAlignment(const Value: THorzAlignment);
+    procedure SetBackgroundVertAlignment(const Value: TVertAlignment);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
-    function HasArrowImage(): Boolean;
+    function HasArrowImage: Boolean;
 
     function ApplyMargins(const ABounds: TRect): TRect; override;
+    function UndoMargins(const ABounds: TRect): TRect; override;
+
     function GetSpacing(AElement: TX2MenuBarSpacingElement): Integer; override;
     function GetGroupHeaderHeight(AGroup: TX2MenuBarGroup): Integer; override;
     function GetItemHeight(AItem: TX2MenuBarItem): Integer; override;
 
-    procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect); override;
+    procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect; const AOffset: TPoint); override;
     procedure DrawGroupHeader(ACanvas: TCanvas; AGroup: TX2MenuBarGroup; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
     procedure DrawItem(ACanvas: TCanvas; AItem: TX2MenuBarItem; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
     procedure DrawArrow(ACanvas: TCanvas; ABounds: TRect);
@@ -174,21 +398,24 @@ type
     procedure ColorChange(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy(); override;
+    destructor Destroy; override;
 
-    procedure ResetColors();
+    procedure ResetColors;
   published
-    property ArrowImageIndex:     TImageIndex               read FArrowImageIndex     write SetArrowImageIndex      default -1;
-    property ArrowImages:         TCustomImageList          read FArrowImages         write SetArrowImages;
-    property ArrowColor:          TColor                    read FArrowColor          write FArrowColor             default clBlue;
-    property BlurShadow:          Boolean                   read FBlurShadow          write SetBlurShadow           default True;
-    property Color:               TColor                    read FColor               write FColor                  default clWindow;
-    property GroupColors:         TX2MenuBarunaGroupColors  read FGroupColors         write SetGroupColors;
-    property ItemColors:          TX2MenuBarunaColor        read FItemColors          write SetItemColors;
-    property Metrics:             TX2MenuBarunaMetrics      read FMetrics             write SetMetrics;
-    property ShadowColor:         TColor                    read FShadowColor         write SetShadowColor          default clBtnShadow;
-    property ShadowOffset:        Integer                   read FShadowOffset        write SetShadowOffset         default 2;
-    property GroupGradient:       Integer                   read FGroupGradient       write SetGroupGradient        default 0;
+    property ArrowColor:              TColor                    read FArrowColor              write FArrowColor                 default clBlue;
+    property ArrowImageIndex:         TImageIndex               read FArrowImageIndex         write SetArrowImageIndex          default -1;
+    property ArrowImages:             TCustomImageList          read FArrowImages             write SetArrowImages;
+    property Background:              TPicture                  read FBackground              write SetBackground;
+    property BackgroundHorzAlignment: THorzAlignment            read FBackgroundHorzAlignment write SetBackgroundHorzAlignment  default haLeft;
+    property BackgroundVertAlignment: TVertAlignment            read FBackgroundVertAlignment write SetBackgroundVertAlignment  default vaTop;
+    property BlurShadow:              Boolean                   read FBlurShadow              write SetBlurShadow               default True;
+    property Color:                   TColor                    read FColor                   write FColor                      default clWindow;
+    property GroupColors:             TX2MenuBarunaGroupColors  read FGroupColors             write SetGroupColors;
+    property GroupGradient:           Integer                   read FGroupGradient           write SetGroupGradient            default 0;
+    property ItemColors:              TX2MenuBarunaColor        read FItemColors              write SetItemColors;
+    property Metrics:                 TX2MenuBarunaMetrics      read FMetrics                 write SetMetrics;
+    property ShadowColor:             TColor                    read FShadowColor             write SetShadowColor              default clBtnShadow;
+    property ShadowOffset:            Integer                   read FShadowOffset            write SetShadowOffset             default 2;
   end;
 
 implementation
@@ -221,7 +448,7 @@ var
 
 begin
   ASource.PixelFormat := pf32bit;
-  refBitmap           := Graphics.TBitmap.Create();
+  refBitmap           := Graphics.TBitmap.Create;
   try
     refBitmap.Assign(ASource);
 
@@ -297,7 +524,7 @@ end;
 
 
 { TX2MenuBarunaMetrics }
-constructor TX2MenuBarunaMetrics.Create();
+constructor TX2MenuBarunaMetrics.Create;
 begin
   inherited;
 
@@ -338,7 +565,7 @@ begin
   if Value <> FAfterGroupHeader then
   begin
     FAfterGroupHeader := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -347,7 +574,7 @@ begin
   if Value <> FAfterItem then
   begin
     FAfterItem := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -356,7 +583,7 @@ begin
   if Value <> FAfterLastItem then
   begin
     FAfterLastItem := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -365,7 +592,7 @@ begin
   if Value <> FBeforeFirstItem then
   begin
     FBeforeFirstItem := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -374,7 +601,7 @@ begin
   if Value <> FBeforeGroupHeader then
   begin
     FBeforeGroupHeader := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -383,7 +610,7 @@ begin
   if Value <> FBeforeItem then
   begin
     FBeforeItem := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -392,7 +619,7 @@ begin
   if Value <> FGroupHeight then
   begin
     FGroupHeight := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -401,7 +628,7 @@ begin
   if Value <> FItemHeight then
   begin
     FItemHeight := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -410,7 +637,7 @@ begin
   if Value <> FMargin then
   begin
     FMargin := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -420,7 +647,7 @@ begin
   if Value <> FImageOffsetX then
   begin
     FImageOffsetX := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -430,7 +657,7 @@ begin
   if Value <> FImageOffsetY then
   begin
     FImageOffsetY := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -442,21 +669,26 @@ begin
 
   FArrowImageIndex  := -1;
   FBlurShadow       := True;
-  FGroupColors      := TX2MenuBarunaGroupColors.Create();
-  FItemColors       := TX2MenuBarunaColor.Create();
-  FMetrics          := TX2MenuBarunaMetrics.Create();
+  FGroupColors      := TX2MenuBarunaGroupColors.Create;
+  FItemColors       := TX2MenuBarunaColor.Create;
+  FMetrics          := TX2MenuBarunaMetrics.Create;
   FShadowOffset     := 2;
+
+  FBackground               := TPicture.Create;
+  FBackgroundHorzAlignment  := haLeft;
+  FBackgroundVertAlignment  := vaTop;
 
   FGroupColors.OnChange := ColorChange;
   FItemColors.OnChange  := ColorChange;
   FMetrics.OnChange     := ColorChange;
 
-  ResetColors();
+  ResetColors;
 end;
 
-destructor TX2MenuBarunaPainter.Destroy();
+destructor TX2MenuBarunaPainter.Destroy;
 begin
   SetArrowImages(nil);
+  FreeAndNil(FBackground);
   FreeAndNil(FMetrics);
   FreeAndNil(FItemColors);
   FreeAndNil(FGroupColors);
@@ -465,7 +697,7 @@ begin
 end;
 
 
-procedure TX2MenuBarunaPainter.ResetColors();
+procedure TX2MenuBarunaPainter.ResetColors;
 const
   PurpleBlue = $00BE6363;
 
@@ -497,7 +729,7 @@ begin
   if Value <> FBlurShadow then
   begin
     FBlurShadow := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -507,6 +739,14 @@ begin
   Result  := inherited ApplyMargins(ABounds);
   InflateRect(Result, -Metrics.Margin, -Metrics.Margin);
 end;
+
+
+function TX2MenuBarunaPainter.UndoMargins(const ABounds: TRect): TRect;
+begin
+  Result  := inherited UndoMargins(ABounds);
+  InflateRect(Result, Metrics.Margin, Metrics.Margin);
+end;
+
 
 function TX2MenuBarunaPainter.GetSpacing(AElement: TX2MenuBarSpacingElement): Integer;
 begin
@@ -534,11 +774,37 @@ end;
 
 
 procedure TX2MenuBarunaPainter.DrawBackground(ACanvas: TCanvas;
-                                              const ABounds: TRect);
+                                              const ABounds: TRect;
+                                              const AOffset: TPoint);
+var
+  pos: TPoint;
+
 begin
   ACanvas.Brush.Color := Self.Color;
   ACanvas.FillRect(ABounds);
+
+  if (Background.Width > 0) and
+     (Background.Height > 0) then
+  begin
+    case BackgroundHorzAlignment of
+      haLeft:   pos.X := 0;
+      haCenter: pos.X := (MenuBar.ClientWidth - Background.Width) div 2;
+      haRight:  pos.X := ABounds.Right - Background.Width;
+    end;
+
+    case BackgroundVertAlignment of
+      vaTop:    pos.Y := 0;
+      vaCenter: pos.Y := (MenuBar.ClientHeight - Background.Height) div 2;
+      vaBottom: pos.Y := MenuBar.ClientHeight - Background.Height;
+    end;
+
+    Dec(pos.X, AOffset.X);
+    Dec(pos.Y, AOffset.Y);
+
+    ACanvas.Draw(pos.X, pos.Y, Background.Graphic);
+  end;
 end;
+
 
 procedure TX2MenuBarunaPainter.DrawGroupHeader(ACanvas: TCanvas;
                                                AGroup: TX2MenuBarGroup;
@@ -579,6 +845,7 @@ var
   clipRegion:       HRGN;
   startColor:       TColor;
   endColor:         TColor;
+  groupOffset:      TPoint;
 
 begin
   if not ((mdsSelected in AState) or (mdsGroupSelected in AState)) then
@@ -586,14 +853,16 @@ begin
     { Shadow }
     if BlurShadow then
     begin
-      shadowBitmap  := Graphics.TBitmap.Create();
+      shadowBitmap  := Graphics.TBitmap.Create;
       try
         shadowBitmap.PixelFormat  := pf32bit;
         shadowBitmap.Width        := (ABounds.Right - ABounds.Left + (ShadowMargin * 2));
         shadowBitmap.Height       := (ABounds.Bottom - ABounds.Top + (ShadowMargin * 2));
 
-        DrawBackground(shadowBitmap.Canvas, Rect(0, 0, shadowBitmap.Width,
-                                                 shadowBitmap.Height));
+        shadowBounds  := Rect(0, 0, shadowBitmap.Width, shadowBitmap.Height);
+        groupOffset   := ABounds.TopLeft;
+
+        DrawBackground(shadowBitmap.Canvas, shadowBounds, groupOffset);
         DrawShadowOutline(shadowBitmap.Canvas, Rect(0, 0, shadowBitmap.Width - (ShadowMargin * 2),
                           shadowBitmap.Height - (ShadowMargin * 2)));
 
@@ -690,7 +959,7 @@ var
 begin
   focusBounds := ABounds;
 
-  if HasArrowImage() then
+  if HasArrowImage then
     Dec(focusBounds.Right, ArrowImages.Width + ArrowMargin)
   else
     Dec(focusBounds.Right, ArrowWidth + ArrowMargin);
@@ -727,7 +996,7 @@ var
   arrowPoints:  array[0..2] of TPoint;
 
 begin
-  if HasArrowImage() then
+  if HasArrowImage then
   begin
     arrowX := ABounds.Right - ArrowImages.Width;
     arrowY := ABounds.Top + ((ABounds.Bottom - ABounds.Top - ArrowImages.Height) div 2);
@@ -750,11 +1019,11 @@ end;
 
 procedure TX2MenuBarunaPainter.ColorChange(Sender: TObject);
 begin
-  NotifyObservers();
+  NotifyObservers;
 end;
 
 
-function TX2MenuBarunaPainter.HasArrowImage(): Boolean;
+function TX2MenuBarunaPainter.HasArrowImage: Boolean;
 begin
   Result := Assigned(ArrowImages) and (ArrowImageIndex > -1);
 end;
@@ -774,7 +1043,7 @@ begin
   if Value <> FGroupColors then
   begin
     FGroupColors.Assign(Value);
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -783,7 +1052,7 @@ begin
   if Value <> FItemColors then
   begin
     FItemColors.Assign(Value);
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -792,7 +1061,7 @@ begin
   if Value <> FMetrics then
   begin
     FMetrics.Assign(Value);
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -801,7 +1070,7 @@ begin
   if Value <> FShadowColor then
   begin
     FShadowColor := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -810,7 +1079,7 @@ begin
   if Value <> FShadowOffset then
   begin
     FShadowOffset := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -820,7 +1089,7 @@ begin
   if Value <> FGroupGradient then
   begin
     FGroupGradient := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -830,7 +1099,7 @@ begin
   if Value <> FArrowImageIndex then
   begin
     FArrowImageIndex := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -847,13 +1116,40 @@ begin
     if Assigned(FArrowImages) then
       FArrowImages.FreeNotification(Self);
 
-    NotifyObservers();
+    NotifyObservers;
+  end;
+end;
+
+
+procedure TX2MenuBarunaPainter.SetBackground(const Value: TPicture);
+begin
+  FBackground.Assign(Value);
+  NotifyObservers;
+end;
+
+
+procedure TX2MenuBarunaPainter.SetBackgroundHorzAlignment(const Value: THorzAlignment);
+begin
+  if Value <> FBackgroundHorzAlignment then
+  begin
+    FBackgroundHorzAlignment := Value;
+    NotifyObservers;
+  end;
+end;
+
+
+procedure TX2MenuBarunaPainter.SetBackgroundVertAlignment(const Value: TVertAlignment);
+begin
+  if Value <> FBackgroundVertAlignment then
+  begin
+    FBackgroundVertAlignment := Value;
+    NotifyObservers;
   end;
 end;
 
 
 { TX2MenuBarunaProperty }
-procedure TX2MenuBarunaProperty.Changed();
+procedure TX2MenuBarunaProperty.Changed;
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);
@@ -879,22 +1175,22 @@ begin
     inherited;
 end;
 
-function TX2MenuBarunaColor.IsDisabledStored(): Boolean;
+function TX2MenuBarunaColor.IsDisabledStored: Boolean;
 begin
   Result  := (FDisabled <> FDefaultDisabled);
 end;
 
-function TX2MenuBarunaColor.IsHotStored(): Boolean;
+function TX2MenuBarunaColor.IsHotStored: Boolean;
 begin
   Result  := (FHot <> FDefaultHot);
 end;
 
-function TX2MenuBarunaColor.IsNormalStored(): Boolean;
+function TX2MenuBarunaColor.IsNormalStored: Boolean;
 begin
   Result  := (FNormal <> FDefaultNormal);
 end;
 
-function TX2MenuBarunaColor.IsSelectedStored(): Boolean;
+function TX2MenuBarunaColor.IsSelectedStored: Boolean;
 begin
   Result  := (FSelected <> FDefaultSelected);
 end;
@@ -916,7 +1212,7 @@ begin
   if Value <> FDisabled then
   begin
     FDisabled := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -925,7 +1221,7 @@ begin
   if Value <> FHot then
   begin
     FHot := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -934,7 +1230,7 @@ begin
   if Value <> FNormal then
   begin
     FNormal := Value;
-    Changed();
+    Changed;
   end;
 end;
 
@@ -943,26 +1239,26 @@ begin
   if Value <> FSelected then
   begin
     FSelected := Value;
-    Changed();
+    Changed;
   end;
 end;
 
 
 { TX2MenuBarunaGroupColors }
-constructor TX2MenuBarunaGroupColors.Create();
+constructor TX2MenuBarunaGroupColors.Create;
 begin
   inherited;
 
-  FBorder := TX2MenuBarunaColor.Create();
-  FFill   := TX2MenuBarunaColor.Create();
-  FText   := TX2MenuBarunaColor.Create();
+  FBorder := TX2MenuBarunaColor.Create;
+  FFill   := TX2MenuBarunaColor.Create;
+  FText   := TX2MenuBarunaColor.Create;
 
   FBorder.OnChange  := ColorChange;
   FFill.OnChange    := ColorChange;
   FText.OnChange    := ColorChange;
 end;
 
-destructor TX2MenuBarunaGroupColors.Destroy();
+destructor TX2MenuBarunaGroupColors.Destroy;
 begin
   FreeAndNil(FText);
   FreeAndNil(FFill);
@@ -988,7 +1284,7 @@ end;
 
 procedure TX2MenuBarunaGroupColors.ColorChange(Sender: TObject);
 begin
-  Changed();
+  Changed;
 end;
 
 
@@ -997,7 +1293,7 @@ begin
   if Value <> FBorder then
   begin
     FBorder.Assign(Value);
-    Changed();
+    Changed;
   end;
 end;
 
@@ -1006,7 +1302,7 @@ begin
   if Value <> FFill then
   begin
     FFill.Assign(Value);
-    Changed();
+    Changed;
   end;
 end;
 
@@ -1015,7 +1311,7 @@ begin
   if Value <> FText then
   begin
     FText.Assign(Value);
-    Changed();
+    Changed;
   end;
 end;
 

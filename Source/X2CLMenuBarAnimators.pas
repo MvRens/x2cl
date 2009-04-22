@@ -27,9 +27,9 @@ type
   private
     FSlideHeight:     Integer;
   protected
-    function GetHeight(): Integer; override;
+    function GetHeight: Integer; override;
   public
-    procedure Update(); override;
+    procedure Update; override;
     procedure Draw(ACanvas: TCanvas; const ABounds: TRect); override;
   end;
 
@@ -47,10 +47,10 @@ type
     property ItemsState:    Graphics.TBitmap  read FItemsState;
     property Mask:          Graphics.TBitmap  read FMask;
   public
-    constructor Create(AItemsBuffer: Graphics.TBitmap); override;
-    destructor Destroy(); override;
+    constructor Create(AItemsBuffer: TX2CustomMenuBarAnimatorBuffer); override;
+    destructor Destroy; override;
 
-    procedure Update(); override;
+    procedure Update; override;
     procedure Draw(ACanvas: TCanvas; const ABounds: TRect); override;
   end;
 
@@ -61,9 +61,7 @@ type
   private
     FAlpha:     Byte;
   public
-    constructor Create(AItemsBuffer: Graphics.TBitmap); override;
-
-    procedure Update(); override;
+    procedure Update; override;
     procedure Draw(ACanvas: TCanvas; const ABounds: TRect); override;
   end;
 
@@ -74,9 +72,9 @@ type
   private
     FSlideHeight:       Integer;
   protected
-    function GetHeight(): Integer; override;
+    function GetHeight: Integer; override;
   public
-    procedure Update(); override;
+    procedure Update; override;
  end;
 
 implementation
@@ -87,12 +85,12 @@ uses
   
 
 { TX2MenuBarSlideAnimator }
-function TX2MenuBarSlideAnimator.GetHeight(): Integer;
+function TX2MenuBarSlideAnimator.GetHeight: Integer;
 begin
   Result  := FSlideHeight;
 end;
 
-procedure TX2MenuBarSlideAnimator.Update();
+procedure TX2MenuBarSlideAnimator.Update;
 var
   elapsed:      Cardinal;
 
@@ -108,7 +106,7 @@ begin
     FSlideHeight  := 0;
 
   if elapsed >= AnimationTime then
-    Terminate();
+    Terminate;
 end;
 
 procedure TX2MenuBarSlideAnimator.Draw(ACanvas: TCanvas; const ABounds: TRect);
@@ -121,12 +119,12 @@ begin
   destRect          := ABounds;
   destRect.Bottom   := destRect.Top + FSlideHeight;
 
-  ACanvas.CopyRect(destRect, ItemsBuffer.Canvas, sourceRect);
+  ACanvas.CopyRect(destRect, ItemsBuffer.Bitmap.Canvas, sourceRect);
 end;
 
 
 { TX2MenuBarDissolveAnimator }
-constructor TX2MenuBarDissolveAnimator.Create(AItemsBuffer: Graphics.TBitmap);
+constructor TX2MenuBarDissolveAnimator.Create(AItemsBuffer: TX2CustomMenuBarAnimatorBuffer);
 var
   pixelIndex:   Integer;
   pixelPos:     Integer;
@@ -138,20 +136,20 @@ begin
   { The bitmaps need to be 32-bits since we'll be accessing the scanlines as
     one big array, not by using Scanline on each row. In 24-bit mode, the
     scanlines are still aligned on a 32-bits boundary, thus causing problems. }
-  ItemsBuffer.PixelFormat := pf32bit;
+  ItemsBuffer.Bitmap.PixelFormat  := pf32bit;
 
-  FMask                   := Graphics.TBitmap.Create();
+  FMask                   := Graphics.TBitmap.Create;
   FMask.PixelFormat       := pf32bit;
   FMask.Width             := AItemsBuffer.Width;
   FMask.Height            := AItemsBuffer.Height;
 
-  FItemsState             := Graphics.TBitmap.Create();
+  FItemsState             := Graphics.TBitmap.Create;
   FItemsState.PixelFormat := pf32bit;
   FItemsState.Width       := AItemsBuffer.Width;
   FItemsState.Height      := AItemsBuffer.Height;
 
   if RandSeed = 0 then
-    Randomize();
+    Randomize;
 
   { Prepare an array of pixel indices which will be used to pick random
     unique pixels in the Update method.
@@ -160,7 +158,7 @@ begin
     be randomly picked and deleted in Update. Now we pre-shuffle the list,
     then Delete only from the end, which does not reallocate or move any
     memory (TList.Count decreases, Capacity stays the same), a LOT faster. }
-  FPixels                 := TList.Create();
+  FPixels                 := TList.Create;
   FPixels.Count           := AItemsBuffer.Width * AItemsBuffer.Height;
 
   for pixelIndex := Pred(FPixels.Count) downto 0 do
@@ -178,7 +176,7 @@ begin
   end;
 end;
 
-destructor TX2MenuBarDissolveAnimator.Destroy();
+destructor TX2MenuBarDissolveAnimator.Destroy;
 begin
   FreeAndNil(FItemsState);
   FreeAndNil(FMask); 
@@ -187,7 +185,7 @@ begin
 end;
 
 
-procedure TX2MenuBarDissolveAnimator.Update();
+procedure TX2MenuBarDissolveAnimator.Update;
 const
   RGBBlack:   TRGBQuad  = (rgbBlue:     0;
                            rgbGreen:    0;
@@ -225,7 +223,7 @@ begin
   itemsPixels     := nil;
 
   if Expanding then
-    itemsPixels   := GetScanlinePointer(ItemsBuffer);
+    itemsPixels   := GetScanlinePointer(ItemsBuffer.Bitmap);
 
   for pixel := Pred(FPixels.Count - pixelsRemaining) downto 0 do
   begin
@@ -248,7 +246,7 @@ begin
   end;
 
   if elapsed >= AnimationTime then
-    Terminate();
+    Terminate;
 end;
 
 procedure TX2MenuBarDissolveAnimator.Draw(ACanvas: TCanvas; const ABounds: TRect);
@@ -290,7 +288,7 @@ begin
   begin
     { Start with a visible group }
     FMask.Canvas.Brush.Color  := clBlack;
-    FItemsState.Canvas.Draw(0, 0, ItemsBuffer);
+    FItemsState.Canvas.Draw(0, 0, ItemsBuffer.Bitmap);
   end;
 
   FMask.Canvas.FillRect(Rect(0, 0, FMask.Width, FMask.Height));
@@ -300,15 +298,7 @@ end;
 
 
 { TX2MenuBarFadeAnimator }
-constructor TX2MenuBarFadeAnimator.Create(AItemsBuffer: Graphics.TBitmap);
-begin
-  inherited;
-
-  ItemsBuffer.PixelFormat := pf32bit;
-end;
-
-
-procedure TX2MenuBarFadeAnimator.Update();
+procedure TX2MenuBarFadeAnimator.Update;
 var
   elapsed:        Cardinal;
   newAlpha:       Integer;
@@ -326,7 +316,7 @@ begin
 
   FAlpha  := newAlpha;
   if elapsed >= AnimationTime then
-    Terminate();
+    Terminate;
 end;
 
 procedure TX2MenuBarFadeAnimator.Draw(ACanvas: TCanvas; const ABounds: TRect);
@@ -339,20 +329,21 @@ begin
   if ABounds.Bottom - ABounds.Top <= 0 then
     exit;
 
-  backBuffer  := Graphics.TBitmap.Create();
+  backBuffer  := Graphics.TBitmap.Create;
   try
     backBuffer.PixelFormat  := pf32bit;
     backBuffer.Width        := ItemsBuffer.Width;
     backBuffer.Height       := ItemsBuffer.Height;
 
-    destRect                := Rect(0, 0, backBuffer.Width, backBuffer.Height);
+    destRect                := Rect(0, 0, backBuffer.Width, ABounds.Bottom - ABounds.Top);
     backBuffer.Canvas.CopyRect(destRect, ACanvas, ABounds);
 
-    X2CLGraphics.DrawBlended(backBuffer, ItemsBuffer, FAlpha);
+    X2CLGraphics.DrawBlended(backBuffer, ItemsBuffer.Bitmap, FAlpha);
 
     sourceRect              := Rect(0, 0, ItemsBuffer.Width, Self.Height);
     destRect                := ABounds;
     destRect.Bottom         := destRect.Top + Self.Height;
+
     ACanvas.CopyRect(destRect, backBuffer.Canvas, sourceRect);
   finally
     FreeAndNil(backBuffer);
@@ -361,12 +352,12 @@ end;
 
 
 { TX2MenuBarSlideFadeAnimator }
-function TX2MenuBarSlideFadeAnimator.GetHeight(): Integer;
+function TX2MenuBarSlideFadeAnimator.GetHeight: Integer;
 begin
   Result  := FSlideHeight;
 end;
 
-procedure TX2MenuBarSlideFadeAnimator.Update();
+procedure TX2MenuBarSlideFadeAnimator.Update;
 var
   elapsed:      Cardinal;
 

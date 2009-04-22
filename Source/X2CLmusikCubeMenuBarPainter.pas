@@ -31,10 +31,10 @@ type
 
     procedure SetBorder(const Value: TX2Color32);
     procedure SetFill(const Value: TX2Color32);
-    function IsBorderStored(): Boolean;
-    function IsFillStored(): Boolean;
+    function IsBorderStored: Boolean;
+    function IsFillStored: Boolean;
   protected
-    procedure DoChange();
+    procedure DoChange;
 
     procedure SetDefaultColors(ABorder, AFill: TX2Color32);
 
@@ -59,13 +59,13 @@ type
     procedure SetNormal(const Value: TX2MenuBarmCColor);
     procedure SetSelected(const Value: TX2MenuBarmCColor);
   protected
-    procedure DoChange();
+    procedure DoChange;
     procedure ColorChange(Sender: TObject);
 
     property OnChange:    TNotifyEvent    read FOnChange  write FOnChange;
   public
-    constructor Create();
-    destructor Destroy(); override;
+    constructor Create;
+    destructor Destroy; override;
 
     procedure Assign(Source: TPersistent); override;
   published
@@ -99,14 +99,14 @@ type
     function GetGroupHeaderHeight(AGroup: TX2MenuBarGroup): Integer; override;
     function GetItemHeight(AItem: TX2MenuBarItem): Integer; override;
 
-    procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect); override;
+    procedure DrawBackground(ACanvas: TCanvas; const ABounds: TRect; const AOffset: TPoint); override;
     procedure DrawGroupHeader(ACanvas: TCanvas; AGroup: TX2MenuBarGroup; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
     procedure DrawItem(ACanvas: TCanvas; AItem: TX2MenuBarItem; const ABounds: TRect; AState: TX2MenuBarDrawStates); override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy(); override;
+    destructor Destroy; override;
 
-    procedure ResetColors();
+    procedure ResetColors;
   published
     property Color:           TColor              read FColor           write SetColor stored False;
     property GroupColors:     TX2MenuBarmCColors  read FGroupColors     write SetGroupColors stored False;
@@ -127,20 +127,20 @@ begin
   inherited;
 
   FColor            := clBtnFace;
-  FGroupColors      := TX2MenuBarmCColors.Create();
+  FGroupColors      := TX2MenuBarmCColors.Create;
   FGroupHeight      := 22;
-  FIndicatorColors  := TX2MenuBarmCColors.Create();
-  FItemColors       := TX2MenuBarmCColors.Create();
+  FIndicatorColors  := TX2MenuBarmCColors.Create;
+  FItemColors       := TX2MenuBarmCColors.Create;
   FItemHeight       := 22;
 
   FGroupColors.OnChange     := ColorChange;
   FIndicatorColors.OnChange := ColorChange;
   FItemColors.OnChange      := ColorChange;
 
-  ResetColors();
+  ResetColors;
 end;
 
-destructor TX2MenuBarmusikCubePainter.Destroy();
+destructor TX2MenuBarmusikCubePainter.Destroy;
 begin
   FreeAndNil(FItemColors);
   FreeAndNil(FIndicatorColors);
@@ -150,7 +150,7 @@ begin
 end;
 
 
-procedure TX2MenuBarmusikCubePainter.ResetColors();
+procedure TX2MenuBarmusikCubePainter.ResetColors;
 begin
   { Group buttons }
   GroupColors.Hot.SetDefaultColors(     Color32(clBtnShadow),
@@ -200,7 +200,7 @@ var
   destRect:         TRect;
 
 begin
-  backBuffer  := Graphics.TBitmap.Create();
+  backBuffer  := Graphics.TBitmap.Create;
   try
     backBuffer.PixelFormat  := pf32bit;
     backBuffer.Width        := AImageList.Width;
@@ -211,7 +211,7 @@ begin
     OffsetRect(sourceRect, AX, AY);
     backBuffer.Canvas.CopyRect(destRect, ACanvas, sourceRect);
 
-    iconBuffer  := Graphics.TBitmap.Create();
+    iconBuffer  := Graphics.TBitmap.Create;
     try
       iconBuffer.Assign(backBuffer);
       AImageList.Draw(iconBuffer.Canvas, 0, 0, AImageIndex);
@@ -240,7 +240,8 @@ end;
 
 
 procedure TX2MenuBarmusikCubePainter.DrawBackground(ACanvas: TCanvas;
-                                                    const ABounds: TRect);
+                                                    const ABounds: TRect;
+                                                    const AOffset: TPoint);
 begin
   with ACanvas do
   begin
@@ -355,7 +356,7 @@ end;
 
 procedure TX2MenuBarmusikCubePainter.ColorChange(Sender: TObject);
 begin
-  NotifyObservers();
+  NotifyObservers;
 end;
 
 
@@ -364,7 +365,7 @@ begin
   if Value <> FIndicatorColors then
   begin
     FIndicatorColors.Assign(Value);
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -373,7 +374,7 @@ begin
   if Value <> FItemColors then
   begin
     FItemColors.Assign(Value);
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -382,7 +383,7 @@ begin
   if Value <> FItemHeight then
   begin
     FItemHeight := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -391,7 +392,7 @@ begin
   if Value <> FColor then
   begin
     FColor := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -400,7 +401,7 @@ begin
   if Value <> FGroupColors then
   begin
     FGroupColors.Assign(Value);
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -409,7 +410,7 @@ begin
   if Value <> FGroupHeight then
   begin
     FGroupHeight := Value;
-    NotifyObservers();
+    NotifyObservers;
   end;
 end;
 
@@ -430,7 +431,7 @@ begin
 end;
 
 
-procedure TX2MenuBarmCColor.DoChange();
+procedure TX2MenuBarmCColor.DoChange;
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);
@@ -445,12 +446,12 @@ begin
 end;
 
 
-function TX2MenuBarmCColor.IsBorderStored(): Boolean;
+function TX2MenuBarmCColor.IsBorderStored: Boolean;
 begin
   Result  := (FBorder <> FDefaultBorder);
 end;
 
-function TX2MenuBarmCColor.IsFillStored(): Boolean;
+function TX2MenuBarmCColor.IsFillStored: Boolean;
 begin
   Result  := (FFill <> FDefaultFill);
 end;
@@ -460,7 +461,7 @@ begin
   if Value <> FBorder then
   begin
     FBorder := Value;
-    DoChange();
+    DoChange;
   end;
 end;
 
@@ -469,26 +470,26 @@ begin
   if Value <> FFill then
   begin
     FFill := Value;
-    DoChange();
+    DoChange;
   end;
 end;
 
 
 { TX2MenuBarmCColors }
-constructor TX2MenuBarmCColors.Create();
+constructor TX2MenuBarmCColors.Create;
 begin
   inherited;
 
-  FHot      := TX2MenuBarmCColor.Create();
-  FNormal   := TX2MenuBarmCColor.Create();
-  FSelected := TX2MenuBarmCColor.Create();
+  FHot      := TX2MenuBarmCColor.Create;
+  FNormal   := TX2MenuBarmCColor.Create;
+  FSelected := TX2MenuBarmCColor.Create;
 
   FHot.OnChange       := ColorChange;
   FNormal.OnChange    := ColorChange;
   FSelected.OnChange  := ColorChange;
 end;
 
-destructor TX2MenuBarmCColors.Destroy();
+destructor TX2MenuBarmCColors.Destroy;
 begin
   FreeAndNil(FSelected);
   FreeAndNil(FNormal);
@@ -511,7 +512,7 @@ begin
 end;
 
 
-procedure TX2MenuBarmCColors.DoChange();
+procedure TX2MenuBarmCColors.DoChange;
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);
@@ -519,7 +520,7 @@ end;
 
 procedure TX2MenuBarmCColors.ColorChange(Sender: TObject);
 begin
-  DoChange();
+  DoChange;
 end;
 
 
@@ -528,7 +529,7 @@ begin
   if FHot <> Value then
   begin
     FHot.Assign(Value);
-    DoChange();
+    DoChange;
   end;
 end;
 
@@ -537,7 +538,7 @@ begin
   if FNormal <> Value then
   begin
     FNormal.Assign(Value);
-    DoChange();
+    DoChange;
   end;
 end;
 
@@ -546,7 +547,7 @@ begin
   if FNormal <> Value then
   begin
     FSelected.Assign(Value);
-    DoChange();
+    DoChange;
   end;
 end;
 

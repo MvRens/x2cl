@@ -1,0 +1,64 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{3a4e1d27-aacb-4d4d-8812-c03e8125faf1}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Projects Include="Packages\D7\X2CLGL.dproj" />
+    <Projects Include="Packages\D7\X2CLGLD.dproj" />
+    <Projects Include="Packages\D7\X2CLMB.dproj" />
+    <Projects Include="Packages\D7\X2CLMBD.dproj" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Default.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+  <BorlandProject xmlns=""> <Default.Personality> </Default.Personality> </BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Target Name="X2CLGL">
+    <MSBuild Projects="Packages\D7\X2CLGL.dproj" Targets="" />
+  </Target>
+  <Target Name="X2CLGL:Clean">
+    <MSBuild Projects="Packages\D7\X2CLGL.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="X2CLGL:Make">
+    <MSBuild Projects="Packages\D7\X2CLGL.dproj" Targets="Make" />
+  </Target>
+  <Target Name="X2CLGLD">
+    <MSBuild Projects="Packages\D7\X2CLGLD.dproj" Targets="" />
+  </Target>
+  <Target Name="X2CLGLD:Clean">
+    <MSBuild Projects="Packages\D7\X2CLGLD.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="X2CLGLD:Make">
+    <MSBuild Projects="Packages\D7\X2CLGLD.dproj" Targets="Make" />
+  </Target>
+  <Target Name="X2CLMB">
+    <MSBuild Projects="Packages\D7\X2CLMB.dproj" Targets="" />
+  </Target>
+  <Target Name="X2CLMB:Clean">
+    <MSBuild Projects="Packages\D7\X2CLMB.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="X2CLMB:Make">
+    <MSBuild Projects="Packages\D7\X2CLMB.dproj" Targets="Make" />
+  </Target>
+  <Target Name="X2CLMBD">
+    <MSBuild Projects="Packages\D7\X2CLMBD.dproj" Targets="" />
+  </Target>
+  <Target Name="X2CLMBD:Clean">
+    <MSBuild Projects="Packages\D7\X2CLMBD.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="X2CLMBD:Make">
+    <MSBuild Projects="Packages\D7\X2CLMBD.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Build">
+    <CallTarget Targets="X2CLGL;X2CLGLD;X2CLMB;X2CLMBD" />
+  </Target>
+  <Target Name="Clean">
+    <CallTarget Targets="X2CLGL:Clean;X2CLGLD:Clean;X2CLMB:Clean;X2CLMBD:Clean" />
+  </Target>
+  <Target Name="Make">
+    <CallTarget Targets="X2CLGL:Make;X2CLGLD:Make;X2CLMB:Make;X2CLMBD:Make" />
+  </Target>
+  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+</Project>

@@ -11,6 +11,12 @@
 }
 unit X2CLMenuBar;
 
+
+{$IFDEF VER180}
+  {$DEFINE D2006}
+{$ENDIF}
+
+
 interface
 uses
   ActnList,
@@ -51,6 +57,10 @@ type
   TX2MenuBarItem = class;
   TX2MenuBarGroup = class;
   TX2CustomMenuBar = class;
+
+
+  TX2MenuBarItemsEnumerator = class;
+  TX2MenuBarGroupsEnumerator = class;
 
 
   IX2MenuBarDesigner = interface
@@ -290,7 +300,6 @@ type
   TX2ComponentNotification = class(TComponent)
   private
     FOnNotification:    TX2ComponentNotificationEvent;
-  published
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
@@ -388,6 +397,8 @@ type
   public
     constructor Create(AOwner: TPersistent);
 
+    function GetEnumerator: TX2MenuBarItemsEnumerator;
+
     function Add(const ACaption: TCaption = ''): TX2MenuBarItem;
 
     property Items[Index: Integer]: TX2MenuBarItem read GetItem write SetItem; default;
@@ -417,6 +428,8 @@ type
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
 
+    function GetEnumerator: TX2MenuBarItemsEnumerator;
+
     procedure Assign(Source: TPersistent); override;
 
     property SelectedItem:    Integer read GetSelectedItem  write FSelectedItem;
@@ -435,6 +448,8 @@ type
     procedure SetItem(Index: Integer; const Value: TX2MenuBarGroup);
   public
     constructor Create(AOwner: TPersistent);
+
+    function GetEnumerator: TX2MenuBarGroupsEnumerator;
 
     function Add(const ACaption: TCaption = ''): TX2MenuBarGroup;
 
@@ -594,6 +609,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
+    function GetEnumerator: TX2MenuBarGroupsEnumerator;
+
     function HitTest(const APoint: TPoint): TX2MenuBarHitTest; overload;
     function HitTest(AX, AY: Integer): TX2MenuBarHitTest; overload;
 
@@ -659,7 +676,7 @@ type
     property OnExpanding;
     property OnSelectedChanged;
     property OnSelectedChanging;
-    {$IFDEF VER180}
+    {$IFDEF D2006}
     property OnMouseActivate;
     property OnMouseEnter;
     property OnMouseLeave;
@@ -671,6 +688,26 @@ type
     property Painter;
     property Scrollbar;
   end;
+
+
+  {
+    :$ For iterators support for D2006+
+  }
+  TX2MenuBarItemsEnumerator = class(TCollectionEnumerator)
+  private
+    function GetCurrent: TX2MenuBarItem;
+  public
+    property Current: TX2MenuBarItem read GetCurrent;
+  end;
+
+
+  TX2MenuBarGroupsEnumerator = class(TCollectionEnumerator)
+  private
+    function GetCurrent: TX2MenuBarGroup;
+  public
+    property Current: TX2MenuBarGroup read GetCurrent;
+  end;
+
 
 
 const
@@ -1331,6 +1368,12 @@ begin
 end;
 
 
+function TX2MenuBarItems.GetEnumerator: TX2MenuBarItemsEnumerator;
+begin
+  Result := TX2MenuBarItemsEnumerator.Create(Self);
+end;
+
+
 function TX2MenuBarItems.Add(const ACaption: TCaption): TX2MenuBarItem;
 begin
   Result          := TX2MenuBarItem(inherited Add);
@@ -1374,6 +1417,12 @@ begin
     FreeAndNil(FData);
 
   inherited;
+end;
+
+
+function TX2MenuBarGroup.GetEnumerator: TX2MenuBarItemsEnumerator;
+begin
+  Result := TX2MenuBarItemsEnumerator.Create(Items);
 end;
 
 
@@ -1479,6 +1528,12 @@ begin
 end;
 
 
+function TX2MenuBarGroups.GetEnumerator: TX2MenuBarGroupsEnumerator;
+begin
+  Result := TX2MenuBarGroupsEnumerator.Create(Self);
+end;
+
+
 function TX2MenuBarGroups.Add(const ACaption: TCaption): TX2MenuBarGroup;
 begin
   Result          := TX2MenuBarGroup(inherited Add);
@@ -1565,6 +1620,12 @@ begin
   FreeAndNil(FImagesChangeLink);
 
   inherited;
+end;
+
+
+function TX2CustomMenuBar.GetEnumerator: TX2MenuBarGroupsEnumerator;
+begin
+  Result := TX2MenuBarGroupsEnumerator.Create(Groups);
 end;
 
 
@@ -3202,5 +3263,19 @@ end;
 //begin
 ////  MessageBox(0, 'I gots a mousewheel', '', 0);
 //end;
+
+
+{ TX2MenuBarItemsEnumerator }
+function TX2MenuBarItemsEnumerator.GetCurrent: TX2MenuBarItem;
+begin
+  Result := TX2MenuBarItem(inherited GetCurrent);
+end;
+
+
+{ TX2MenuBarGroupsEnumerator }
+function TX2MenuBarGroupsEnumerator.GetCurrent: TX2MenuBarGroup;
+begin
+  Result := TX2MenuBarGroup(inherited GetCurrent);
+end;
 
 end.

@@ -83,6 +83,7 @@ type
     FIndicatorColors:   TX2MenuBarmCColors;
     FItemColors:        TX2MenuBarmCColors;
     FItemHeight:        Integer;
+    FItemDisabledColor: TColor;
 
     procedure SetColor(const Value: TColor);
     procedure SetGroupColors(const Value: TX2MenuBarmCColors);
@@ -90,6 +91,7 @@ type
     procedure SetIndicatorColors(const Value: TX2MenuBarmCColors);
     procedure SetItemColors(const Value: TX2MenuBarmCColors);
     procedure SetItemHeight(const Value: Integer);
+    procedure SetItemDisabledColor(const Value: TColor);
   protected
     procedure ColorChange(Sender: TObject);
 
@@ -108,12 +110,13 @@ type
 
     procedure ResetColors;
   published
-    property Color:           TColor              read FColor           write SetColor stored False;
-    property GroupColors:     TX2MenuBarmCColors  read FGroupColors     write SetGroupColors stored False;
-    property GroupHeight:     Integer             read FGroupHeight     write SetGroupHeight stored False;
-    property IndicatorColors: TX2MenuBarmCColors  read FIndicatorColors write SetIndicatorColors stored False;
-    property ItemColors:      TX2MenuBarmCColors  read FItemColors      write SetItemColors stored False;
-    property ItemHeight:      Integer             read FItemHeight      write SetItemHeight stored False;
+    property Color:             TColor              read FColor             write SetColor stored False;
+    property GroupColors:       TX2MenuBarmCColors  read FGroupColors       write SetGroupColors stored False;
+    property GroupHeight:       Integer             read FGroupHeight       write SetGroupHeight stored False;
+    property IndicatorColors:   TX2MenuBarmCColors  read FIndicatorColors   write SetIndicatorColors stored False;
+    property ItemColors:        TX2MenuBarmCColors  read FItemColors        write SetItemColors stored False;
+    property ItemHeight:        Integer             read FItemHeight        write SetItemHeight stored False;
+    property ItemDisabledColor: TColor              read FItemDisabledColor write SetItemDisabledColor stored False;
   end;
 
 implementation
@@ -126,12 +129,13 @@ constructor TX2MenuBarmusikCubePainter.Create(AOwner: TComponent);
 begin
   inherited;
 
-  FColor            := clBtnFace;
-  FGroupColors      := TX2MenuBarmCColors.Create;
-  FGroupHeight      := 22;
-  FIndicatorColors  := TX2MenuBarmCColors.Create;
-  FItemColors       := TX2MenuBarmCColors.Create;
-  FItemHeight       := 22;
+  FColor              := clBtnFace;
+  FItemDisabledColor  := clGrayText;
+  FGroupColors        := TX2MenuBarmCColors.Create;
+  FGroupHeight        := 22;
+  FIndicatorColors    := TX2MenuBarmCColors.Create;
+  FItemColors         := TX2MenuBarmCColors.Create;
+  FItemHeight         := 22;
 
   FGroupColors.OnChange     := ColorChange;
   FIndicatorColors.OnChange := ColorChange;
@@ -341,6 +345,11 @@ begin
       Inc(textBounds.Left, imageList.Width + 4);
     end;
 
+    if AItem.Enabled then
+      ACanvas.Font.Color := clWindowText
+    else
+      ACanvas.Font.Color := ItemDisabledColor;
+
     if not AItem.Visible then
       { Design-time }
       ACanvas.Font.Style  := [fsItalic]
@@ -374,6 +383,15 @@ begin
   if Value <> FItemColors then
   begin
     FItemColors.Assign(Value);
+    NotifyObservers;
+  end;
+end;
+
+procedure TX2MenuBarmusikCubePainter.SetItemDisabledColor(const Value: TColor);
+begin
+  if Value <> FItemDisabledColor then
+  begin
+    FItemDisabledColor := Value;
     NotifyObservers;
   end;
 end;

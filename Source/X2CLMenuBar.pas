@@ -2661,7 +2661,7 @@ begin
 
   if AllowInteraction then
   begin
-    Result  := Iterate(FindEnabledItem, mbdDown);
+    Result  := Iterate(FindEnabledItem, mbdUp);
     if Assigned(Result) then
       SelectedItem  := Result;
   end;

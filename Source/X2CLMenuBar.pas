@@ -2571,7 +2571,12 @@ var
 
 begin
   Result      := nil;
-  groupIndex  := 0;
+
+  case ADirection of
+    mbdUp:    groupIndex  := Pred(Groups.Count);
+    mbdDown:  groupIndex  := 0;
+  end;
+
   itemIndex   := -2;
   abort       := False;
 
@@ -2656,26 +2661,12 @@ end;
 
 
 function TX2CustomMenuBar.SelectLast: TX2CustomMenuBarItem;
-var
-  startGroup: TX2MenuBarGroup;
-  startItem:  TX2CustomMenuBarItem;
-
 begin
   Result  := nil;
-  if Groups.Count = 0 then
-    Exit;
 
   if AllowInteraction then
   begin
-    { Start from the last item in the last group }
-    startGroup  := Groups[Pred(Groups.Count)];
-
-    if startGroup.Items.Count > 0 then
-      startItem := startGroup.Items[Pred(startGroup.Items.Count)]
-    else
-      startItem := startGroup;
-
-    Result    := Iterate(FindEnabledItem, mbdUp, nil, startItem);
+    Result    := Iterate(FindEnabledItem, mbdUp);
     if Assigned(Result) then
       SelectedItem  := Result;
   end;

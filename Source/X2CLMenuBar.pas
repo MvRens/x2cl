@@ -2656,12 +2656,26 @@ end;
 
 
 function TX2CustomMenuBar.SelectLast: TX2CustomMenuBarItem;
+var
+  startGroup: TX2MenuBarGroup;
+  startItem:  TX2CustomMenuBarItem;
+
 begin
   Result  := nil;
+  if Groups.Count = 0 then
+    Exit;
 
   if AllowInteraction then
   begin
-    Result  := Iterate(FindEnabledItem, mbdUp);
+    { Start from the last item in the last group }
+    startGroup  := Groups[Pred(Groups.Count)];
+
+    if startGroup.Items.Count > 0 then
+      startItem := startGroup.Items[Pred(startGroup.Items.Count)]
+    else
+      startItem := startGroup;
+
+    Result    := Iterate(FindEnabledItem, mbdUp, nil, startItem);
     if Assigned(Result) then
       SelectedItem  := Result;
   end;

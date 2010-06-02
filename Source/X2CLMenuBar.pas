@@ -327,6 +327,7 @@ type
     procedure DoActionChange(Sender: TObject);
   protected
     procedure ActionChange(Sender: TObject; CheckDefaults: Boolean); virtual;
+    procedure ActionNotification(Sender: TObject; AComponent: TComponent; Operation: TOperation); virtual;
 
     function IsCaptionStored: Boolean; virtual;
     function GetMenuBar: TX2CustomMenuBar; virtual;
@@ -1198,6 +1199,17 @@ begin
 end;
 
 
+procedure TX2CustomMenuBarItem.ActionNotification(Sender: TObject; AComponent: TComponent; Operation: TOperation);
+begin
+  if (AComponent = FAction) and (Operation = opRemove) then
+  begin
+    { Don't free FNotification here, we're in it's event handler }
+    FAction := nil;
+    FreeAndNil(FActionLink);
+  end;
+end;
+
+
 function TX2CustomMenuBarItem.IsCaptionStored: Boolean;
 begin
   Result  := (Length(Caption) > 0);
@@ -1252,7 +1264,10 @@ begin
       FActionLink.Action    := Value;
 
       if not Assigned(FNotification) then
+      begin
         FNotification := TX2ComponentNotification.Create(nil);
+        FNotification.OnNotification := ActionNotification;
+      end;
 
       ActionChange(Value, csLoading in Value.ComponentState);
       FAction.FreeNotification(FNotification);

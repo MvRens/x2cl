@@ -170,7 +170,9 @@ type
     procedure SetEnabled(const Value: Boolean);
     procedure SetStretchMode(const Value: TX2GLStretchMode);
   protected
-    procedure DefineProperties(Filer: TFiler); override;
+    procedure ReadData(Stream: TStream); override;
+    procedure WriteData(Stream: TStream); override;
+
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     function DrawGraphic(const AIndex: Integer;
@@ -739,6 +741,9 @@ var
   listIndex:      Integer;
 
 begin
+  if csDestroying in ComponentState then
+    Exit;
+
   graphicIndex := AGraphic.Index;
   
   if graphicIndex > -1 then
@@ -1327,26 +1332,13 @@ end;
 {========================= TX2GraphicList
   Properties
 ========================================}
-procedure TX2GraphicList.DefineProperties(Filer: TFiler);
-var
-  pType:        TClass;
-
+procedure TX2GraphicList.ReadData(Stream: TStream);
 begin
-  // TCustomImageList defines the Bitmap property, we don't want that
-  // (since the ImageList will be generated from a GraphicContainer).
-  // Erik's solution was to override Read/WriteData, but in Delphi 6 those
-  // aren't virtual yet. Instead we skip TCustomImageList's DefineProperties.
-  //
-  // The trick here is to modify the ClassType so the VMT of descendants
-  // (include ourself!) is ignored and only TComponent.DefineProperties
-  // is called...
-  pType           := Self.ClassType;
-  PClass(Self)^   := TComponent;
-  try
-    DefineProperties(Filer);
-  finally
-    PClass(Self)^ := pType;
-  end;
+end;
+
+
+procedure TX2GraphicList.WriteData(Stream: TStream);
+begin
 end;
 
 
@@ -1354,7 +1346,7 @@ procedure TX2GraphicList.Notification(AComponent: TComponent;
                                       Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = FContainer) then
-    FContainer  := nil;
+    SetContainer(nil);
 
   inherited;
 end;

@@ -741,15 +741,15 @@ var
   listIndex:      Integer;
 
 begin
-  if csDestroying in ComponentState then
-    Exit;
-
   graphicIndex := AGraphic.Index;
   
   if graphicIndex > -1 then
   begin
-    for listIndex := Pred(Lists.Count) downto 0 do
-      TX2GraphicList(Lists[listIndex]).DeleteImage(graphicIndex);
+    if not (csDestroying in ComponentState) then
+    begin
+      for listIndex := Pred(Lists.Count) downto 0 do
+        TX2GraphicList(Lists[listIndex]).DeleteImage(graphicIndex);
+    end;
   
     GraphicsList.Delete(graphicIndex);
     AGraphic.InternalSetContainer(nil);

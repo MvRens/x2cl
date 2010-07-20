@@ -544,7 +544,7 @@ begin
   Result  := -1;
 
   for graphicIndex := Pred(GraphicCount) downto 0 do
-    if SameText(Graphics[graphicIndex].Name, AName) then
+    if SameText(Graphics[graphicIndex].PictureName, AName) then
     begin
       Result := graphicIndex;
       break;

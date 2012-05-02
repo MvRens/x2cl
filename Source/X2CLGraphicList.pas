@@ -666,7 +666,7 @@ begin
            (TX2GraphicContainerItem(AComponent).Container = Self) then
         begin
           RemoveGraphic(TX2GraphicContainerItem(AComponent));
-        end;
+        end
   
         else if AComponent is TX2GraphicList then
           Lists.Remove(AComponent);

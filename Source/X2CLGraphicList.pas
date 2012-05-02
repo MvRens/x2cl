@@ -662,8 +662,11 @@ begin
   
     opRemove:
       begin
-        if AComponent is TX2GraphicContainerItem then
-          RemoveGraphic(TX2GraphicContainerItem(AComponent))
+        if (AComponent is TX2GraphicContainerItem) and
+           (TX2GraphicContainerItem(AComponent).Container = Self) then
+        begin
+          RemoveGraphic(TX2GraphicContainerItem(AComponent));
+        end;
   
         else if AComponent is TX2GraphicList then
           Lists.Remove(AComponent);
@@ -1263,22 +1266,29 @@ end;
 
 procedure TX2GraphicList.DeleteImage(const AIndex: Integer);
 begin
-  BeginUpdate;
-  try
-    Delete(AIndex);
-  finally
-    EndUpdate;
-  end;
+  if CanConvert then
+  begin
+    BeginUpdate;
+    try
+      Delete(AIndex);
+    finally
+      EndUpdate;
+    end;
+  end else
+    UpdateImageCount;
 end;
 
 
 procedure TX2GraphicList.MoveImage(const AOldIndex, ANewIndex: Integer);
 begin
-  BeginUpdate;
-  try
-    Move(AOldIndex, ANewIndex);
-  finally
-    EndUpdate;
+  if CanConvert then
+  begin
+    BeginUpdate;
+    try
+      Move(AOldIndex, ANewIndex);
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 

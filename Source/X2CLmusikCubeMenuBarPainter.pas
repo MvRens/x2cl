@@ -74,6 +74,8 @@ type
     property Selected:  TX2MenuBarmCColor read FSelected  write SetSelected;
   end;
 
+  TImagePosition  = (ipLeft, ipRight);
+
   // #ToDo1 (MvR) 19-3-2006: Custom base class?
   TX2MenuBarmusikCubePainter = class(TX2CustomMenuBarPainter)
   private
@@ -84,6 +86,7 @@ type
     FItemColors:        TX2MenuBarmCColors;
     FItemHeight:        Integer;
     FItemDisabledColor: TColor;
+    FImagePosition: TImagePosition;
 
     procedure SetColor(const Value: TColor);
     procedure SetGroupColors(const Value: TX2MenuBarmCColors);
@@ -92,6 +95,7 @@ type
     procedure SetItemColors(const Value: TX2MenuBarmCColors);
     procedure SetItemHeight(const Value: Integer);
     procedure SetItemDisabledColor(const Value: TColor);
+    procedure SetImagePosition(const Value: TImagePosition);
   protected
     procedure ColorChange(Sender: TObject);
 
@@ -113,6 +117,7 @@ type
     property Color:             TColor              read FColor             write SetColor stored False;
     property GroupColors:       TX2MenuBarmCColors  read FGroupColors       write SetGroupColors stored False;
     property GroupHeight:       Integer             read FGroupHeight       write SetGroupHeight stored False;
+    property ImagePosition:     TImagePosition      read FImagePosition     write SetImagePosition default ipLeft;
     property IndicatorColors:   TX2MenuBarmCColors  read FIndicatorColors   write SetIndicatorColors stored False;
     property ItemColors:        TX2MenuBarmCColors  read FItemColors        write SetItemColors stored False;
     property ItemHeight:        Integer             read FItemHeight        write SetItemHeight stored False;
@@ -133,6 +138,7 @@ begin
   FItemDisabledColor  := clGrayText;
   FGroupColors        := TX2MenuBarmCColors.Create;
   FGroupHeight        := 22;
+  FImagePosition      := ipLeft;
   FIndicatorColors    := TX2MenuBarmCColors.Create;
   FItemColors         := TX2MenuBarmCColors.Create;
   FItemHeight         := 22;
@@ -300,6 +306,7 @@ var
   indicatorColor:     TX2MenuBarmCColor;
   textBounds:         TRect;
   imageList:          TCustomImageList;
+  imgX:               Integer;
   imgY:               Integer;
 
 begin
@@ -326,23 +333,33 @@ begin
 
     textBounds            := itemBounds;
     Inc(textBounds.Left, 4);
+    Dec(textBounds.Right, 4);
 
     imageList := MenuBar.Images;
     if Assigned(imageList) then
     begin
       if AItem.ImageIndex > -1 then
       begin
+        if ImagePosition = ipRight then
+          imgX := textBounds.Right - imageList.Width
+        else
+          imgX := textBounds.Left;
+
         imgY  := textBounds.Top + ((textBounds.Bottom - textBounds.Top -
                                     imageList.Height) div 2);
 
         if (mdsHot in AState) or (mdsSelected in AState) then
-          imageList.Draw(ACanvas, textBounds.Left, imgY, AItem.ImageIndex)
+          imageList.Draw(ACanvas, imgX, imgY, AItem.ImageIndex)
         else
-          DrawBlended(ACanvas, imageList, textBounds.Left, imgY,
+          DrawBlended(ACanvas, imageList, imgX, imgY,
                       AItem.ImageIndex, 128);
+
+        if ImagePosition = ipRight then
+          Dec(textBounds.Right, imageList.Width + 4);
       end;
 
-      Inc(textBounds.Left, imageList.Width + 4);
+      if ImagePosition = ipLeft then
+        Inc(textBounds.Left, imageList.Width + 4);
     end;
 
     if AItem.Enabled then
@@ -368,6 +385,15 @@ begin
   NotifyObservers;
 end;
 
+
+procedure TX2MenuBarmusikCubePainter.SetImagePosition(const Value: TImagePosition);
+begin
+  if Value <> FImagePosition then
+  begin
+    FImagePosition := Value;
+    NotifyObservers;
+  end;
+end;
 
 procedure TX2MenuBarmusikCubePainter.SetIndicatorColors(const Value: TX2MenuBarmCColors);
 begin

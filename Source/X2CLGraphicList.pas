@@ -222,7 +222,9 @@ uses
   CommCtrl,
   Forms,
   ImgList,
-  SysUtils;
+  SysUtils,
+
+  X2UtDelphiCompatibility;
 
 
 var
@@ -497,7 +499,7 @@ begin
     Result := 'GraphicContainerItem';
 
   for charIndex := 1 to Length(PictureName) do
-    if PictureName[charIndex] in AlphaNumeric then
+    if CharInSet(PictureName[charIndex], AlphaNumeric) then
       Result := Result + PictureName[charIndex];
 
 

@@ -120,13 +120,13 @@ end;
 
 procedure TfrmMenuBarEditor.FormCreate(Sender: TObject);
 begin
-  {$IFDEF VER180}
+  {$IF CompilerVersion >= 18}
   // Delphi (BDS) 2006
   tbMenu.EdgeBorders  := [];
   tbMenu.DrawingStyle := dsGradient;
   {$ELSE}
   tbMenu.Flat         := True;
-  {$ENDIF}
+  {$IFEND}
 end;
 
 

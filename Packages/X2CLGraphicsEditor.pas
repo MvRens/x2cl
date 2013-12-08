@@ -26,64 +26,72 @@ uses
 
 type
   TGraphicsEditorForm = class(TForm)
-    actAdd:                                     TAction;
-    actClear:                                   TAction;
-    actDelete:                                  TAction;
-    actDown:                                    TAction;
-    actOpen:                                    TAction;
-    actSave:                                    TAction;
-    actUp:                                      TAction;
-    alGraphics:                                 TActionList;
-    dlgOpen:                                    TOpenPictureDialog;
-    dlgSave:                                    TSavePictureDialog;
-    ilsIcons:                                   TImageList;
-    imgPreview:                                 TImage;
-    lblName:                                    TLabel;
-    lstGraphics:                                TListBox;
-    pnlGraphics:                                TPanel;
-    pnlImage:                                   TPanel;
-    pnlProperties:                              TPanel;
-    sbImage:                                    TScrollBox;
-    spltGraphics:                               TSplitter;
-    tbClear:                                    TToolButton;
-    tbDelete:                                   TToolButton;
-    tbDown:                                     TToolButton;
-    tbGraphics:                                 TToolBar;
-    tbImage:                                    TToolBar;
-    tbNew:                                      TToolButton;
-    tbOpen:                                     TToolButton;
-    tbSave:                                     TToolButton;
-    tbSep1:                                     TToolButton;
-    tbUp:                                       TToolButton;
-    txtName:                                    TEdit;
+    actAdd: TAction;
+    actClear: TAction;
+    actDelete: TAction;
+    actDown: TAction;
+    actOpen: TAction;
+    actSave: TAction;
+    actUp: TAction;
+    alGraphics: TActionList;
+    dlgOpen: TOpenPictureDialog;
+    dlgSave: TSavePictureDialog;
+    ilsIcons: TImageList;
+    imgPreview: TImage;
+    lblName: TLabel;
+    lstGraphics: TListBox;
+    pnlGraphics: TPanel;
+    pnlImage: TPanel;
+    pnlProperties: TPanel;
+    sbImage: TScrollBox;
+    spltGraphics: TSplitter;
+    tbClear: TToolButton;
+    tbDelete: TToolButton;
+    tbDown: TToolButton;
+    tbGraphics: TToolBar;
+    tbImage: TToolBar;
+    tbNew: TToolButton;
+    tbOpen: TToolButton;
+    tbSave: TToolButton;
+    tbSep1: TToolButton;
+    tbUp: TToolButton;
+    txtName: TEdit;
+    lblClassType: TLabel;
+    tbExport: TToolButton;
+    tbImport: TToolButton;
+    actExport: TAction;
+    actImport: TAction;
+    tbSep2: TToolButton;
+    dlgExport: TSaveDialog;
+    dlgImport: TOpenDialog;
 
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure lstGraphicsClick(Sender: TObject);
-    procedure txtNameChange(Sender: TObject);
+    function lstGraphicsDataFind(Control: TWinControl; FindString: String): Integer;
     procedure actAddExecute(Sender: TObject);
+    procedure actClearExecute(Sender: TObject);
     procedure actDeleteExecute(Sender: TObject);
-    procedure actUpExecute(Sender: TObject);
     procedure actDownExecute(Sender: TObject);
+    procedure actExportExecute(Sender: TObject);
+    procedure actImportExecute(Sender: TObject);
     procedure actOpenExecute(Sender: TObject);
     procedure actSaveExecute(Sender: TObject);
-    procedure actClearExecute(Sender: TObject);
-    procedure lstGraphicsData(Control: TWinControl; Index: Integer;
-      var Data: String);
-    function lstGraphicsDataFind(Control: TWinControl;
-      FindString: String): Integer;
+    procedure actUpExecute(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure lstGraphicsClick(Sender: TObject);
+    procedure lstGraphicsData(Control: TWinControl; Index: Integer; var Data: String);
     procedure lstGraphicsKeyPress(Sender: TObject; var Key: Char);
+    procedure txtNameChange(Sender: TObject);
   private
-    FComponent:           TX2GraphicContainer;
-    FComponentDesigner:   IDesigner;
-    FUpdating:            Boolean;
+    FComponent: TX2GraphicContainer;
+    FComponentDesigner: IDesigner;
+    FUpdating: Boolean;
 
     procedure InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
 
     procedure LoadGraphic(AGraphic: TX2GraphicContainerItem; const AFileName: string);
     
     procedure ItemChanged(AUpdatePreview: Boolean = True);
-    procedure UpdateUI();
-    procedure UpdatePreview();
+    procedure UpdateUI;
+    procedure UpdatePreview;
 
     function Active(out AIndex: Integer; out AGraphic: TX2GraphicContainerItem): Boolean;
   protected
@@ -95,12 +103,13 @@ type
 implementation
 uses
   Graphics,
+  IniFiles,
   SysUtils,
   Windows;
 
 
 var
-  EditorInstance:     TGraphicsEditorForm;
+  EditorInstance: TGraphicsEditorForm;
 
 
 {$R *.dfm}
@@ -115,6 +124,7 @@ begin
   EditorInstance.InternalExecute(AComponent, ADesigner);
 end;
 
+
 procedure TGraphicsEditorForm.InternalExecute(const AComponent: TComponent; const ADesigner: IDesigner);
 begin
   FComponent          := TX2GraphicContainer(AComponent);
@@ -126,9 +136,9 @@ begin
   lstGraphics.Count := FComponent.GraphicCount;
   lstGraphics.ItemIndex := 0;
 
-  UpdateUI();
-  UpdatePreview();
-  Show();
+  UpdateUI;
+  UpdatePreview;
+  Show;
 end;
 
 
@@ -147,6 +157,7 @@ end;
 procedure TGraphicsEditorForm.LoadGraphic(AGraphic: TX2GraphicContainerItem; const AFileName: string);
 begin
   AGraphic.Picture.LoadFromFile(AFileName);
+
   if Length(AGraphic.PictureName) = 0 then
   begin
     AGraphic.PictureName  := ChangeFileExt(ExtractFileName(AFileName), '');
@@ -160,14 +171,14 @@ begin
   if Assigned(FComponentDesigner) then
     FComponentDesigner.Modified;
 
-  UpdateUI();
+  UpdateUI;
 
   if AUpdatePreview then
     UpdatePreview;
 end;
 
 
-procedure TGraphicsEditorForm.UpdateUI();
+procedure TGraphicsEditorForm.UpdateUI;
 var
   enabled:      Boolean;
   index:        Integer;
@@ -185,13 +196,14 @@ begin
 
   actSave.Enabled   := enabled;
   actClear.Enabled  := enabled;
+  actExport.Enabled := (FComponent.GraphicCount > 0);
 
   actUp.Enabled     := enabled and (index > 0);
   actDown.Enabled   := enabled and (index < Pred(FComponent.GraphicCount));
 end;
 
 
-procedure TGraphicsEditorForm.UpdatePreview();
+procedure TGraphicsEditorForm.UpdatePreview;
 var
   index:        Integer;
   graphic:      TX2GraphicContainerItem;
@@ -202,11 +214,18 @@ begin
     if Active(index, graphic) then
     begin
       imgPreview.Picture.Assign(graphic.Picture);
-      txtName.Text  := graphic.PictureName;
+
+      if Assigned(graphic.Picture.Graphic) then
+        lblClassType.Caption  := graphic.Picture.Graphic.ClassName
+      else
+        lblClassType.Caption  := '';
+        
+      txtName.Text          := graphic.PictureName;
       lstGraphics.Invalidate;
     end else
     begin
       imgPreview.Picture.Assign(nil);
+      lblClassType.Caption      := '';
       txtName.Text              := '';
     end;
   finally
@@ -230,8 +249,8 @@ end;
 
 procedure TGraphicsEditorForm.lstGraphicsClick(Sender: TObject);
 begin
-  UpdateUI();
-  UpdatePreview();
+  UpdateUI;
+  UpdatePreview;
 end;
 
 
@@ -265,7 +284,7 @@ begin
     dlgOpen.Filter  := GraphicFilter(TGraphic);
     dlgOpen.Options := dlgOpen.Options + [ofAllowMultiSelect];
 
-    if dlgOpen.Execute() then
+    if dlgOpen.Execute then
     begin
       for fileIndex := 0 to Pred(dlgOpen.Files.Count) do
       begin
@@ -275,13 +294,13 @@ begin
         begin
           graphic.Container := FComponent;
           lstGraphics.Count := FComponent.GraphicCount;
-          
+
           LoadGraphic(graphic, dlgOpen.Files[fileIndex]);
         end else
           raise Exception.Create('Failed to create TX2GraphicContainerItem!');
       end;
 
-      ItemChanged();
+      ItemChanged;
     end;
   end else
     raise Exception.Create('Designer not found!');
@@ -299,7 +318,7 @@ begin
     { First attempt to remove the component; this will raise an exception
       if it's not allowed, for example due to it being introduced in
       an ancestor. }
-    graphic.Free();
+    graphic.Free;
     lstGraphics.Count := FComponent.GraphicCount;
 
     if index > Pred(FComponent.GraphicCount) then
@@ -307,7 +326,7 @@ begin
 
     lstGraphics.ItemIndex := index;
 
-    ItemChanged();
+    ItemChanged;
   end;
 end;
 
@@ -359,13 +378,14 @@ begin
     dlgOpen.Filter  := GraphicFilter(TGraphic);
     dlgOpen.Options := dlgOpen.Options - [ofAllowMultiSelect];
 
-    if dlgOpen.Execute() then
+    if dlgOpen.Execute then
     begin
       LoadGraphic(graphic, dlgOpen.FileName);
-      ItemChanged();
+      ItemChanged;
     end;
   end;
 end;
+
 
 procedure TGraphicsEditorForm.actSaveExecute(Sender: TObject);
 var
@@ -380,10 +400,11 @@ begin
       dlgSave.Filter    := GraphicFilter(graphicClass);
       dlgSave.FileName  := ChangeFileExt(graphic.PictureName, '.' + GraphicExtension(graphicClass));
 
-      if dlgSave.Execute() then
+      if dlgSave.Execute then
         graphic.Picture.SaveToFile(dlgSave.FileName);
     end;
 end;
+
 
 procedure TGraphicsEditorForm.actClearExecute(Sender: TObject);
 var
@@ -394,7 +415,97 @@ begin
   if Active(index, graphic) then
   begin
     graphic.Picture.Assign(nil);
-    ItemChanged();
+    ItemChanged;
+  end;
+end;
+
+
+procedure TGraphicsEditorForm.actExportExecute(Sender: TObject);
+var
+  exportFile: TIniFile;
+  exportBaseFileName: string;
+  exportPath: string;
+  index: Integer;
+  graphic: TX2GraphicContainerItem;
+  fileName: string;
+
+begin
+  if dlgExport.Execute then
+  begin
+    exportPath := ExtractFilePath(dlgExport.FileName);
+    exportBaseFileName := ChangeFileExt(ExtractFileName(dlgExport.FileName), '');
+
+    exportFile := TIniFile.Create(dlgExport.FileName);
+    try
+      for index := 0 to Pred(FComponent.GraphicCount) do
+      begin
+        graphic := FComponent.Graphics[index];
+        exportFile.WriteString('PictureName', IntToStr(index), graphic.PictureName);
+
+        if Assigned(graphic.Picture.Graphic) then
+        begin
+          fileName := exportBaseFileName + '.' + IntToStr(index) + '.' + GraphicExtension(TGraphicClass(graphic.Picture.Graphic.ClassType));
+
+          graphic.Picture.Graphic.SaveToFile(exportPath + fileName);
+          exportFile.WriteString('FileName', IntToStr(index), fileName);
+        end;
+      end;
+
+      ShowMessage('Graphics have been exported');
+    finally
+      FreeAndNil(exportFile);
+    end;
+  end;
+end;
+
+
+procedure TGraphicsEditorForm.actImportExecute(Sender: TObject);
+var
+  importFile: TIniFile;
+  importPath: string;
+  index: Integer;
+  graphic: TX2GraphicContainerItem;
+  fileName: string;
+
+begin
+  if dlgImport.Execute then
+  begin
+    if FComponent.GraphicCount > 0 then
+    begin
+      if MessageBox(Self.Handle, 'All graphics will be replaced. Do you want to continue?', 'Import', MB_YESNO or MB_ICONQUESTION) <> ID_YES then
+        exit;
+    end;
+
+    lstGraphics.Clear;
+    FComponent.Clear;
+
+    importPath := ExtractFilePath(dlgImport.FileName);
+    importFile := TIniFile.Create(dlgImport.FileName);
+    try
+      index := 0;
+
+      while importFile.ValueExists('PictureName', IntToStr(index)) do
+      begin
+        graphic := TX2GraphicContainerItem(FComponentDesigner.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
+
+        if Assigned(graphic) then
+        begin
+          graphic.Container := FComponent;
+          graphic.PictureName := importFile.ReadString('PictureName', IntToStr(index), IntToStr(index));
+
+          fileName := importFile.ReadString('FileName', IntToStr(index), '');
+          if (Length(fileName) > 0) and FileExists(importPath + fileName) then
+            graphic.Picture.LoadFromFile(importPath + fileName);
+        end;
+
+        Inc(index);
+      end;
+    finally
+      FreeAndNil(importFile);
+
+      lstGraphics.Count := FComponent.GraphicCount;
+      ItemChanged(True);
+    end;
   end;
 end;
 
@@ -406,7 +517,7 @@ begin
   if (Operation = opRemove) and (AComponent = FComponent) then
   begin
     FComponent := nil;
-    Close();
+    Close;
   end;
 end;
 

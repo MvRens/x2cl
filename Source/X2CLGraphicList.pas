@@ -22,18 +22,11 @@ uses
   Controls,
   Graphics;
 
-{$IFDEF VER150}
+{$IF CompilerVersion >= 15}
 {$WARN UNSAFE_CODE OFF}
 {$WARN UNSAFE_CAST OFF}
 {$WARN UNSAFE_TYPE OFF}
-{$ENDIF}
-
-{$IFDEF VER180}
-{$WARN UNSAFE_CODE OFF}
-{$WARN UNSAFE_CAST OFF}
-{$WARN UNSAFE_TYPE OFF}
-{$ENDIF}
-
+{$IFEND}
 
 type
   // Forward declarations

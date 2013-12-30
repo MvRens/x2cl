@@ -466,6 +466,7 @@ var
   index: Integer;
   graphic: TX2GraphicContainerItem;
   fileName: string;
+  startIndex: Integer;
 
 begin
   if dlgImport.Execute then
@@ -476,8 +477,21 @@ begin
         exit;
     end;
 
+    { Items inherited from the ancestor through visual inheritance can not
+      be deleted. Start at the first one introduced at this level. }
+    startIndex := 0;
+    while (startIndex < FComponent.GraphicCount) and (csAncestor in FComponent.Graphics[startIndex].ComponentState) do
+      Inc(startIndex);
+
     lstGraphics.Clear;
-    FComponent.Clear;
+
+    if startIndex = 0 then
+      FComponent.Clear
+    else
+    begin
+      for index := Pred(FComponent.GraphicCount) downto startIndex do
+        FComponent.Graphics[index].Free;
+    end;
 
     importPath := ExtractFilePath(dlgImport.FileName);
     importFile := TIniFile.Create(dlgImport.FileName);
@@ -486,16 +500,19 @@ begin
 
       while importFile.ValueExists('PictureName', IntToStr(index)) do
       begin
-        graphic := TX2GraphicContainerItem(FComponentDesigner.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
-
-        if Assigned(graphic) then
+        if index >= startIndex then
         begin
-          graphic.Container := FComponent;
-          graphic.PictureName := importFile.ReadString('PictureName', IntToStr(index), IntToStr(index));
+          graphic := TX2GraphicContainerItem(FComponentDesigner.CreateComponent(TX2GraphicContainerItem, nil, 0, 0, 0, 0));
 
-          fileName := importFile.ReadString('FileName', IntToStr(index), '');
-          if (Length(fileName) > 0) and FileExists(importPath + fileName) then
-            graphic.Picture.LoadFromFile(importPath + fileName);
+          if Assigned(graphic) then
+          begin
+            graphic.Container := FComponent;
+            graphic.PictureName := importFile.ReadString('PictureName', IntToStr(index), IntToStr(index));
+
+            fileName := importFile.ReadString('FileName', IntToStr(index), '');
+            if (Length(fileName) > 0) and FileExists(importPath + fileName) then
+              graphic.Picture.LoadFromFile(importPath + fileName);
+          end;
         end;
 
         Inc(index);

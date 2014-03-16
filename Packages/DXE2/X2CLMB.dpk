@@ -31,7 +31,6 @@ package X2CLMB;
 requires
   rtl,
   vcl,
-  designide,
   vclactnband,
   vclx;
 

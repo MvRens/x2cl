@@ -28,7 +28,8 @@ package X2CLGL;
 
 requires
   rtl,
-  vcl;
+  vcl,
+  X2Utils;
 
 contains
   X2CLGraphicList in '..\..\Source\X2CLGraphicList.pas';

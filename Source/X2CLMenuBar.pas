@@ -19,6 +19,12 @@ unit X2CLMenuBar;
 
 interface
 uses
+  // Not sure when TImageIndex was deprecated, we upgraded from XE2 to 10.2 Tokyo.
+  // Lower the CompilerVersion if required.
+  {$IF CompilerVersion >= 32}
+  System.UITypes,
+  {$IFEND}
+
   ActnList,
   Classes,
   Contnrs,
@@ -40,6 +46,10 @@ type
                                  asSlideFade, asCustom);
 
   TX2MenuBarDirection         = (mbdUp, mbdDown);
+
+  {$IF CompilerVersion >= 32}
+  TImageIndex = System.UITypes.TImageIndex;
+  {$IFEND}
 
 
 const

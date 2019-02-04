@@ -30,8 +30,9 @@ uses
 
 type
   // Forward declarations
-  TX2GraphicList      = class;
-  TX2GraphicContainer = class;
+  TX2GraphicList          = class;
+  TX2GraphicContainer     = class;
+  TX2GraphicContainerItem = class;
 
 
   TX2GLCustomDrawImageProc = function(ACanvas: TCanvas;
@@ -39,6 +40,15 @@ type
                                       AIndex: Integer;
                                       AX, AY: Integer;
                                       AEnabled: Boolean): Boolean;
+
+
+  TX2GLOnBeforeDrawItem = procedure(Sender: TX2GraphicContainer; ACanvas: TCanvas; AItem: TX2GraphicContainerItem; ABounds: TRect; AEnabled: Boolean; var ADone: Boolean) of object;
+  TX2GLOnAfterDrawItem  = procedure(Sender: TX2GraphicContainer; ACanvas: TCanvas; AItem: TX2GraphicContainerItem; ABounds: TRect; AEnabled: Boolean) of object;
+
+  {$IF CompilerVersion >= 23}
+  TX2GLBeforeDrawProc = reference to procedure(Sender: TX2GraphicContainer; ACanvas: TCanvas; AItem: TX2GraphicContainerItem; ABounds: TRect; AEnabled: Boolean; var ADone: Boolean);
+  TX2GLAfterDrawProc  = reference to procedure(Sender: TX2GraphicContainer; ACanvas: TCanvas; AItem: TX2GraphicContainerItem; ABounds: TRect; AEnabled: Boolean);
+  {$IFEND}
 
   {
     :$ Holds a single graphic.
@@ -48,6 +58,12 @@ type
     FContainer:         TX2GraphicContainer;
     FPicture:           TPicture;
     FPictureName:       String;
+    FOnBeforeDraw:      TX2GLOnBeforeDrawItem;
+    FOnAfterDraw:       TX2GLOnAfterDrawItem;
+    {$IF CompilerVersion >= 23}
+    FBeforeDrawProc:    TX2GLBeforeDrawProc;
+    FAfterDrawProc:     TX2GLAfterDrawProc;
+    {$IFEND}
 
     function GetIndex: Integer;
     procedure SetContainer(const Value: TX2GraphicContainer);
@@ -67,6 +83,9 @@ type
     procedure SetParentComponent(AParent: TComponent); override;
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+
+    procedure DoBeforeDraw(Sender: TX2GraphicContainer; ACanvas: TCanvas; ABounds: TRect; AEnabled: Boolean; var ADone: Boolean);
+    procedure DoAfterDraw(Sender: TX2GraphicContainer; ACanvas: TCanvas; ABounds: TRect; AEnabled: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -76,11 +95,18 @@ type
 
     procedure AssignTo(Dest: TPersistent); override;
   public
-    property Container:     TX2GraphicContainer read FContainer   write SetContainer stored False;
-    property Index:         Integer             read GetIndex     write SetIndex stored False;
+    property Container:       TX2GraphicContainer   read FContainer       write SetContainer stored False;
+    property Index:           Integer               read GetIndex         write SetIndex stored False;
+
+    {$IF CompilerVersion >= 23}
+    property BeforeDrawProc:  TX2GLBeforeDrawProc   read FBeforeDrawProc  write FBeforeDrawProc;
+    property AfterDrawProc:   TX2GLAfterDrawProc    read FAfterDrawProc   write FAfterDrawProc;
+    {$IFEND}
   published
-    property Picture:       TPicture            read FPicture     write SetPicture;
-    property PictureName:   String              read FPictureName write SetPictureName;
+    property Picture:       TPicture              read FPicture       write SetPicture;
+    property PictureName:   String                read FPictureName   write SetPictureName;
+    property OnBeforeDraw:  TX2GLOnBeforeDrawItem read FOnBeforeDraw  write FOnBeforeDraw;
+    property OnAfterDraw:   TX2GLOnAfterDrawItem  read FOnAfterDraw   write FOnAfterDraw;
   end;
 
   {
@@ -339,6 +365,30 @@ begin
     FContainer := nil;
 
   inherited;
+end;
+
+
+procedure TX2GraphicContainerItem.DoBeforeDraw(Sender: TX2GraphicContainer; ACanvas: TCanvas; ABounds: TRect; AEnabled: Boolean; var ADone: Boolean);
+begin
+  {$IF CompilerVersion >= 23}
+  if Assigned(FBeforeDrawProc) then
+    FBeforeDrawProc(Sender, ACanvas, Self, ABounds, AEnabled, ADone);
+  {$IFEND}
+
+  if Assigned(FOnBeforeDraw) then
+    FOnBeforeDraw(Sender, ACanvas, Self, ABounds, AEnabled, ADone);
+end;
+
+
+procedure TX2GraphicContainerItem.DoAfterDraw(Sender: TX2GraphicContainer; ACanvas: TCanvas; ABounds: TRect; AEnabled: Boolean);
+begin
+  {$IF CompilerVersion >= 23}
+  if Assigned(FAfterDrawProc) then
+    FAfterDrawProc(Sender, ACanvas, Self, ABounds, AEnabled);
+  {$IFEND}
+
+  if Assigned(FOnAfterDraw) then
+    FOnAfterDraw(Sender, ACanvas, Self, ABounds, AEnabled);
 end;
 
 
@@ -980,6 +1030,8 @@ var
   iY:                   Integer;
   pBackground:          PRGBTripleArray;
   pBlend:               PRGBTripleArray;
+  bounds:               TRect;
+  done:                 Boolean;
 
 begin
   Result  := False;
@@ -995,6 +1047,16 @@ begin
     exit;
 
   { First see if any custom draw handlers want to draw the image }
+  bounds := Rect(AX, AY, AX + Self.Width, AY + Self.Height);
+  done := False;
+  FContainer.Graphics[AIndex].DoBeforeDraw(FContainer, ACanvas, bounds, AEnabled, done);
+
+  if done then
+  begin
+    Result := True;
+    Exit;
+  end;
+
   if not CustomDrawImage(ACanvas, Self, AIndex, AX, AY, AEnabled) then
   begin
     if AEnabled then
@@ -1050,6 +1112,7 @@ begin
     end;
   end;
 
+  FContainer.Graphics[AIndex].DoAfterDraw(FContainer, ACanvas, bounds, AEnabled);
   Result  := True;
 end;
 
